@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="favicon.ico">
+    <title>sunofbeach_weapp</title>
+    <!--    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">-->
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <script src="./js/vconsole.min.js"></script>
+    <script>
+        // VConsole will be exported to `window.VConsole` by default.
+        var vConsole = new window.VConsole();
+    </script>
+    <script src="./js/vue.js"></script>
+    <style>
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        html, body {
+            overflow-x: hidden;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+label {
+    margin-right: 10px;
+}
+
+button {
+    font-size: 12px;
+    padding: 2px 6px;
+}
+
+    </style>
+    <script>
+
+    </script>
+</head>
+<body>
+<div id="app">
+    <h2>我的任务清单</h2>
+    <ul>
+        <li v-for="(item, index) in items" :key="index">
+            <label>
+                <input type="checkbox" v-model="item.checked">
+                {{ item.text }}
+            </label>
+        </li>
+    </ul>
+
+    <h3>已选中的项：</h3>
+    <ul>
+        <li v-for="(item, index) in checkedItems" :key="index">
+            {{ item.text }}
+        </li>
+    </ul>
+
+
+    <h3>
+        <button @click="openFolderPicker">选择文件</button>
+    </h3>
+    <h3>
+        <button @click="selectOk">开始同步</button>
+    </h3>
+
+<h2>文件列表</h2>
+<ul>
+    <li v-for="(item, index) in files" :key="index">
+        <label>
+            <input type="checkbox" v-model="item.checked">
+            {{ item.name }}
+        </label>
+        <button @click="deleteFile(index)">删除</button>
+    </li>
+</ul>
+
+</div>
+
+<script>
+
+    window.vue = new Vue({
+        el: '#app',
+        data() {
+            return {
+
+                android:{},
+
+                items: [
+                    {text: '学习 Vue', checked: false},
+                    {text: '写代码', checked: false},
+                    {text: '喝咖啡', checked: false},
+                    {text: '锻炼身体', checked: true}
+                ],
+                files: [],
+            }
+        },
+        mounted() {
+
+
+        },
+        computed: {
+            checkedItems() {
+                return this.items.filter(item => item.checked);
+            }
+        },
+        methods: {
+            setData(key,value){
+                Vue.set(window.vue.$data, key, value);
+            },
+            openFolderPicker() {
+                Android.openFolderPicker();
+            },
+
+            selectOk() {
+                let str = JSON.stringify(this.files.filter(item => item.checked));
+                Android.userClick(str)
+            },
+            // 新增删除方法
+            deleteFile(index) {
+                this.files.splice(index, 1);
+            }
+        }
+    });
+</script>
+</body>
+</html>
