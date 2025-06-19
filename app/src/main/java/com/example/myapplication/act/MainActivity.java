@@ -15,6 +15,7 @@ import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
 import android.provider.DocumentsContract;
 import android.util.Log;
+import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -29,12 +30,15 @@ import android.widget.Toast;
 import com.example.myapplication.R;
 import com.example.myapplication.utils.JsExecUtil;
 import com.example.myapplication.utils.JsResultParser;
+import com.example.myapplication.utils.LocalHttpServer;
+import com.example.myapplication.utils.PortFinder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private JsExecUtil jsExecUtil;
+    private LocalHttpServer localHttpServer;
+    private int serverPort;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -52,7 +58,72 @@ public class MainActivity extends AppCompatActivity {
         webviewInit();
         jsExecUtil = new JsExecUtil(webView);
         // 加载本地文件（确保文件在 assets 目录）
-        webView.loadUrl("file:///android_asset/index2.html");
+//        webView.loadUrl("file:///android_asset/index2.html");
+        webView.loadUrl("file:///android_asset/index.html");
+
+
+        // 启动HTTP服务器
+//        startHttpServer();
+
+        // 加载页面
+//        loadLocalContent();
+    }
+
+    private void startHttpServer() {
+        // 寻找可用端口（范围8080-8090）
+        int port = PortFinder.findAvailablePort(8080, 8090);
+
+        if (port == 0) {
+            // 没有找到可用端口，使用默认值但可能有风险
+            port = 8080;
+        }
+
+        this.serverPort = port;
+
+        // 创建并启动服务器
+        localHttpServer = new LocalHttpServer(port, getApplicationContext());
+        try {
+            localHttpServer.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            // 如果启动失败尝试+1的端口
+            if (port < 8090) {
+                serverPort = port + 1;
+                localHttpServer = new LocalHttpServer(serverPort, getApplicationContext());
+                try {
+                    localHttpServer.start();
+                } catch (IOException ex) {
+                    // 仍失败则放弃
+                }
+            }
+        }
+    }
+
+    private void loadLocalContent() {
+        if (localHttpServer != null && localHttpServer.isAlive()) {
+            // 加载服务器的主页（index.html）
+            webView.loadUrl("http://localhost:" + serverPort + "/index.html");
+        } else {
+            // 如果服务器启动失败，尝试本地文件加载（作为备选方案）
+            webView.loadUrl("file:///android_asset/index.html");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // 销毁WebView
+        if (webView != null) {
+            webView.destroy();
+            webView = null;
+        }
+
+        // 停止HTTP服务器
+        if (localHttpServer != null) {
+            localHttpServer.stop();
+        }
     }
 
     private void webviewInit() {
@@ -76,6 +147,10 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         webView.clearCache(true);
         webView.clearHistory();
+
+
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
         // 添加 WebChromeClient 捕获 JS 错误
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -93,6 +168,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 Log.e("WebViewError", "Error: " + error.getDescription());
+                Log.d("---->  MainActivity",
+                        request.getUrl().toString()
+
+            );
+                Log.d("---->  MainActivity", String.valueOf(error.getErrorCode()));
             }
 
             //防止加载网页时调起系统浏览器
@@ -100,6 +180,16 @@ public class MainActivity extends AppCompatActivity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 view.loadUrl(request.getUrl().toString());
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                // 注入脚本
+                //view.evaluateJavascript(
+                //        "document.body.style.backgroundColor = 'red';" + // 临时设置背景色
+                //                "console.log('Body dimensions:', document.body.clientWidth, document.body.clientHeight);",
+                //        null
+                //);
             }
         });
         // 添加 JS 接口，"Android" 是接口名，JS 中通过这个名称调用
@@ -168,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
         // 将数据传递给WebView
         String jsonData = fileArray.toString();
         Log.d("sendFilesToWebView", jsonData);
-        jsExecUtil.setData("files",fileArray);
+        jsExecUtil.setData("files", fileArray);
 
 
     }
