@@ -6,11 +6,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
@@ -44,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private JsExecUtil jsExecUtil;
     private WebAppInterface webAppInterface;
-
+    SharedPreferences sharedPreference;
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,9 +57,11 @@ public class MainActivity extends AppCompatActivity {
         webviewInit();
         jsExecUtil = new JsExecUtil(webView);
         // 加载本地文件（确保文件在 assets 目录）
-        webView.loadUrl("file:///android_asset/index2.html");
+        webView.loadUrl("file:///android_asset/index.html");
 
-        webAppInterface.openFolderPicker();
+
+        sharedPreference = getSharedPreferences("MainActivity", Context.MODE_PRIVATE);
+
     }
 
 
@@ -89,15 +94,21 @@ public class MainActivity extends AppCompatActivity {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                 );
 
-                String rootDocId = DocumentsContract.getTreeDocumentId(uri);
-
-                rootChild = getChildrenByDocId(uri, rootDocId);
-                root = new DirectoryItem("上级目录", uri, rootDocId, 0, 0, true);
-
-                jsExecUtil.setData("root", DirectoryItem.toJson(root));
-                sendFilesToWebView(rootChild);
+                //2.获得SharedPreferences的编辑器
+                SharedPreferences.Editor edit = sharedPreference.edit();
+                edit.putString("uri",uri.toString());
+                edit.apply();
+                initRootFileList(uri);
             }
         }
+    }
+
+    private void initRootFileList(Uri uri) {
+        String rootDocId = DocumentsContract.getTreeDocumentId(uri);
+        rootChild = getChildrenByDocId(uri, rootDocId);
+        root = new DirectoryItem("上级目录", uri, rootDocId, 0, 0, true);
+        jsExecUtil.setData("root", DirectoryItem.toJson(root));
+        sendFilesToWebView(rootChild);
     }
 
 
@@ -278,9 +289,21 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
-        public void userClick(String jsonStr) throws JSONException {
-            Log.d("userClick", "userClick: " + jsonStr);
-            JSONArray jsonArray = new JSONArray(jsonStr);
+        public void init()  {
+            String uri = sharedPreference.getString("uri", null);
+            if (uri == null){
+
+
+                Log.d("MainActivity", "onCreate: 无数据，重新申请");
+                webAppInterface.openFolderPicker();
+            }else {
+                Uri u = Uri.parse(uri);
+                Log.d("MainActivity", "onCreate: 复用 ");
+
+                runOnUiThread(() -> {
+                    initRootFileList(u);
+                });
+            }
         }
 
         @JavascriptInterface
