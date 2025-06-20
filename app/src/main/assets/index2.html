@@ -33,14 +33,20 @@
         *::after {
             box-sizing: border-box;
         }
-label {
-    margin-right: 10px;
-}
 
-button {
-    font-size: 12px;
-    padding: 2px 6px;
-}
+        label {
+            margin-right: 10px;
+        }
+
+        label:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        button {
+            font-size: 12px;
+            padding: 2px 6px;
+        }
 
     </style>
     <script>
@@ -49,41 +55,41 @@ button {
 </head>
 <body>
 <div id="app">
-    <h2>我的任务清单</h2>
+
+
+    <h2>文件列表</h2>
     <ul>
-        <li v-for="(item, index) in items" :key="index">
-            <label>
-                <input type="checkbox" v-model="item.checked">
-                {{ item.text }}
+        <li>
+            <label @click="intoParent" v-if="currentPath && currentPath.length>0">
+                返回上一级
             </label>
         </li>
-    </ul>
+        <li v-for="(item, index) in files" :key="index">
+            <div style="display: flex; align-items: center;">
+                <!-- 目录图标 -->
+                <span v-if="item.isDirectory" style="margin-right: 10px;">📁</span>
+                <!-- 文件图标 -->
+                <span v-else style="margin-right: 10px;">📄</span>
 
-    <h3>已选中的项：</h3>
-    <ul>
-        <li v-for="(item, index) in checkedItems" :key="index">
-            {{ item.text }}
+                <!-- 点击事件绑定 -->
+                <label @click="toChild(item)" v-if="item.isDirectory" style="cursor: pointer;">
+                    {{ item.name }}
+                </label>
+                <span v-else>{{ item.name }}</span>
+
+                <!-- 文件大小 -->
+                <span style="margin-left: auto; font-size: 12px; color: gray;">
+                    {{ formatSize(item.size) }}
+        </span>
+            </div>
+
+            <!-- 最后修改时间 -->
+            <div style="margin-left: 24px; font-size: 12px; color: #666;">
+                最后修改时间: {{ formatDate(item.lastModified) }}
+            </div>
         </li>
+
     </ul>
-
-
-    <h3>
-        <button @click="openFolderPicker">选择文件</button>
-    </h3>
-    <h3>
-        <button @click="selectOk">开始同步</button>
-    </h3>
-
-<h2>文件列表</h2>
-<ul>
-    <li v-for="(item, index) in files" :key="index">
-        <label>
-            <input type="checkbox" v-model="item.checked">
-            {{ item.name }}
-        </label>
-        <button @click="deleteFile(index)">删除</button>
-    </li>
-</ul>
 
 </div>
 
@@ -93,42 +99,65 @@ button {
         el: '#app',
         data() {
             return {
+                currentPath:null,
 
-                android:{},
-
-                items: [
-                    {text: '学习 Vue', checked: false},
-                    {text: '写代码', checked: false},
-                    {text: '喝咖啡', checked: false},
-                    {text: '锻炼身体', checked: true}
-                ],
+                root:null,
                 files: [],
+
             }
         },
         mounted() {
 
 
         },
-        computed: {
-            checkedItems() {
-                return this.items.filter(item => item.checked);
-            }
-        },
+        computed: {},
         methods: {
-            setData(key,value){
+            setData(key, value) {
                 Vue.set(window.vue.$data, key, value);
             },
-            openFolderPicker() {
-                Android.openFolderPicker();
+
+            toChild(item) {
+                if (!this.currentPath ){
+                    this.currentPath = [this.root];
+                }else{
+                    this.currentPath.push(item);
+                }
+                Android.intoChild(JSON.stringify(item))
+            },
+            intoParent() {
+
+
+                if (this.currentPath && this.currentPath.length > 1) {
+
+                    this.currentPath.pop();
+                }
+
+                console.log(this.currentPath)
+
+                if (!this.currentPath || this.currentPath.length <1){
+                    console.log("回到根目录")
+                    Android.intoParent(JSON.stringify(this.root));
+                }else if ( this.currentPath.length > 0){
+                    let item = this.currentPath[this.currentPath.length-1];
+                    item = JSON.stringify(item);
+
+                    console.log("返回："+item)
+                    Android.intoParent(item)
+                }
+
             },
 
-            selectOk() {
-                let str = JSON.stringify(this.files.filter(item => item.checked));
-                Android.userClick(str)
+            // 格式化文件大小（字节转 KB/MB）
+            formatSize(size) {
+                if (size < 1024) return size + ' B';
+                else if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
+                else return (size / (1024 * 1024)).toFixed(1) + ' MB';
             },
-            // 新增删除方法
-            deleteFile(index) {
-                this.files.splice(index, 1);
+
+            // 格式化时间戳为可读格式
+            formatDate(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
             }
         }
     });

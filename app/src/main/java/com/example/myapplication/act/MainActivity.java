@@ -3,22 +3,19 @@ package com.example.myapplication.act;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.documentfile.provider.DocumentFile;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.storage.StorageManager;
-import android.os.storage.StorageVolume;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
-import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -28,26 +25,25 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.example.myapplication.R;
+import com.example.myapplication.entity.DirectoryItem;
 import com.example.myapplication.utils.JsExecUtil;
-import com.example.myapplication.utils.JsResultParser;
-import com.example.myapplication.utils.LocalHttpServer;
-import com.example.myapplication.utils.PortFinder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class MainActivity extends AppCompatActivity {
 
 
     private WebView webView;
     private JsExecUtil jsExecUtil;
-    private LocalHttpServer localHttpServer;
-    private int serverPort;
+    private WebAppInterface webAppInterface;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -58,57 +54,11 @@ public class MainActivity extends AppCompatActivity {
         webviewInit();
         jsExecUtil = new JsExecUtil(webView);
         // 加载本地文件（确保文件在 assets 目录）
-//        webView.loadUrl("file:///android_asset/index2.html");
-        webView.loadUrl("file:///android_asset/index.html");
+        webView.loadUrl("file:///android_asset/index2.html");
 
-
-        // 启动HTTP服务器
-//        startHttpServer();
-
-        // 加载页面
-//        loadLocalContent();
+        webAppInterface.openFolderPicker();
     }
 
-    private void startHttpServer() {
-        // 寻找可用端口（范围8080-8090）
-        int port = PortFinder.findAvailablePort(8080, 8090);
-
-        if (port == 0) {
-            // 没有找到可用端口，使用默认值但可能有风险
-            port = 8080;
-        }
-
-        this.serverPort = port;
-
-        // 创建并启动服务器
-        localHttpServer = new LocalHttpServer(port, getApplicationContext());
-        try {
-            localHttpServer.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-
-            // 如果启动失败尝试+1的端口
-            if (port < 8090) {
-                serverPort = port + 1;
-                localHttpServer = new LocalHttpServer(serverPort, getApplicationContext());
-                try {
-                    localHttpServer.start();
-                } catch (IOException ex) {
-                    // 仍失败则放弃
-                }
-            }
-        }
-    }
-
-    private void loadLocalContent() {
-        if (localHttpServer != null && localHttpServer.isAlive()) {
-            // 加载服务器的主页（index.html）
-            webView.loadUrl("http://localhost:" + serverPort + "/index.html");
-        } else {
-            // 如果服务器启动失败，尝试本地文件加载（作为备选方案）
-            webView.loadUrl("file:///android_asset/index.html");
-        }
-    }
 
     @Override
     protected void onDestroy() {
@@ -120,10 +70,266 @@ public class MainActivity extends AppCompatActivity {
             webView = null;
         }
 
-        // 停止HTTP服务器
-        if (localHttpServer != null) {
-            localHttpServer.stop();
+
+    }
+
+    List<DirectoryItem> rootChild;
+    DirectoryItem root;
+
+    @SuppressLint("WrongConstant")
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 123 && resultCode == RESULT_OK) {
+            if (data != null) {
+                Uri uri = data.getData();
+                // 获取持久化权限
+                getContentResolver().takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                );
+
+                String rootDocId = DocumentsContract.getTreeDocumentId(uri);
+
+                rootChild = getChildrenByDocId(uri, rootDocId);
+                root = new DirectoryItem("上级目录", uri, rootDocId, 0, 0, true);
+
+                jsExecUtil.setData("root", DirectoryItem.toJson(root));
+                sendFilesToWebView(rootChild);
+            }
         }
+    }
+
+
+    // 修改 sendFilesToWebView 方法
+    private void sendFilesToWebView(List<DirectoryItem> list) {
+        JSONArray fileArray = new JSONArray();
+        // 添加文件列表
+        for (DirectoryItem item : list) {
+            fileArray.put(DirectoryItem.toJson(item));
+        }
+        // 将数据传递给WebView
+        jsExecUtil.setData("files", fileArray);
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack(); // 如果 WebView 可以返回上一页，则返回
+        } else {
+            super.onBackPressed(); // 否则按默认行为退出 Activity
+        }
+    }
+
+
+    private void printDirectoryTree(Uri treeUri) {
+        String rootDocId = DocumentsContract.getTreeDocumentId(treeUri);
+
+        Log.d("MainActivity", "printDirectoryTree: rootDocID " + rootDocId);
+        printDirectoryLevel(treeUri, rootDocId, 0, 2);
+    }
+
+    private void printDirectoryLevel(Uri treeUri, String docId, int currentDepth, int maxDepth) {
+        if (currentDepth > maxDepth) {
+            return;
+        }
+
+        ContentResolver resolver = getContentResolver();
+        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, docId);
+
+        Cursor cursor = resolver.query(
+                childrenUri,
+                new String[]{
+                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                        DocumentsContract.Document.COLUMN_MIME_TYPE
+                },
+                null, null, null
+        );
+
+        try {
+            while (cursor != null && cursor.moveToNext()) {
+                String childDocId = cursor.getString(0);
+
+                Log.d("MainActivity", "printDirectoryLevel:childDocId:  " + childDocId);
+                String name = cursor.getString(1);
+                String mimeType = cursor.getString(2);
+
+                // 打印当前项目（带缩进）
+                StringBuilder prefix = new StringBuilder();
+                for (int i = 0; i < currentDepth; i++) {
+                    prefix.append("    ");
+                }
+                Log.d("TREE", prefix.toString() + "├── " + name);
+
+                // 如果是目录且未达到最大深度，递归打印子目录
+                if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType) && currentDepth < maxDepth) {
+                    printDirectoryLevel(treeUri, childDocId, currentDepth + 1, maxDepth);
+                }
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+
+    @SuppressLint("Range")
+    private List<DirectoryItem> getChildrenByDocId(Uri treeUri, String docId) {
+
+        List<DirectoryItem> list = new ArrayList<>();
+        ContentResolver resolver = getContentResolver();
+
+
+        // 先查询当前 docId 的 mimeType，判断是否是目录
+        Cursor selfCursor = resolver.query(
+                DocumentsContract.buildDocumentUriUsingTree(treeUri, docId),
+                new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE},
+                null, null, null
+        );
+
+        boolean isDir = false;
+        if (selfCursor != null) {
+            if (selfCursor.moveToFirst()) {
+                String mimeType = selfCursor.getString(0);
+                isDir = DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType);
+            }
+            selfCursor.close();
+        }
+
+        // 如果不是目录，直接返回空列表
+        if (!isDir) {
+
+            Log.d("MainActivity", "getChildrenByDocId:  " + docId + " 不是目录");
+            return list;
+        }
+
+
+        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, docId);
+
+        Cursor cursor = resolver.query(
+                childrenUri,
+                new String[]{
+                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                        DocumentsContract.Document.COLUMN_MIME_TYPE,
+                        DocumentsContract.Document.COLUMN_SIZE,
+                        DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+                },
+                null, null, null
+        );
+
+        try {
+            while (cursor != null && cursor.moveToNext()) {
+                String childDocId = cursor.getString(cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID));
+                String name = cursor.getString(cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME));
+                String mimeType = cursor.getString(cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE));
+                long size = cursor.getLong(cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE));
+                long lastModified = cursor.getLong(cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED));
+                boolean isDirectory = DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType);
+
+                list.add(new DirectoryItem(name, treeUri, childDocId, size, lastModified, isDirectory));
+
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+
+        Collections.sort(list, new Comparator<DirectoryItem>() {
+            @Override
+            public int compare(DirectoryItem o1, DirectoryItem o2) {
+
+                //对list排序，如果isDirectory=true，排在前面，其次再按照name排序
+                if (o1.isDirectory() && !o2.isDirectory()) {
+                    return -1;
+                }
+                if (!o1.isDirectory() && o2.isDirectory()) {
+                    return 1;
+                }
+                return o1.getName().compareTo(o2.getName());
+
+            }
+        });
+
+        return list;
+    }
+
+
+    class WebAppInterface {
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @JavascriptInterface
+        public void openFolderPicker() {
+            // 启动目录选择器
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            Uri rootUri = Uri.parse("content://com.android.externalstorage.documents/root/primary");
+            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, rootUri);
+            startActivityForResult(intent, 123);
+        }
+
+
+        @JavascriptInterface
+        public void toast(String toast) {
+            Toast.makeText(MainActivity.this, toast, Toast.LENGTH_SHORT).show();
+        }
+
+        @JavascriptInterface
+        public void userClick(String jsonStr) throws JSONException {
+            Log.d("userClick", "userClick: " + jsonStr);
+            JSONArray jsonArray = new JSONArray(jsonStr);
+        }
+
+        @JavascriptInterface
+        public void intoChild(String targetDirJson) {
+
+        Log.d("WebAppInterface", "intoChild: ");
+            try {
+                //转换 DirectoryItem
+                DirectoryItem targetDir = DirectoryItem.fromJson(new JSONObject(targetDirJson));
+                List<DirectoryItem> childrenByDocId = getChildrenByDocId(targetDir.getTreeUri(), targetDir.getDocId());
+
+                runOnUiThread(() -> {
+                    // 发送新目录的内容
+                    sendFilesToWebView(childrenByDocId);
+                });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @JavascriptInterface
+        public void intoParent(String parentDirJson) {
+
+            
+            Log.d("WebAppInterface", "intoParent: ");
+            try {
+                if (parentDirJson == null) {
+                    runOnUiThread(() -> {
+                        // 发送新目录的内容
+                        sendFilesToWebView(rootChild);
+                    });
+                    return;
+                }
+                //转换 DirectoryItem
+                DirectoryItem parentDir = DirectoryItem.fromJson(new JSONObject(parentDirJson));
+
+                Log.d("WebAppInterface", "intoParent: " + parentDir.getDocId());
+                List<DirectoryItem> childrenByDocId = getChildrenByDocId(parentDir.getTreeUri(), parentDir.getDocId());
+
+                runOnUiThread(() -> {
+                    // 发送新目录的内容
+                    sendFilesToWebView(childrenByDocId);
+                });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+
     }
 
     private void webviewInit() {
@@ -171,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("---->  MainActivity",
                         request.getUrl().toString()
 
-            );
+                );
                 Log.d("---->  MainActivity", String.valueOf(error.getErrorCode()));
             }
 
@@ -192,108 +398,11 @@ public class MainActivity extends AppCompatActivity {
                 //);
             }
         });
+        webAppInterface = new WebAppInterface();
         // 添加 JS 接口，"Android" 是接口名，JS 中通过这个名称调用
-        webView.addJavascriptInterface(new WebAppInterface(), "Android");
+        webView.addJavascriptInterface(webAppInterface, "Android");
 
 
     }
 
-
-    @SuppressLint("WrongConstant")
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 123 && resultCode == RESULT_OK) {
-            if (data != null) {
-                Uri uri = data.getData();
-                // 获取持久化权限
-                getContentResolver().takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                );
-
-                // 处理选择的文件/目录
-                Log.d("onActivityResult: ", uri.toString());
-                sendFilesToWebView(uri);
-            }
-        }
-    }
-
-    public String getUserFriendlyPath(Context context, Uri treeUri) {
-        String baseName = "External Storage";
-
-        // Android 10+ 获取卷名称
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            StorageManager sm = (StorageManager) context.getSystemService(STORAGE_SERVICE);
-            StorageVolume volume = sm.getStorageVolume(treeUri);
-            if (volume != null) baseName = volume.getDescription(context);
-        }
-
-        // 解析路径段（示例：primary:Android/data → Android/data）
-        String documentId = DocumentsContract.getTreeDocumentId(treeUri);
-        String subPath = documentId.contains(":")
-                ? documentId.split(":")[1]
-                : documentId;
-
-        return baseName + File.separator + subPath;
-    }
-
-    // 在获取文件列表后，将数据转换为JSON格式传递给WebView
-    private void sendFilesToWebView(Uri folderUri) {
-        DocumentFile file = DocumentFile.fromTreeUri(this, folderUri);
-        JSONArray fileArray = new JSONArray();
-
-        JSONObject fileObj = new JSONObject();
-        try {
-            fileObj.put("name", getUserFriendlyPath(this, folderUri));
-            fileObj.put("uri", file.getUri().toString());
-            fileObj.put("type", file.getType());
-            fileObj.put("size", file.length());
-            fileObj.put("lastModified", file.lastModified());
-            fileArray.put(fileObj);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        // 将数据传递给WebView
-        String jsonData = fileArray.toString();
-        Log.d("sendFilesToWebView", jsonData);
-        jsExecUtil.setData("files", fileArray);
-
-
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack(); // 如果 WebView 可以返回上一页，则返回
-        } else {
-            super.onBackPressed(); // 否则按默认行为退出 Activity
-        }
-    }
-
-
-    class WebAppInterface {
-        @JavascriptInterface
-        public void openFolderPicker() {
-            // 启动目录选择器
-            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            Uri rootUri = Uri.parse("content://com.android.externalstorage.documents/root/primary");
-            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, rootUri);
-            startActivityForResult(intent, 123);
-        }
-
-
-        @JavascriptInterface
-        public void toast(String toast) {
-            Toast.makeText(MainActivity.this, toast, Toast.LENGTH_SHORT).show();
-        }
-
-        @JavascriptInterface
-        public void userClick(String jsonStr) throws JSONException {
-            Log.d("userClick", "userClick: " + jsonStr);
-            JSONArray jsonArray = new JSONArray(jsonStr);
-        }
-
-    }
 }
