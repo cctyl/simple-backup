@@ -35,6 +35,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -269,7 +271,26 @@ public class MainActivity extends AppCompatActivity {
 
         return list;
     }
-
+    public String getFileMD5(Uri fileUri) {
+        ContentResolver resolver = getContentResolver();
+        try (InputStream is = resolver.openInputStream(fileUri)) {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            byte[] byteArray = new byte[1024];
+            int bytesCount;
+            while ((bytesCount = is.read(byteArray)) != -1) {
+                md5.update(byteArray, 0, bytesCount);
+            }
+            byte[] bytes = md5.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     class WebAppInterface {
         @RequiresApi(api = Build.VERSION_CODES.O)
@@ -319,6 +340,24 @@ public class MainActivity extends AppCompatActivity {
                     // 发送新目录的内容
                     sendFilesToWebView(childrenByDocId);
                 });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        @JavascriptInterface
+        public void getMd5(String targetDirJson) {
+
+            Log.d("WebAppInterface", "getMd5: ");
+            try {
+                //转换 DirectoryItem
+                DirectoryItem targetDir = DirectoryItem.fromJson(new JSONObject(targetDirJson));
+                Uri uri = DocumentsContract.buildDocumentUriUsingTree(targetDir.getTreeUri(), targetDir.getDocId());
+                String fileMD5 = getFileMD5(uri);
+
+                toast( targetDir.getName() +"的md5是："+fileMD5);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }

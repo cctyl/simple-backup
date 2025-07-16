@@ -48,6 +48,20 @@
             padding: 2px 6px;
         }
 
+        .float-btn{
+            position: fixed;
+            border-radius: 50%;
+            height: 100px;
+            width: 100px;
+            bottom: 20px;
+            right: 20px;
+            background-color: pink;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
     </style>
     <script>
 
@@ -65,11 +79,11 @@
             </label>
         </li>
         <li v-for="(item, index) in files" :key="index">
-            <div style="display: flex; align-items: center;">
+            <div style="display: flex; align-items: center;" @click="getMd5(item)">
                 <!-- 目录图标 -->
                 <span v-if="item.isDirectory" style="margin-right: 10px;">📁</span>
                 <!-- 文件图标 -->
-                <span v-else style="margin-right: 10px;">📄</span>
+                <span v-else style="margin-right: 10px;" >📄</span>
 
                 <!-- 点击事件绑定 -->
                 <label @click="toChild(item)" v-if="item.isDirectory" style="cursor: pointer;">
@@ -91,6 +105,9 @@
 
     </ul>
 
+    <div >
+        <button class="float-btn">选好了</button>
+    </div>
 </div>
 
 <script>
@@ -163,7 +180,15 @@
             formatDate(timestamp) {
                 const date = new Date(timestamp);
                 return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-            }
+            },
+
+            getMd5(item) {
+                if (!item.isDirectory){
+                    console.log("获取md5")
+                    Android.getMd5(JSON.stringify(item))
+                }
+
+            },
         }
     });
 </script>
