@@ -1,4 +1,4 @@
-package com.example.myapplication.entity;
+package io.github.cctyl.backup.entity;
 
 import android.net.Uri;
 

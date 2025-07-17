@@ -1,4 +1,4 @@
-package com.example.myapplication.act;
+package io.github.cctyl.backup.act;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -13,7 +13,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
@@ -27,9 +26,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import com.example.myapplication.R;
-import com.example.myapplication.entity.DirectoryItem;
-import com.example.myapplication.utils.JsExecUtil;
+import io.github.cctyl.backup.R;
+import io.github.cctyl.backup.entity.DirectoryItem;
+import io.github.cctyl.backup.utils.JsExecUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;

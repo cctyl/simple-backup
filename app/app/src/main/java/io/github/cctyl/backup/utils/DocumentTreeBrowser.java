@@ -1,11 +1,11 @@
-package com.example.myapplication.utils;
+package io.github.cctyl.backup.utils;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.DocumentsContract;
 
-import com.example.myapplication.entity.DirectoryItem;
+import io.github.cctyl.backup.entity.DirectoryItem;
 
 import java.util.ArrayList;
 import java.util.List;

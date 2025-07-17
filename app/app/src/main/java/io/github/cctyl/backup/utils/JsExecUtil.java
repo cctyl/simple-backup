@@ -1,13 +1,9 @@
-package com.example.myapplication.utils;
+package io.github.cctyl.backup.utils;
 
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

@@ -14,7 +14,7 @@ npm-debug.log.*
 /.awcache/*
 /.cache-loader/*
 /logs
-
+.idea
 /temp
 ######################
 # SASS
@@ -60,7 +60,7 @@ local.properties
 ######################
 # IntelliJ
 ######################
-.idea/
+.idea/*
 *.iml
 *.iws
 *.ipr
@@ -161,3 +161,11 @@ application-dev.yml
 
 *.exe
 .env
+
+**/.idea
+
+
+debug
+
+
+target
