@@ -1,6 +1,8 @@
 
 
 
+use std::fmt::Debug;
+
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +27,7 @@ impl UserRole {
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow,sqlx::Type)]
 pub struct User{
 
-    pub id:uuid::Uuid,
+    pub id:i64,
     pub name:String,
     pub email:String,
     pub password:String,
