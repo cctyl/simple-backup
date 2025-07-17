@@ -160,7 +160,6 @@ bili-recomm.db-journal
 application-dev.yml
 
 *.exe
-.env
 
 **/.idea
 

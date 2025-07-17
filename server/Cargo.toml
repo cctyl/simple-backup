@@ -13,10 +13,10 @@ jsonwebtoken = "9.2.0" # JWT处理
 serde = { version = "1.0.183", features = ["derive"] }
 serde_json = "1.0.104"
 sqlx = { version = "0.8.1", features = [
-    "runtime-async-std",
+    "runtime-tokio",
     "tls-rustls-ring-webpki",
     "uuid",
-    "postgres",
+    "sqlite",
     "chrono",
 ] } #数据库操作
 uuid = { version = "1.4.1", features = ["serde", "v4"] } # 数据库id

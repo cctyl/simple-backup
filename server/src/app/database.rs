@@ -1,12 +1,11 @@
 use std::sync::{LazyLock, OnceLock};
 
-use sqlx::postgres::PgPoolOptions;
+use sqlx::{SqlitePool, sqlite::SqlitePoolOptions};
 use tokio::runtime::Runtime;
 
+static POOL: OnceLock<sqlx::Pool<sqlx::Sqlite>> = OnceLock::new();
 
-static POOL: OnceLock<sqlx::Pool<sqlx::Postgres>> = OnceLock::new();
-
-pub fn get_db() -> &'static sqlx::Pool<sqlx::Postgres> {
+pub fn get_db() -> &'static sqlx::Pool<sqlx::Sqlite> {
     POOL.get_or_init(|| {
         let database_url = std::env::var("DATABASE_URL").expect("数据库链接不能为空");
         let rt = tokio::runtime::Builder::new_current_thread()
@@ -14,7 +13,7 @@ pub fn get_db() -> &'static sqlx::Pool<sqlx::Postgres> {
             .build()
             .unwrap();
         rt.block_on(async {
-            match PgPoolOptions::new()
+            match SqlitePoolOptions::new()
                 .max_connections(10)
                 .connect(&database_url)
                 .await
