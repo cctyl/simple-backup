@@ -3,13 +3,13 @@ use axum::{Extension, Router, middleware};
 
 use crate::{app:: error::HttpError, app::middleware::auth, app::response::R};
 
-pub mod user;
 
+pub mod file;
 pub fn create_router() -> Router {
     let api_router = Router::new()
         .nest(
-            "/users",
-            user::create_router()
+            "/file",
+            file::create_router()
         )
         .fallback(async || -> R<()> {
             Err(HttpError::BadRequest("Not found".to_string()))

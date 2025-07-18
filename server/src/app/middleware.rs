@@ -12,13 +12,9 @@ use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::{error::{ErrorMessage, HttpError}, response::R}, entity::models::User, AppState
+    app::{error::{ErrorMessage, HttpError}, response::R}, AppState
 };
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct JWTAuthMiddeware {
-    pub user: User,
-}
 
 pub async fn auth(
     Extension(app_state): Extension<Arc<AppState>>,
@@ -37,14 +33,15 @@ pub async fn auth(
         }
     });
 
-    let token = token
-        .ok_or_else(|| HttpError::Unauthorized(ErrorMessage::TokenNotProvided.to_string()))?;
+    //TODO 暂时关闭验证
+    // let token = token
+    //     .ok_or_else(|| HttpError::Unauthorized(ErrorMessage::TokenNotProvided.to_string()))?;
 
     
-    if token!= app_state.env.secret{
-        info!("访问失败：token={}",token);
-        return Err(HttpError::Unauthorized(ErrorMessage::InvalidToken.to_string()));
-    } 
+    // if token!= app_state.env.secret{
+    //     info!("访问失败：token={}",token);
+    //     return Err(HttpError::Unauthorized(ErrorMessage::InvalidToken.to_string()));
+    // } 
 
 
 

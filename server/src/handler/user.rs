@@ -1,4 +1,4 @@
-use std::sync::Arc;
+/* use std::sync::Arc;
 
 use axum::{extract::Query, middleware, response::IntoResponse, routing::*, Extension, Json, Router};
 use axum_valid::Valid;
@@ -122,3 +122,4 @@ pub async fn update_user_role(
 
     Ok(Json(response))
 }
+ */

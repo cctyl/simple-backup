@@ -3,7 +3,6 @@ use core::str;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::entity::models::{User, UserRole};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Validate)]
 pub struct RegisterUserDto {
@@ -55,23 +54,7 @@ pub struct FilterUserDto {
     pub updated_at: DateTime<Utc>,
 }
 
-impl FilterUserDto {
-    pub fn filter_user(user: &User) -> Self {
-        FilterUserDto {
-            id: user.id.to_string(),
-            name: user.name.to_owned(),
-            email: user.email.to_owned(),
-            role: user.role.to_str().to_string(),
-            verified: user.verified,
-            created_at: user.created_at.unwrap(),
-            updated_at: user.updated_at.unwrap(),
-        }
-    }
 
-    pub fn filter_users(users: &[User]) -> Vec<Self> {
-        users.iter().map(Self::filter_user).collect()
-    }
-}
 
 #[derive(Validate, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct LoginUserDto {
@@ -132,18 +115,7 @@ pub struct NameUpdateDto {
     pub name: String,
 }
 
-#[derive(Validate, Debug, Clone, Serialize, Deserialize)]
-pub struct RoleUpdateDto {
-    #[validate(custom(function = "validate_user_role"))]
-    pub role: UserRole,
-}
 
-fn validate_user_role(role: &UserRole) -> Result<(), validator::ValidationError> {
-    match role {
-        UserRole::Admin | UserRole::User => Ok(()),
-        // _ => Err(validator::ValidationError::new("无效的用户角色")),
-    }
-}
 
 #[derive(Validate, Debug, Clone, Serialize, Deserialize)]
 pub struct ForgotPasswordRequestDto {
