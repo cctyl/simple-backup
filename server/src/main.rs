@@ -19,9 +19,8 @@ use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
 use tower_http::{
     cors::{self, CorsLayer},
-    trace::TraceLayer,
 };
-use tracing_subscriber::filter::LevelFilter;
+
 
 #[derive(Debug)]
 pub struct AppState {
@@ -61,9 +60,7 @@ fn init_config() -> Config {
 }
 
 fn build_router(config: Config) -> Router {
-    tracing_subscriber::fmt()
-        .with_max_level(LevelFilter::DEBUG)
-        .init();
+
     let cors = CorsLayer::new()
         .allow_origin(cors::Any)
         .allow_methods(cors::Any)
@@ -78,4 +75,6 @@ fn build_router(config: Config) -> Router {
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .layer(Extension(Arc::new(app_state)))
+
+
 }

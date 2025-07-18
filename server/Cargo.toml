@@ -6,12 +6,11 @@ edition = "2024"
 [dependencies]
 
 
-log = "0.4.27"
-chrono = { version = "0.4.26", features = ["serde"] } #处理时间戳
-dotenv = "0.15.0" #加载环境变量
-jsonwebtoken = "9.2.0" # JWT处理
-serde = { version = "1.0.183", features = ["derive"] }
-serde_json = "1.0.104"
+# rbs = { version = "4.5"}
+# rbatis = { version = "4.5",features = ["debug_mode"]}
+# rbdc-sqlite = { version = "4.5" }
+# fast_log = "1.6"
+
 sqlx = { version = "0.8.1", features = [
     "runtime-tokio",
     "tls-rustls-ring-webpki",
@@ -19,7 +18,19 @@ sqlx = { version = "0.8.1", features = [
     "sqlite",
     "chrono",
 ] }
-uuid = { version = "1.4.1", features = ["serde", "v4"] } # 数据库id
+
+
+
+log = "0.4.27"
+chrono = { version = "0.4.26", features = ["serde"] } #处理时间戳
+dotenv = "0.15.0" #加载环境变量
+jsonwebtoken = "9.2.0" # JWT处理
+serde = { version = "1.0.183", features = ["derive"] }
+serde_json = "1.0.104"
+
+
+
+
 validator = { version = "0.20.0", features = ["derive"] }
 axum-valid = { version = "0.23.0", features = ["full_validator"] }
 axum = { version = "0.8.4", features = ["macros"] }
@@ -27,9 +38,7 @@ axum = { version = "0.8.4", features = ["macros"] }
 tokio = { version = "1.39.3", features = ["full"] }
 tower = { version = "0.5.0" }
 time = "0.3.20"
-tower-http = { version = "0.5.2", features = ["cors", "trace"] }
-tracing = { version = "0.1.41", features = ["async-await"] }
-tracing-subscriber = { version = "0.3.19", features = ["env-filter", "chrono"] }
+tower-http = { version = "0.5.2", features = ["cors"] }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
 bytesize = "2.0.1"
