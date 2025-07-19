@@ -1,32 +1,27 @@
 use std::sync::{LazyLock, OnceLock};
 
-use sqlx::{SqlitePool, sqlite::SqlitePoolOptions};
+use rbatis::RBatis;
+use rbdc_sqlite::Driver;
+use rbdc_sqlite::driver::SqliteDriver;
 use tokio::runtime::Runtime;
 
-static POOL: OnceLock<sqlx::Pool<sqlx::Sqlite>> = OnceLock::new();
+use crate::app::config::Config;
 
-pub fn get_db() -> &'static sqlx::Pool<sqlx::Sqlite> {
-    POOL.get_or_init(|| {
-        let database_url = std::env::var("DATABASE_URL").expect("数据库链接不能为空");
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
+pub struct AppContext {
+    pub rb: RBatis,
+    pub config: Config,
+}
+pub static CONTEXT: LazyLock<AppContext> = LazyLock::new(|| AppContext {
+    rb: RBatis::new(),
+    config: Config::new(),
+});
+
+impl AppContext {
+    pub async fn init(&self) {
+        &self
+            .rb
+            .link(SqliteDriver {}, &self.config.db_url)
+            .await
             .unwrap();
-        rt.block_on(async {
-            match SqlitePoolOptions::new()
-                .max_connections(10)
-                .connect(&database_url)
-                .await
-            {
-                Ok(pool) => {
-                    println!("数据库连接成功");
-                    pool
-                }
-                Err(err) => {
-                    eprintln!("数据库连接失败: {}", err);
-                    std::process::exit(1);
-                }
-            }
-        })
-    })
+    }
 }

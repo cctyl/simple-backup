@@ -4,7 +4,7 @@ CREATE TABLE file (
   "name" TEXT NOT NULL,
   "doc_id" TEXT NOT NULL,
   "relative_path" TEXT NOT NULL,
-  "is_directory" TEXT NOT NULL,
+  "is_directory" boolean NOT NULL,
   "md5" TEXT NOT NULL,
   PRIMARY KEY ("id")
 );

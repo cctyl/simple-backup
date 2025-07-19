@@ -1,0 +1,29 @@
+<html>
+
+<head>
+
+</head>
+
+<body>
+
+
+    <form action="http://localhost:8082/api/file/upload" method="post" enctype="multipart/form-data">
+        <input type="text" name="name" value="TestName" />
+        <input type="text" name="treeUri" value="http://example.com" />
+        <input type="text" name="docId" value="123456" />
+        <input type="text" name="md5" value="abcdef1234567890" />
+        <input type="text" name="releactivePath" value="/path/to/file" />
+        <input type="checkbox" name="isDirectory" value="true" checked />
+        <input type="file" name="file" />
+        <button type="submit">Submit</button>
+    </form>
+     <form action="http://localhost:8082/api/file/upload" method="post" enctype="multipart/form-data">
+        <label>
+            上传文件(仅支持图片上传)：
+            <input type="file" name="file">
+        </label>
+        <button type="submit">上传文件</button>
+    </form>
+</body>
+
+</html>

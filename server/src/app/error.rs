@@ -1,11 +1,10 @@
 use std::fmt::Display;
 
 use axum::{
-    Json,
-    http::StatusCode,
-    response::{IntoResponse, Response},
+    extract::multipart::MultipartError, http::StatusCode, response::{IntoResponse, Response}, Json
 };
 
+use log::{error, info};
 use thiserror::Error;
 use validator::ValidationErrors;
 
@@ -76,16 +75,15 @@ pub enum HttpError {
 }
 
 
-impl From<uuid::Error> for HttpError {
-    fn from(e: uuid::Error) -> Self {
-        HttpError::Unauthorized(e.to_string())
+impl From<std::io::Error> for HttpError  {
+    fn from(e: std::io::Error) -> Self {
+          HttpError::ServerError(format!("io error:{}",e.to_string()))
     }
 }
 
-impl From<sqlx::Error> for HttpError{
-    fn from(e: sqlx::Error) -> Self {
-    
-        HttpError::ServerError(e.to_string())
+impl From<MultipartError> for HttpError  {
+    fn from(e: MultipartError) -> Self {
+          HttpError::ServerError(format!("io error:{}",e.to_string()))
     }
 }
 
@@ -100,7 +98,11 @@ impl From<ValidationErrors> for HttpError {
     }
 }
 
-
+impl From<rbs::Error> for HttpError{
+    fn from(e: rbs::Error) -> Self {
+        HttpError::ServerError(format!("database error:{}",e.to_string()))
+    }
+}
 
 
 impl HttpError {
@@ -125,7 +127,7 @@ impl IntoResponse for HttpError {
             message: self.to_string(),
             data: None,
         });
-
+        error!(" {}",self.to_string());
         (status_code, json).into_response()
     }
 }

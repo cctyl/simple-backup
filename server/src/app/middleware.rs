@@ -12,12 +12,11 @@ use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::{error::{ErrorMessage, HttpError}, response::R}, AppState
+    app::{error::{ErrorMessage, HttpError}, response::R}
 };
 
 
 pub async fn auth(
-    Extension(app_state): Extension<Arc<AppState>>,
     mut req: Request,
     next: Next,
 ) -> R<impl IntoResponse> {

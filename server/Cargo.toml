@@ -6,18 +6,12 @@ edition = "2024"
 [dependencies]
 
 
-# rbs = { version = "4.5"}
-# rbatis = { version = "4.5",features = ["debug_mode"]}
-# rbdc-sqlite = { version = "4.5" }
-# fast_log = "1.6"
+rbs = { version = "4.5"}
+rbatis = { version = "4.5",features = ["debug_mode"]}
+rbdc-sqlite = { version = "4.5" }
+fast_log = "1.6"
 
-sqlx = { version = "0.8.1", features = [
-    "runtime-tokio",
-    "tls-rustls-ring-webpki",
-    "uuid",
-    "sqlite",
-    "chrono",
-] }
+
 
 
 
@@ -33,7 +27,7 @@ serde_json = "1.0.104"
 
 validator = { version = "0.20.0", features = ["derive"] }
 axum-valid = { version = "0.23.0", features = ["full_validator"] }
-axum = { version = "0.8.4", features = ["macros"] }
+axum = { version = "0.8.4", features = ["macros","multipart"] }
 # axum-extra = { version = "0.9.3", features = ["cookie"] }
 tokio = { version = "1.39.3", features = ["full"] }
 tower = { version = "0.5.0" }
@@ -42,3 +36,4 @@ tower-http = { version = "0.5.2", features = ["cors"] }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
 bytesize = "2.0.1"
+idgenerator = "2.0.0"
