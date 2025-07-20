@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import io.github.cctyl.backup.R;
 import io.github.cctyl.backup.entity.DirectoryItem;
+import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
 
 import org.json.JSONArray;
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private JsExecUtil jsExecUtil;
     private WebAppInterface webAppInterface;
     SharedPreferences sharedPreference;
+
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //2.获得SharedPreferences的编辑器
                 SharedPreferences.Editor edit = sharedPreference.edit();
-                edit.putString("uri",uri.toString());
+                edit.putString("uri", uri.toString());
                 edit.apply();
                 initRootFileList(uri);
             }
@@ -105,10 +107,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initRootFileList(Uri uri) {
+        //根节点的初始化
         String rootDocId = DocumentsContract.getTreeDocumentId(uri);
-        rootChild = getChildrenByDocId(uri, rootDocId);
-        root = new DirectoryItem("上级目录", uri, rootDocId, 0, 0, true);
-        jsExecUtil.setData("root", DirectoryItem.toJson(root));
+        root = new DirectoryItem("根目录", uri, rootDocId, 0, 0, true, rootDocId,"/");
+        jsExecUtil.setData("root", GsonUtils.toJsonObject(root));
+
+        //拿到根目录下面的文件数据
+        rootChild = getChildrenByDocId(uri, rootDocId, rootDocId);
         sendFilesToWebView(rootChild);
     }
 
@@ -118,10 +123,11 @@ public class MainActivity extends AppCompatActivity {
         JSONArray fileArray = new JSONArray();
         // 添加文件列表
         for (DirectoryItem item : list) {
-            fileArray.put(DirectoryItem.toJson(item));
+            fileArray.put(GsonUtils.toJsonObject(item));
         }
+
         // 将数据传递给WebView
-        jsExecUtil.setData("files", fileArray);
+        jsExecUtil.setData("files",fileArray);
 
     }
 
@@ -189,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     @SuppressLint("Range")
-    private List<DirectoryItem> getChildrenByDocId(Uri treeUri, String docId) {
+    private List<DirectoryItem> getChildrenByDocId(Uri treeUri, String parentDocId, String rootDocId) {
 
         List<DirectoryItem> list = new ArrayList<>();
         ContentResolver resolver = getContentResolver();
@@ -197,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 先查询当前 docId 的 mimeType，判断是否是目录
         Cursor selfCursor = resolver.query(
-                DocumentsContract.buildDocumentUriUsingTree(treeUri, docId),
+                DocumentsContract.buildDocumentUriUsingTree(treeUri, parentDocId),
                 new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE},
                 null, null, null
         );
@@ -214,12 +220,12 @@ public class MainActivity extends AppCompatActivity {
         // 如果不是目录，直接返回空列表
         if (!isDir) {
 
-            Log.d("MainActivity", "getChildrenByDocId:  " + docId + " 不是目录");
+            Log.d("MainActivity", "getChildrenByDocId:  " + parentDocId + " 不是目录");
             return list;
         }
 
 
-        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, docId);
+        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId);
 
         Cursor cursor = resolver.query(
                 childrenUri,
@@ -241,8 +247,9 @@ public class MainActivity extends AppCompatActivity {
                 long size = cursor.getLong(cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE));
                 long lastModified = cursor.getLong(cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED));
                 boolean isDirectory = DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType);
+                String relativePath = childDocId.replaceAll(rootDocId,"");
 
-                list.add(new DirectoryItem(name, treeUri, childDocId, size, lastModified, isDirectory));
+                list.add(new DirectoryItem(name, treeUri, childDocId, size, lastModified, isDirectory, rootDocId,relativePath));
 
             }
         } finally {
@@ -270,6 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
         return list;
     }
+
     public String getFileMD5(Uri fileUri) {
         ContentResolver resolver = getContentResolver();
         try (InputStream is = resolver.openInputStream(fileUri)) {
@@ -309,14 +317,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
-        public void init()  {
+        public void init() {
             String uri = sharedPreference.getString("uri", null);
-            if (uri == null){
+            if (uri == null) {
 
 
                 Log.d("MainActivity", "onCreate: 无数据，重新申请");
                 webAppInterface.openFolderPicker();
-            }else {
+            } else {
                 Uri u = Uri.parse(uri);
                 Log.d("MainActivity", "onCreate: 复用 ");
 
@@ -329,19 +337,16 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void intoChild(String targetDirJson) {
 
-        Log.d("WebAppInterface", "intoChild: ");
-            try {
-                //转换 DirectoryItem
-                DirectoryItem targetDir = DirectoryItem.fromJson(new JSONObject(targetDirJson));
-                List<DirectoryItem> childrenByDocId = getChildrenByDocId(targetDir.getTreeUri(), targetDir.getDocId());
+            Log.d("WebAppInterface", "intoChild: ");
+            //转换 DirectoryItem
+            DirectoryItem targetDir = GsonUtils.fromJson(targetDirJson, DirectoryItem.class);
+            List<DirectoryItem> childrenByDocId = getChildrenByDocId(targetDir.getTreeUri(), targetDir.getDocId(), targetDir.getRootDocId());
 
-                runOnUiThread(() -> {
-                    // 发送新目录的内容
-                    sendFilesToWebView(childrenByDocId);
-                });
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            runOnUiThread(() -> {
+                // 发送新目录的内容
+                sendFilesToWebView(childrenByDocId);
+            });
+
         }
 
 
@@ -349,45 +354,39 @@ public class MainActivity extends AppCompatActivity {
         public void getMd5(String targetDirJson) {
 
             Log.d("WebAppInterface", "getMd5: ");
-            try {
-                //转换 DirectoryItem
-                DirectoryItem targetDir = DirectoryItem.fromJson(new JSONObject(targetDirJson));
-                Uri uri = DocumentsContract.buildDocumentUriUsingTree(targetDir.getTreeUri(), targetDir.getDocId());
-                String fileMD5 = getFileMD5(uri);
+            //转换 DirectoryItem
+            DirectoryItem targetDir = GsonUtils.fromJson(targetDirJson, DirectoryItem.class);
+            Uri uri = DocumentsContract.buildDocumentUriUsingTree(targetDir.getTreeUri(), targetDir.getDocId());
+            String fileMD5 = getFileMD5(uri);
 
-                toast( targetDir.getName() +"的md5是："+fileMD5);
+            toast(targetDir.getName() + "的md5是：" + fileMD5);
 
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+
         }
 
         @JavascriptInterface
         public void intoParent(String parentDirJson) {
 
-            
+
             Log.d("WebAppInterface", "intoParent: ");
-            try {
-                if (parentDirJson == null) {
-                    runOnUiThread(() -> {
-                        // 发送新目录的内容
-                        sendFilesToWebView(rootChild);
-                    });
-                    return;
-                }
-                //转换 DirectoryItem
-                DirectoryItem parentDir = DirectoryItem.fromJson(new JSONObject(parentDirJson));
-
-                Log.d("WebAppInterface", "intoParent: " + parentDir.getDocId());
-                List<DirectoryItem> childrenByDocId = getChildrenByDocId(parentDir.getTreeUri(), parentDir.getDocId());
-
+            if (parentDirJson == null) {
                 runOnUiThread(() -> {
                     // 发送新目录的内容
-                    sendFilesToWebView(childrenByDocId);
+                    sendFilesToWebView(rootChild);
                 });
-            } catch (JSONException e) {
-                e.printStackTrace();
+                return;
             }
+            //转换 DirectoryItem
+            DirectoryItem parentDir = GsonUtils.fromJson(parentDirJson, DirectoryItem.class);
+
+            Log.d("WebAppInterface", "intoParent: " + parentDir.getDocId());
+            List<DirectoryItem> childrenByDocId = getChildrenByDocId(parentDir.getTreeUri(), parentDir.getDocId(), parentDir.getRootDocId());
+
+            runOnUiThread(() -> {
+                // 发送新目录的内容
+                sendFilesToWebView(childrenByDocId);
+            });
+
         }
 
 

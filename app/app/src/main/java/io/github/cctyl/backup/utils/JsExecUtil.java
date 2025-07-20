@@ -4,6 +4,9 @@ import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -88,7 +91,15 @@ public class JsExecUtil {
 
     }
 
-    public void setData(String key, Object value) {
+    /**
+     * 务必注意，如果传入的是json字符串，那么到js中也是字符串，而不是一个对象，
+     * 遍历会出现问题
+     *
+     * 如果想直接传递对象，则必须传递JsonObject
+     * @param key
+     * @param value
+     */
+    public void setDataString(String key, Object value) {
         //字符串类型的处理
         if (
                 value != null &&
@@ -98,6 +109,26 @@ public class JsExecUtil {
             Log.d("---->  JsExecUtil","是string"+value.getClass().getName()     );
             value = handleStringTransfer((String) value);
         }
+        String ling = "vue.setData('" + key + "'," + value + ")";
+        Log.d("---->  JsExecUtil", ling);
+        webView.evaluateJavascript(
+                ling,
+                null
+        );
+    }
+
+    public void setData(String key, JSONArray value) {
+
+        String ling = "vue.setData('" + key + "'," + value + ")";
+        Log.d("---->  JsExecUtil", ling);
+        webView.evaluateJavascript(
+                ling,
+                null
+        );
+    }
+
+    public void setData(String key, JSONObject value) {
+
         String ling = "vue.setData('" + key + "'," + value + ")";
         Log.d("---->  JsExecUtil", ling);
         webView.evaluateJavascript(

@@ -130,11 +130,14 @@
         mounted() {
 
             Android.init()
+
         },
         computed: {},
         methods: {
             setData(key, value) {
                 console.log("设置数据")
+                console.log("typeof="+typeof value)
+                console.log(value)
                 Vue.set(this.$data, key, value);
             },
 

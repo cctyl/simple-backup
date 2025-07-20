@@ -12,15 +12,26 @@ public class DirectoryItem {
     private long size;          //文件大小，byte
     private long lastModified;  //最后修改时间，时间戳
     private boolean isDirectory;//是否是目录
+    private String rootDocId;//是否是目录
+    private String relativePath;//是否是目录
 
+    public String getRootDocId() {
+        return rootDocId;
+    }
 
-    public DirectoryItem(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory) {
+    public void setRootDocId(String rootDocId) {
+        this.rootDocId = rootDocId;
+    }
+
+    public DirectoryItem(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory, String rootDocId, String relativePath) {
         this.name = name;
         this.treeUri = treeUri;
         this.docId = docId;
         this.size = size;
         this.lastModified = lastModified;
         this.isDirectory = isDirectory;
+        this.rootDocId = rootDocId;
+        this.relativePath = relativePath;
     }
 
     public String getName() {
@@ -71,32 +82,42 @@ public class DirectoryItem {
         isDirectory = directory;
     }
 
-    public static JSONObject toJson(DirectoryItem item) {
-        JSONObject parentObj = new JSONObject();
-        try {
-            parentObj.put("name", item.getName());
-            parentObj.put("docId", item.getDocId());
-            parentObj.put("treeUri", item.getTreeUri().toString());
-            parentObj.put("size", item.getSize());
-            parentObj.put("lastModified", item.getLastModified());
-            parentObj.put("isDirectory", item.isDirectory());
-            return parentObj;
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+    public String getRelativePath() {
+        return relativePath;
     }
 
-    public static DirectoryItem fromJson(JSONObject jsonObject) {
-        try {
-            String name = jsonObject.getString("name");
-            String docId = jsonObject.getString("docId");
-            Uri treeUri = Uri.parse(jsonObject.getString("treeUri"));
-            long size = jsonObject.getLong("size");
-            long lastModified = jsonObject.getLong("lastModified");
-            boolean isDirectory = jsonObject.getBoolean("isDirectory");
-            return new DirectoryItem(name, treeUri, docId, size, lastModified, isDirectory);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+    public void setRelativePath(String relativePath) {
+        this.relativePath = relativePath;
     }
+
+    //    public static JSONObject toJson(DirectoryItem item) {
+//        JSONObject parentObj = new JSONObject();
+//        try {
+//            parentObj.put("name", item.getName());
+//            parentObj.put("docId", item.getDocId());
+//            parentObj.put("treeUri", item.getTreeUri().toString());
+//            parentObj.put("size", item.getSize());
+//            parentObj.put("lastModified", item.getLastModified());
+//            parentObj.put("isDirectory", item.isDirectory());
+//            parentObj.put("rootDocId", item.getRootDocId());
+//            return parentObj;
+//        } catch (JSONException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    public static DirectoryItem fromJson(JSONObject jsonObject) {
+//        try {
+//            String name = jsonObject.getString("name");
+//            String docId = jsonObject.getString("docId");
+//            Uri treeUri = Uri.parse(jsonObject.getString("treeUri"));
+//            long size = jsonObject.getLong("size");
+//            long lastModified = jsonObject.getLong("lastModified");
+//            boolean isDirectory = jsonObject.getBoolean("isDirectory");
+//            String rootDocId = jsonObject.getString("rootDocId");
+//            return new DirectoryItem(name, treeUri, docId, size, lastModified, isDirectory,rootDocId);
+//        } catch (JSONException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }
