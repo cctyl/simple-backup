@@ -86,7 +86,7 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
             "treeUri" => tree_uri = Some(String::from_utf8_lossy(&data).to_string()),
             "docId" => doc_id = Some(String::from_utf8_lossy(&data).to_string()),
             "md5" => md5 = Some(String::from_utf8_lossy(&data).to_string()),
-            "releactivePath" => relative_path = Some(String::from_utf8_lossy(&data).to_string()),
+            "relativePath" => relative_path = Some(String::from_utf8_lossy(&data).to_string()),
             "isDirectory" => {
                 is_directory = String::from_utf8_lossy(&data)
                     .to_string()
@@ -95,6 +95,9 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
             }
             "file" => {
                  let path = relative_path.clone().ok_or(HttpError::BadRequest("必须提供releactivePath！".to_string()))?;
+                 if path=="/" {
+                    return RR::success(());
+                }
                     info!("path={path}");
                 let path = std::path::Path::new(&path);
                 if let Some(parent) = path.parent() {
