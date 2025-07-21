@@ -1,114 +1,488 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="icon" href="favicon.ico">
-    <title>sunofbeach_weapp</title>
-    <!--    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">-->
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <script src="./js/vconsole.min.js"></script>
-    <script>
-        // VConsole will be exported to `window.VConsole` by default.
-        var vConsole = new window.VConsole();
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>简单备份</title>
     <script src="./js/vue.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        ul {
-            list-style-type: none;
-            padding-left: 0;
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
-        li {
-            margin: 8px 0;
-        }
-
-        html, body {
-            overflow-x: hidden;
-        }
-
-        *,
-        *::before,
-        *::after {
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        label {
-            margin-right: 10px;
+        html body {
+            height: 100%;
         }
 
-        label:hover {
-            text-decoration: underline;
-            cursor: pointer;
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            /*min-height: 100vh;*/
+            padding: 0;
+
         }
 
-        button {
-            font-size: 12px;
-            padding: 2px 6px;
+        /* Android状态栏 */
+        .status-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+
+            height: 24px;
         }
 
-        .float-btn{
-            position: fixed;
-            border-radius: 50%;
-            height: 100px;
-            width: 100px;
-            bottom: 20px;
-            right: 20px;
-            background-color: pink;
+        /* 应用栏 */
+        .app-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: 56px;
+        }
+
+        .app-bar .title {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        /* 内容区域 */
+        .content {
+            margin: 0 auto;
+            padding: 16px;
+            padding-top: 0px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        /* 备份状态卡片 */
+        .backup-status {
+            position: relative;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: #34a853;
+        }
+
+        .status-indicator.warning {
+            background-color: #fbbc04;
+        }
+
+        .status-indicator.error {
+            background-color: #ea4335;
+        }
+
+        .backup-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .device-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            background-color: #e8f0fe;
+            color: #1a73e8;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-right: 16px;
         }
 
-    </style>
-    <script>
+        .device-icon i {
+            font-size: 24px;
+        }
 
-    </script>
+        .device-info {
+            flex: 1;
+        }
+
+        .device-name {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .device-model {
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .backup-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #5f6368;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        /* 无备份状态 */
+        .no-backup {
+            text-align: center;
+            padding: 24px 16px;
+        }
+
+        .no-backup-icon {
+            font-size: 64px;
+            color: #dadce0;
+            margin-bottom: 16px;
+        }
+
+        .no-backup-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #202124;
+        }
+
+        .no-backup-text {
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 24px;
+        }
+
+        /* 存储卡片 */
+        .storage-progress {
+            height: 8px;
+            background: #e8eaed;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .storage-bar {
+            height: 100%;
+            width: 65%;
+            background: #1a73e8;
+            border-radius: 4px;
+        }
+
+        .storage-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .storage-label {
+            color: #5f6368;
+        }
+
+        .storage-value {
+            font-weight: 500;
+        }
+
+        /* 主按钮 */
+        .primary-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            margin: 24px 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .primary-button i {
+            margin-right: 8px;
+        }
+
+        .primary-button:hover {
+            background: #1967d2;
+        }
+
+        .primary-button:active {
+            background: #185abc;
+        }
+
+        /* 快捷入口 */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .action-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-item:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: #e8f0fe;
+            color: #1a73e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+
+        .action-icon i {
+            font-size: 20px;
+        }
+
+        .action-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            text-align: center;
+            padding: 8px;
+            color: #5f6368;
+            font-size: 12px;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: #1a73e8;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        /* 状态切换 */
+        .state-toggle {
+            display: flex;
+            justify-content: center;
+            margin: 16px 0;
+        }
+
+        .toggle-btn {
+            background: #e8f0fe;
+            color: #1a73e8;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+
+            .backup-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
 </head>
 <body>
+
 <div id="app">
+    <!-- 应用栏 -->
+    <div class="app-bar">
+        <div class="title">云备份</div>
+    </div>
 
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 状态切换按钮 -->
+        <div class="state-toggle">
+            <button class="toggle-btn" @click="changeState">切换备份状态</button>
+        </div>
 
-    <h2>文件列表</h2>
-    <ul>
-        <li>
-            <label @click="intoParent" v-if="currentPath && currentPath.length>0">
-                返回上一级
-            </label>
-        </li>
-        <li v-for="(item, index) in files" :key="index">
-            <div style="display: flex; align-items: center;" @click="getMd5(item)">
-                <!-- 目录图标 -->
-                <span v-if="item.isDirectory" style="margin-right: 10px;">📁</span>
-                <!-- 文件图标 -->
-                <span v-else style="margin-right: 10px;" >📄</span>
-
-                <!-- 点击事件绑定 -->
-                <label @click="toChild(item)" v-if="item.isDirectory" style="cursor: pointer;">
-                    {{ item.name }}
-                </label>
-                <span v-else>{{ item.name }}</span>
-
-                <!-- 文件大小 -->
-                <span style="margin-left: auto; font-size: 12px; color: gray;">
-                    {{ formatSize(item.size) }}
-        </span>
+        <!-- 备份状态卡片 (默认显示有备份状态) -->
+        <div class="card backup-status" id="backupCard">
+            <div class="status-indicator" :class="{'warning': !hasBackup}" id="statusIndicator"></div>
+            <div class="card-header">
+                <div class="card-title">备份状态</div>
+                <span class="material-icons" style="color: #5f6368;">info</span>
             </div>
-
-            <!-- 最后修改时间 -->
-            <div style="margin-left: 24px; font-size: 12px; color: #666;">
-                最后修改时间: {{ formatDate(item.lastModified) }}
+            <div class="card-body " v-if="hasBackup">
+                <div class="backup-info">
+                    <div class="device-icon">
+                        <i class="material-icons">smartphone</i>
+                    </div>
+                    <div class="device-info">
+                        <div class="device-name">我的手机</div>
+                        <div class="device-model">Android 13 • Galaxy S23</div>
+                    </div>
+                </div>
+                <div class="backup-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">上次备份</div>
+                        <div class="stat-value">今天 10:30</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">备份文件</div>
+                        <div class="stat-value">1,274</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">总大小</div>
+                        <div class="stat-value">4.7 GB</div>
+                    </div>
+                </div>
             </div>
-        </li>
+            <div class="card-body" v-else>
+                <div class="no-backup">
+                    <div class="no-backup-icon">
+                        <i class="material-icons">cloud_off</i>
+                    </div>
+                    <div class="no-backup-title">尚未进行备份</div>
+                    <div class="no-backup-text">您的设备数据尚未备份，请立即备份以防止数据丢失</div>
+                </div>
+            </div>
+        </div>
 
-    </ul>
+        <!-- 存储卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">存储空间</div>
+                <span class="material-icons" style="color: #5f6368;">cloud</span>
+            </div>
+            <div class="card-body">
+                <div class="storage-progress">
+                    <div class="storage-bar" id="storageBar"></div>
+                </div>
+                <div class="storage-info">
+                    <div class="storage-label">已使用</div>
+                    <div class="storage-value" id="storageValue">6.5 GB / 10 GB</div>
+                </div>
+            </div>
+        </div>
 
-    <div >
-        <button class="float-btn">选好了</button>
+        <!-- 主操作按钮 -->
+        <button class="primary-button" v-if="hasBackup" style="background: #1a73e8">
+            <i class="material-icons">cloud_upload</i>
+            <span>立即备份</span>
+
+        </button>
+        <button class="primary-button" v-else style="background: #34a853">
+            <i class="material-icons">cloud_upload</i>
+            <span>开始首次备份</span>
+
+        </button>
+
+
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <div class="nav-icon material-icons">home</div>
+            <div>首页</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">history</div>
+            <div>历史</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">cloud</div>
+            <div>云端</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">settings</div>
+            <div>设置</div>
+        </div>
     </div>
 </div>
+
 
 <script>
 
@@ -116,60 +490,27 @@
         el: '#app',
         data() {
             return {
-                currentPath:null,
-
-                root:null,
-                files: [],
+                hasBackup: false,
 
             }
         },
         created() {
 
-            console.log("初始化")
         },
         mounted() {
 
-            Android.init()
 
         },
         computed: {},
         methods: {
             setData(key, value) {
-                console.log("设置数据")
-                console.log("typeof="+typeof value)
-                console.log(value)
                 Vue.set(this.$data, key, value);
             },
 
-            toChild(item) {
-                if (!this.currentPath ){
-                    this.currentPath = [this.root];
-                }else{
-                    this.currentPath.push(item);
-                }
-                Android.intoChild(JSON.stringify(item))
-            },
-            intoParent() {
 
+            changeState() {
 
-                if (this.currentPath && this.currentPath.length > 1) {
-
-                    this.currentPath.pop();
-                }
-
-                console.log(this.currentPath)
-
-                if (!this.currentPath || this.currentPath.length <1){
-                    console.log("回到根目录")
-                    Android.intoParent(JSON.stringify(this.root));
-                }else if ( this.currentPath.length > 0){
-                    let item = this.currentPath[this.currentPath.length-1];
-                    item = JSON.stringify(item);
-
-                    console.log("返回："+item)
-                    Android.intoParent(item)
-                }
-
+                this.hasBackup = !this.hasBackup;
             },
 
             // 格式化文件大小（字节转 KB/MB）
@@ -185,15 +526,11 @@
                 return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
             },
 
-            getMd5(item) {
-                if (!item.isDirectory){
-                    console.log("获取md5")
-                    Android.getMd5(JSON.stringify(item))
-                }
 
-            },
         }
     });
 </script>
+
+
 </body>
 </html>
