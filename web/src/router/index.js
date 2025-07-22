@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from "@/pages/Home.vue";
+import Settings from "@/pages/Settings.vue";
+import History from "@/pages/History.vue";
 
 // 其他页面组件的导入
 // import Review from "@/pages/Review.vue"
@@ -19,15 +21,15 @@ const router = new VueRouter({
             path: '/home',
             component: Home,
         },
-        // // 其他路由配置
-        // {
-        //     path: '/tasks',
-        //     component: Tasks,
-        // },
-        // {
-        //     path: '/whitelist',
-        //     component: Whitelist,
-        // },
+
+        {
+            path: '/settings',
+            component: Settings,
+        },
+        {
+            path: '/history',
+            component: History,
+        },
         // {
         //     path: '/blacklist',
         //     component: Blacklist,

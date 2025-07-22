@@ -1,113 +1,88 @@
 <template>
 
-  <div >
-    <!-- 应用栏 -->
-    <div class="app-bar">
-      <div class="title">云备份</div>
+
+  <!-- 内容区域 -->
+  <div class="content">
+    <!-- 状态切换按钮 -->
+    <!--      <div class="state-toggle">-->
+    <!--        <button class="toggle-btn" @click="changeState">切换备份状态</button>-->
+    <!--      </div>-->
+
+    <!-- 备份状态卡片 (默认显示有备份状态) -->
+    <div class="card backup-status" id="backupCard">
+      <div class="status-indicator" :class="{'warning': !hasBackup}" id="statusIndicator"></div>
+      <div class="card-header">
+        <div class="card-title">备份状态</div>
+        <span class="material-icons" style="color: #5f6368;">info</span>
+      </div>
+      <div class="card-body " v-if="hasBackup">
+        <div class="backup-info">
+          <div class="device-icon">
+            <i class="material-icons">smartphone</i>
+          </div>
+          <div class="device-info">
+            <div class="device-name">我的手机</div>
+            <div class="device-model">Android 13 • Galaxy S23</div>
+          </div>
+        </div>
+        <div class="backup-stats">
+          <div class="stat-item">
+            <div class="stat-label">上次备份</div>
+            <div class="stat-value">今天 10:30</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">备份文件</div>
+            <div class="stat-value">1,274</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">总大小</div>
+            <div class="stat-value">4.7 GB</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body" v-else>
+        <div class="no-backup">
+          <div class="no-backup-icon">
+            <i class="material-icons">cloud_off</i>
+          </div>
+          <div class="no-backup-title">尚未进行备份</div>
+          <div class="no-backup-text">您的设备数据尚未备份，请立即备份以防止数据丢失</div>
+        </div>
+      </div>
     </div>
 
-    <!-- 内容区域 -->
-    <div class="content">
-      <!-- 状态切换按钮 -->
-      <div class="state-toggle">
-        <button class="toggle-btn" @click="changeState">切换备份状态</button>
+    <!-- 存储卡片 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">存储空间</div>
+        <span class="material-icons" style="color: #5f6368;">cloud</span>
       </div>
-
-      <!-- 备份状态卡片 (默认显示有备份状态) -->
-      <div class="card backup-status" id="backupCard">
-        <div class="status-indicator" :class="{'warning': !hasBackup}" id="statusIndicator"></div>
-        <div class="card-header">
-          <div class="card-title">备份状态</div>
-          <span class="material-icons" style="color: #5f6368;">info</span>
+      <div class="card-body">
+        <div class="storage-progress">
+          <div class="storage-bar" id="storageBar"></div>
         </div>
-        <div class="card-body " v-if="hasBackup">
-          <div class="backup-info">
-            <div class="device-icon">
-              <i class="material-icons">smartphone</i>
-            </div>
-            <div class="device-info">
-              <div class="device-name">我的手机</div>
-              <div class="device-model">Android 13 • Galaxy S23</div>
-            </div>
-          </div>
-          <div class="backup-stats">
-            <div class="stat-item">
-              <div class="stat-label">上次备份</div>
-              <div class="stat-value">今天 10:30</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">备份文件</div>
-              <div class="stat-value">1,274</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">总大小</div>
-              <div class="stat-value">4.7 GB</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-body" v-else>
-          <div class="no-backup">
-            <div class="no-backup-icon">
-              <i class="material-icons">cloud_off</i>
-            </div>
-            <div class="no-backup-title">尚未进行备份</div>
-            <div class="no-backup-text">您的设备数据尚未备份，请立即备份以防止数据丢失</div>
-          </div>
+        <div class="storage-info">
+          <div class="storage-label">已使用</div>
+          <div class="storage-value" id="storageValue">6.5 GB / 10 GB</div>
         </div>
       </div>
-
-      <!-- 存储卡片 -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">存储空间</div>
-          <span class="material-icons" style="color: #5f6368;">cloud</span>
-        </div>
-        <div class="card-body">
-          <div class="storage-progress">
-            <div class="storage-bar" id="storageBar"></div>
-          </div>
-          <div class="storage-info">
-            <div class="storage-label">已使用</div>
-            <div class="storage-value" id="storageValue">6.5 GB / 10 GB</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 主操作按钮 -->
-      <button class="primary-button" v-if="hasBackup" style="background: #1a73e8">
-        <i class="material-icons">cloud_upload</i>
-        <span>立即备份</span>
-
-      </button>
-      <button class="primary-button" v-else style="background: #34a853">
-        <i class="material-icons">cloud_upload</i>
-        <span>开始首次备份</span>
-
-      </button>
-
-
     </div>
 
-    <!-- 底部导航 -->
-    <div class="bottom-nav">
-      <div class="nav-item active">
-        <div class="nav-icon material-icons">home</div>
-        <div>首页</div>
-      </div>
-      <div class="nav-item">
-        <div class="nav-icon material-icons">history</div>
-        <div>历史</div>
-      </div>
-      <div class="nav-item">
-        <div class="nav-icon material-icons">cloud</div>
-        <div>云端</div>
-      </div>
-      <div class="nav-item">
-        <div class="nav-icon material-icons">settings</div>
-        <div>设置</div>
-      </div>
-    </div>
+    <!-- 主操作按钮 -->
+    <button class="primary-button" v-if="hasBackup" style="background: #1a73e8">
+      <i class="material-icons">cloud_upload</i>
+      <span>立即备份</span>
+
+    </button>
+    <button class="primary-button" v-else style="background: #34a853">
+      <i class="material-icons">cloud_upload</i>
+      <span>开始首次备份</span>
+
+    </button>
+
+
   </div>
+
 
 </template>
 
@@ -130,7 +105,6 @@ export default {
   },
   computed: {},
   methods: {
-
 
 
     changeState() {
@@ -166,25 +140,6 @@ export default {
   }
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html body {
-  height: 100%;
-}
-
-body {
-  font-family: 'Roboto', sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  /*min-height: 100vh;*/
-  padding: 0;
-
-}
 
 /* Android状态栏 */
 .status-bar {
@@ -199,28 +154,18 @@ body {
   height: 24px;
 }
 
-/* 应用栏 */
-.app-bar {
-  background-color: #1a73e8;
-  color: white;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 56px;
-}
-
-.app-bar .title {
-  font-size: 20px;
-  font-weight: 500;
-}
 
 /* 内容区域 */
 .content {
   margin: 0 auto;
   padding: 16px;
   padding-top: 0px;
+
+  height: 100%;
+
+  //display: flex;
+  //flex-direction: column;
+  //justify-content: space-evenly;
 }
 
 /* 卡片样式 */
@@ -230,6 +175,7 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
   overflow: hidden;
+
 }
 
 .card-header {
@@ -420,7 +366,8 @@ body {
   background: #185abc;
 }
 
-/* 快捷入口 */
+/*
+
 .quick-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -462,37 +409,7 @@ body {
   font-size: 14px;
   font-weight: 500;
 }
-
-/* 底部导航 */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0;
-  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-  z-index: 100;
-}
-
-.nav-item {
-  text-align: center;
-  padding: 8px;
-  color: #5f6368;
-  font-size: 12px;
-  flex: 1;
-}
-
-.nav-item.active {
-  color: #1a73e8;
-}
-
-.nav-icon {
-  font-size: 24px;
-  margin-bottom: 4px;
-}
+*/
 
 /* 状态切换 */
 .state-toggle {
