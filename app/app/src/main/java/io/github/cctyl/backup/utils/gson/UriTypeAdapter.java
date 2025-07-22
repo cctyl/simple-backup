@@ -1,4 +1,4 @@
-package io.github.cctyl.backup.utils;
+package io.github.cctyl.backup.utils.gson;
 
 import android.net.Uri;
 import com.google.gson.TypeAdapter;

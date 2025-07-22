@@ -1,4 +1,6 @@
-const { defineConfig } = require('@vue/cli-service')
+const {defineConfig} = require('@vue/cli-service')
 module.exports = defineConfig({
-  transpileDependencies: true
+    publicPath: './',
+    transpileDependencies: true,
+    outputDir: 'D:\\AndroidPrj\\simple-backup\\app\\app\\src\\main\\assets'
 })

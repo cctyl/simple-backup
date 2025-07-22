@@ -22,21 +22,25 @@
           </div>
           <div class="device-info">
             <div class="device-name">我的手机</div>
-            <div class="device-model">Android 13 • Galaxy S23</div>
+            <div class="device-model">{{phoneDetail}}</div>
           </div>
         </div>
         <div class="backup-stats">
           <div class="stat-item">
             <div class="stat-label">上次备份</div>
-            <div class="stat-value">今天 10:30</div>
+            <div class="stat-value">{{formatRelativeTime( backupList[0].backUpTime) }}</div>
           </div>
           <div class="stat-item">
-            <div class="stat-label">备份文件</div>
-            <div class="stat-value">1,274</div>
+            <div class="stat-label">备份文件数</div>
+            <div class="stat-value">{{ formatNumberWithCommas(backupList[0].backUpNum) }}</div>
           </div>
           <div class="stat-item">
             <div class="stat-label">总大小</div>
-            <div class="stat-value">4.7 GB</div>
+            <div class="stat-value">{{ formatStorage(backupList[0].totalFileSize)}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">花费时长</div>
+            <div class="stat-value">{{ backupList[0].backUpCostTime }} 秒</div>
           </div>
         </div>
       </div>
@@ -54,23 +58,34 @@
     <!-- 存储卡片 -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">存储空间</div>
-        <span class="material-icons" style="color: #5f6368;">cloud</span>
+        <div class="card-title">本地存储空间</div>
+<!--        <span class="material-icons" style="color: #5f6368;">cloud</span>-->
+        <span class="material-icons" style="color: #5f6368;">mobile_camera</span>
       </div>
       <div class="card-body">
         <div class="storage-progress">
-          <div class="storage-bar" id="storageBar"></div>
+          <div class="storage-bar" id="storageBar"  :style="{
+            width: progress+'%',
+           backgroundColor: progress >= 90 ? '#f44336' :
+                     progress >= 80 ? '#ff9800' :
+                     progress >= 70 ? '#ffeb3b' :
+                     progress >= 50 ? '#1a73e8'
+                     : '#4caf50'
+
+
+          }"></div>
         </div>
         <div class="storage-info">
           <div class="storage-label">已使用</div>
-          <div class="storage-value" id="storageValue">6.5 GB / 10 GB</div>
+          <div class="storage-value" id="storageValue">{{formatSize(available) }} / {{ formatSize(total)}}</div>
         </div>
       </div>
     </div>
 
     <!-- 主操作按钮 -->
     <button class="primary-button" v-if="hasBackup" style="background: #1a73e8">
-      <i class="material-icons">cloud_upload</i>
+<!--      <i class="material-icons">cloud_upload</i>-->
+      <i class="material-icons" style="animation: spin 1s linear infinite">autorenew</i>
       <span>立即备份</span>
 
     </button>
@@ -92,8 +107,12 @@ export default {
   name: 'home-view',
   data() {
     return {
-      hasBackup: false,
-
+      hasBackup: true,
+      backupList: [{}],
+      phoneDetail:'',
+      total:0,
+      available:0,
+      progress:0,
     }
   },
   created() {
@@ -101,12 +120,92 @@ export default {
   },
   mounted() {
 
+    this.getBackupList();
+    this.getPhoneDetail();
+    this.getStorageInfo();
+
+    setTimeout(()=>{
+      this.getProgress()
+    },500)
+  },
+  computed: {
+
+
 
   },
-  computed: {},
   methods: {
+    getProgress(){
+      let a = this.available / this.total;
+      //不保留小数
+      a =  100-Math.floor(a * 100);
+      this.progress = a;
+    },
+
+    getStorageInfo(){
+
+      this.total = window.Android.getTotalStorage();
+      this.available = window.Android.getAvailableStorage();
+      console.log(this.total, this.available)
+    },
+
+    getPhoneDetail(){
+      this.phoneDetail = window.Android.getPhoneDetail();
+    },
+    getBackupList() {
+
+      this.backupList = JSON.parse(window.Android.getBackupHistory());
+      console.log(this.backupList.length)
+      console.log(this.backupList)
 
 
+      if (this.backupList.length > 0) {
+         this.hasBackup = true;
+      }
+    },
+
+    formatNumberWithCommas(num) {
+      // 处理非数字输入
+      if (typeof num !== 'number' || isNaN(num)) {
+        return '0';
+      }
+
+      // 四舍五入取整
+      const roundedNum = Math.round(num);
+
+      // 使用toLocaleString自动添加千位分隔符
+      return roundedNum.toLocaleString('en-US');
+    },
+    formatRelativeTime(isoDateTime) {
+      // 解析输入时间
+      const inputDate = new Date(isoDateTime);
+      const now = new Date();
+
+      // 计算时间差（毫秒）
+      const diffMs = now - inputDate;
+      const diffMinutes = Math.round(diffMs / (1000 * 60));
+      const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      // 判断时间范围并返回相应格式
+      if (diffMinutes < 60) {
+        return `${diffMinutes}分钟前`;
+      }
+      else if (diffHours < 24) {
+        const hours = Math.floor(diffHours);
+        const minutes = diffMinutes % 60;
+        return `${hours}小时${minutes}分钟前`;
+      }
+      else if (diffDays <= 7) {
+        return `${diffDays}天前`;
+      }
+      else {
+        // 超过7天显示具体日期
+        const year = inputDate.getFullYear();
+        const month = inputDate.getMonth() + 1; // 月份从0开始
+        const day = inputDate.getDate();
+        return `${year}年${month}月${day}日`;
+      }
+    },
     changeState() {
 
       this.hasBackup = !this.hasBackup;
@@ -116,13 +215,17 @@ export default {
     formatSize(size) {
       if (size < 1024) return size + ' B';
       else if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
-      else return (size / (1024 * 1024)).toFixed(1) + ' MB';
+      else  if (size < 1024 * 1024 * 1024)
+        return (size / (1024 * 1024)).toFixed(1) + ' MB';
+      else return (size / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
     },
-
-    // 格式化时间戳为可读格式
-    formatDate(timestamp) {
-      const date = new Date(timestamp);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    formatStorage(mbValue) {
+      if (mbValue >= 1024) {
+        // 转换为GB并保留1位小数
+        const gbValue = Math.round(mbValue / 102.4) / 10; // 避免浮点运算问题
+        return `${gbValue}GB`;
+      }
+      return `${Math.round(mbValue)}MB`; // 不足1024MB直接显示
     },
 
 
@@ -131,15 +234,6 @@ export default {
 </script>
 
 <style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 
 /* Android状态栏 */
 .status-bar {
@@ -161,11 +255,6 @@ export default {
   padding: 16px;
   padding-top: 0px;
 
-  height: 100%;
-
-  //display: flex;
-  //flex-direction: column;
-  //justify-content: space-evenly;
 }
 
 /* 卡片样式 */
@@ -316,9 +405,10 @@ export default {
 
 .storage-bar {
   height: 100%;
-  width: 65%;
+  width: 0;
   background: #1a73e8;
   border-radius: 4px;
+  transition: width 1s ease-out, background-color 0.5s ease-out;
 }
 
 .storage-info {
