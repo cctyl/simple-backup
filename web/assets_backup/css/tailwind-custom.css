@@ -1,0 +1,11 @@
+/* 自定义媒体查询设置根字体大小 */
+@media (max-width: 640px) {
+    html {
+        font-size: 14px;
+    }
+}
+@media (width>640px) {
+    html {
+        font-size: 16px;
+    }
+}

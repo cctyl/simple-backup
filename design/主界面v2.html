@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>简单备份</title>
+    <script src="./js/vue.js"></script>
+    <script src="./js/axios.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+        }
+        
+        /* Android状态栏 */
+        .status-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 24px;
+        }
+        
+        /* 应用栏 */
+        .app-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            position: fixed;
+            top: 24px;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 56px;
+        }
+        
+        .app-bar .title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-left: 16px;
+        }
+        
+        /* 内容区域 */
+        .content {
+            padding: 24px 16px;
+            padding-top: 100px; /* 状态栏+应用栏高度 */
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #202124;
+        }
+        
+        .card-body {
+            padding: 16px;
+        }
+        
+        /* 备份状态卡片 */
+        .backup-status {
+            position: relative;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: #34a853;
+        }
+        
+        .status-indicator.warning {
+            background-color: #fbbc04;
+        }
+        
+        .status-indicator.error {
+            background-color: #ea4335;
+        }
+        
+        .backup-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .device-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+        }
+        
+        .device-icon i {
+            font-size: 24px;
+        }
+        
+        .device-info {
+            flex: 1;
+        }
+        
+        .device-name {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        
+        .device-model {
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .backup-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #5f6368;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        /* 无备份状态 */
+        .no-backup {
+            text-align: center;
+            padding: 24px 16px;
+        }
+        
+        .no-backup-icon {
+            font-size: 64px;
+            color: #dadce0;
+            margin-bottom: 16px;
+        }
+        
+        .no-backup-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #202124;
+        }
+        
+        .no-backup-text {
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 24px;
+        }
+        
+        /* 存储卡片 */
+        .storage-progress {
+            height: 8px;
+            background: #e8eaed;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .storage-bar {
+            height: 100%;
+            width: 65%;
+            background: #1a73e8;
+            border-radius: 4px;
+        }
+        
+        .storage-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        
+        .storage-label {
+            color: #5f6368;
+        }
+        
+        .storage-value {
+            font-weight: 500;
+        }
+        
+        /* 主按钮 */
+        .primary-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            margin: 24px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .primary-button i {
+            margin-right: 8px;
+        }
+        
+        .primary-button:hover {
+            background: #1967d2;
+        }
+        
+        .primary-button:active {
+            background: #185abc;
+        }
+        
+        /* 快捷入口 */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .action-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-item:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: #e8f0fe;
+            color: #1a73e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        
+        .action-icon i {
+            font-size: 20px;
+        }
+        
+        .action-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            text-align: center;
+            padding: 8px;
+            color: #5f6368;
+            font-size: 12px;
+            flex: 1;
+        }
+        
+        .nav-item.active {
+            color: #1a73e8;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        /* 状态切换 */
+        .state-toggle {
+            display: flex;
+            justify-content: center;
+            margin: 16px 0;
+        }
+        
+        .toggle-btn {
+            background: #e8f0fe;
+            color: #1a73e8;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .content {
+                padding: 16px;
+                padding-top: 88px;
+            }
+            
+            .backup-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Android状态栏 -->
+    <div class="status-bar">
+        <div>9:41</div>
+        <div>
+            <span class="material-icons" style="font-size: 14px;">signal_cellular_alt</span>
+            <span class="material-icons" style="font-size: 14px; margin-left: 4px;">wifi</span>
+            <span class="material-icons" style="font-size: 14px; margin-left: 4px;">battery_full</span>
+        </div>
+    </div>
+    
+    <!-- 应用栏 -->
+    <div class="app-bar">
+        <span class="material-icons">menu</span>
+        <div class="title">云备份</div>
+        <div style="flex: 1;"></div>
+        <span class="material-icons">search</span>
+        <span class="material-icons" style="margin-left: 16px;">more_vert</span>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 状态切换按钮 -->
+        <div class="state-toggle">
+            <button class="toggle-btn" onclick="toggleState()">切换备份状态</button>
+        </div>
+        
+        <!-- 备份状态卡片 (默认显示有备份状态) -->
+        <div class="card backup-status" id="backupCard">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <div class="card-header">
+                <div class="card-title">备份状态</div>
+                <span class="material-icons" style="color: #5f6368;">info</span>
+            </div>
+            <div class="card-body" id="backupBody">
+                <!-- 内容由JavaScript动态填充 -->
+            </div>
+        </div>
+        
+        <!-- 存储卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">存储空间</div>
+                <span class="material-icons" style="color: #5f6368;">cloud</span>
+            </div>
+            <div class="card-body">
+                <div class="storage-progress">
+                    <div class="storage-bar" id="storageBar"></div>
+                </div>
+                <div class="storage-info">
+                    <div class="storage-label">已使用</div>
+                    <div class="storage-value" id="storageValue">6.5 GB / 10 GB</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主操作按钮 -->
+        <button class="primary-button" id="actionButton">
+            <i class="material-icons">cloud_upload</i>
+            <span id="buttonText">立即备份</span>
+        </button>
+        
+        <!-- 快捷入口 -->
+        <div class="quick-actions">
+            <div class="action-item">
+                <div class="action-icon">
+                    <i class="material-icons">settings</i>
+                </div>
+                <div class="action-title">备份设置</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">
+                    <i class="material-icons">history</i>
+                </div>
+                <div class="action-title">活动日志</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">
+                    <i class="material-icons">storage</i>
+                </div>
+                <div class="action-title">存储管理</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <div class="nav-icon material-icons">home</div>
+            <div>首页</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">history</div>
+            <div>历史</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">cloud</div>
+            <div>云端</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">settings</div>
+            <div>设置</div>
+        </div>
+    </div>
+    
+    <script>
+        // 当前状态：true表示有备份，false表示无备份
+        let hasBackup = true;
+        
+        // 初始化界面
+        function initUI() {
+            updateBackupCard();
+            updateStorage();
+            updateButton();
+        }
+        
+        // 更新备份卡片
+        function updateBackupCard() {
+            const backupBody = document.getElementById('backupBody');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            if (hasBackup) {
+                // 有备份状态
+                statusIndicator.className = 'status-indicator';
+                
+                backupBody.innerHTML = `
+                    <div class="backup-info">
+                        <div class="device-icon">
+                            <i class="material-icons">smartphone</i>
+                        </div>
+                        <div class="device-info">
+                            <div class="device-name">我的手机</div>
+                            <div class="device-model">Android 13 • Galaxy S23</div>
+                        </div>
+                    </div>
+                    <div class="backup-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">上次备份</div>
+                            <div class="stat-value">今天 10:30</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">备份文件</div>
+                            <div class="stat-value">1,274</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">总大小</div>
+                            <div class="stat-value">4.7 GB</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 无备份状态
+                statusIndicator.className = 'status-indicator warning';
+                
+                backupBody.innerHTML = `
+                    <div class="no-backup">
+                        <div class="no-backup-icon">
+                            <i class="material-icons">cloud_off</i>
+                        </div>
+                        <div class="no-backup-title">尚未进行备份</div>
+                        <div class="no-backup-text">您的设备数据尚未备份，请立即备份以防止数据丢失</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 更新存储显示
+        function updateStorage() {
+            const storageBar = document.getElementById('storageBar');
+            const storageValue = document.getElementById('storageValue');
+            
+            if (hasBackup) {
+                storageBar.style.width = '65%';
+                storageValue.textContent = '6.5 GB / 10 GB';
+            } else {
+                storageBar.style.width = '15%';
+                storageValue.textContent = '1.5 GB / 10 GB';
+            }
+        }
+        
+        // 更新按钮状态
+        function updateButton() {
+            const buttonText = document.getElementById('buttonText');
+            const actionButton = document.getElementById('actionButton');
+            
+            if (hasBackup) {
+                buttonText.textContent = '立即备份';
+                actionButton.style.background = '#1a73e8';
+            } else {
+                buttonText.textContent = '开始首次备份';
+                actionButton.style.background = '#34a853';
+            }
+        }
+        
+        // 切换状态
+        function toggleState() {
+            hasBackup = !hasBackup;
+            initUI();
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', initUI);
+        
+        // 主按钮点击事件
+        document.querySelector('.primary-button').addEventListener('click', function() {
+            if (hasBackup) {
+                // 备份操作
+                const buttonText = document.getElementById('buttonText');
+                const icon = this.querySelector('i');
+                
+                // 保存原始状态
+                const originalText = buttonText.textContent;
+                const originalHTML = icon.innerHTML;
+                
+                // 更新为备份中状态
+                buttonText.textContent = '备份中...';
+                icon.textContent = 'autorenew';
+                icon.style.animation = 'spin 1s linear infinite';
+                
+                // 模拟备份过程
+                setTimeout(() => {
+                    // 恢复原始状态
+                    buttonText.textContent = originalText;
+                    icon.textContent = 'cloud_upload';
+                    icon.style.animation = '';
+                    
+                    // 显示备份完成提示
+                    alert('备份已完成！');
+                }, 2000);
+            } else {
+                // 首次备份
+                hasBackup = true;
+                initUI();
+            }
+        });
+        
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

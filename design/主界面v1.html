@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备份应用 - 主界面</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a4d8e);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        
+        .logo-text {
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .status-title {
+            font-weight: 600;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .status-badge {
+            background: rgba(0, 230, 118, 0.15);
+            color: #00e676;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-badge.warning {
+            background: rgba(255, 145, 0, 0.15);
+            color: #ff9100;
+        }
+        
+        .device-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 15px 0 20px;
+        }
+        
+        .device-icon {
+            background: rgba(255, 255, 255, 0.1);
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .device-details {
+            flex: 1;
+        }
+        
+        .device-name {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .device-model {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .backup-info {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 16px;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .info-label {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .storage-container {
+            margin: 25px 0;
+        }
+        
+        .storage-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .storage-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .storage-value {
+            font-weight: 700;
+            font-size: 15px;
+        }
+        
+        .progress-container {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 75%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            border-radius: 10px;
+            position: relative;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            background-size: 200% 100%;
+            animation: shine 2s infinite;
+        }
+        
+        .storage-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+        
+        .action-button {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0 30px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0, 114, 255, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 114, 255, 0.6);
+        }
+        
+        .action-button:active {
+            transform: translateY(1px);
+        }
+        
+        .action-button i {
+            margin-right: 10px;
+        }
+        
+        .quick-access {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .quick-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 18px 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .quick-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+        
+        .quick-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #00c6ff;
+        }
+        
+        .quick-title {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .next-backup {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        @keyframes shine {
+            0% { background-position: -100% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @media (max-width: 500px) {
+            .container {
+                border-radius: 20px;
+                padding: 20px 15px;
+            }
+            
+            .status-card {
+                padding: 15px;
+            }
+            
+            .backup-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="logo-text">云备份</div>
+            </div>
+            <div class="user">
+                <i class="fas fa-cog"></i>
+            </div>
+        </header>
+        
+        <div class="status-card">
+            <div class="status-header">
+                <div class="status-title">上次备份</div>
+                <div class="status-badge">
+                    <i class="fas fa-check-circle"></i>
+                    成功
+                </div>
+            </div>
+            
+            <div class="backup-time">今天 14:30</div>
+            
+            <div class="device-info">
+                <div class="device-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div class="device-details">
+                    <div class="device-name">我的iPhone</div>
+                    <div class="device-model">iPhone 14 Pro • iOS 16.5</div>
+                </div>
+            </div>
+            
+            <div class="backup-info">
+                <div class="info-item">
+                    <div class="info-label">备份文件</div>
+                    <div class="info-value">1,274</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">总大小</div>
+                    <div class="info-value">4.7 GB</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">耗时</div>
+                    <div class="info-value">2:15</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="storage-container">
+            <div class="storage-header">
+                <div class="storage-title">云端存储空间</div>
+                <div class="storage-value">15.2 GB / 20 GB</div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 76%"></div>
+            </div>
+            <div class="storage-labels">
+                <div>0 GB</div>
+                <div>20 GB</div>
+            </div>
+        </div>
+        
+        <button class="action-button pulse">
+            <i class="fas fa-cloud-upload-alt"></i>立即备份
+        </button>
+        
+        <div class="quick-access">
+            <div class="quick-item">
+                <div class="quick-icon">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div class="quick-title">备份设置</div>
+            </div>
+            <div class="quick-item">
+                <div class="quick-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="quick-title">活动日志</div>
+            </div>
+            <div class="quick-item">
+                <div class="quick-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="quick-title">存储管理</div>
+            </div>
+        </div>
+        
+        <div class="next-backup">
+            下次自动备份: 明天 02:00
+        </div>
+    </div>
+
+    <script>
+        // 动态更新进度条
+        function updateProgressBar() {
+            const progressBar = document.querySelector('.progress-bar');
+            let progress = 76;
+            
+            setInterval(() => {
+                // 模拟轻微波动
+                progress = 76 + Math.sin(Date.now()/5000) * 0.5;
+                progressBar.style.width = `${progress}%`;
+            }, 100);
+        }
+        
+        // 按钮动画效果
+        document.querySelector('.action-button').addEventListener('click', function() {
+            this.classList.remove('pulse');
+            this.innerHTML = '<i class="fas fa-sync fa-spin"></i> 备份中...';
+            this.style.background = 'linear-gradient(135deg, #0072ff, #0058c4)';
+            
+            // 模拟备份过程
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-check"></i> 备份完成';
+                this.style.background = 'linear-gradient(135deg, #00c853, #009624)';
+                
+                // 3秒后恢复原状
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 立即备份';
+                    this.style.background = 'linear-gradient(135deg, #00c6ff, #0072ff)';
+                    this.classList.add('pulse');
+                }, 3000);
+            }, 2000);
+        });
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', updateProgressBar);
+    </script>
+</body>
+</html>

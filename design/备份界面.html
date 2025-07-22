@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>备份设置</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Android状态栏 */
+        .status-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 24px;
+        }
+        
+        /* 应用栏 */
+        .app-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            position: fixed;
+            top: 24px;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 56px;
+        }
+        
+        .app-bar .title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-left: 16px;
+        }
+        
+        /* 内容区域 */
+        .content {
+            padding: 16px;
+            padding-top: 100px; /* 状态栏+应用栏高度 */
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* 设置组 */
+        .settings-group {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        
+        .group-title {
+            padding: 16px;
+            font-weight: 500;
+            font-size: 16px;
+            color: #202124;
+            background: #f8f9fa;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        /* 设置项 */
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #f1f3f4;
+            position: relative;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .setting-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: #e8f0fe;
+            color: #1a73e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+        }
+        
+        .setting-icon i {
+            font-size: 20px;
+        }
+        
+        .setting-info {
+            flex: 1;
+        }
+        
+        .setting-name {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: #202124;
+        }
+        
+        .setting-desc {
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .setting-action {
+            margin-left: 16px;
+            color: #5f6368;
+        }
+        
+        .setting-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .setting-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .setting-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .setting-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .setting-slider {
+            background-color: #1a73e8;
+        }
+        
+        input:checked + .setting-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* 备份计划预览 */
+        .backup-preview {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        /* 底部操作栏 */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            display: flex;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 90;
+        }
+        
+        .action-button {
+            flex: 1;
+            border-radius: 24px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            background: #1a73e8;
+            color: white;
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .content {
+                padding: 16px;
+                padding-top: 88px;
+            }
+            
+            .action-bar {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Android状态栏 -->
+    <div class="status-bar">
+        <div>9:41</div>
+        <div>
+            <span class="material-icons" style="font-size: 14px;">signal_cellular_alt</span>
+            <span class="material-icons" style="font-size: 14px; margin-left: 4px;">wifi</span>
+            <span class="material-icons" style="font-size: 14px; margin-left: 4px;">battery_full</span>
+        </div>
+    </div>
+    
+    <!-- 应用栏 -->
+    <div class="app-bar">
+        <span class="material-icons">arrow_back</span>
+        <div class="title">备份设置</div>
+        <div style="flex: 1;"></div>
+        <span class="material-icons">help_outline</span>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 备份内容设置组 -->
+        <div class="settings-group">
+            <div class="group-title">备份内容</div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">folder</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">备份源管理</div>
+                        <div class="setting-desc">选择要备份的文件夹</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <i class="material-icons">chevron_right</i>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">visibility_off</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">忽略隐藏文件</div>
+                        <div class="setting-desc">不备份以点开头的文件</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <label class="setting-switch">
+                        <input type="checkbox" checked>
+                        <span class="setting-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 备份规则设置组 -->
+        <div class="settings-group">
+            <div class="group-title">备份规则</div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">schedule</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">自动备份计划</div>
+                        <div class="setting-desc">设置自动备份的时间</div>
+                        <div class="backup-preview">每天 02:00 (仅在充电时)</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <i class="material-icons">chevron_right</i>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">wifi</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">仅Wi-Fi上传</div>
+                        <div class="setting-desc">避免使用移动数据</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <label class="setting-switch">
+                        <input type="checkbox" checked>
+                        <span class="setting-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">battery_charging_full</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">仅在充电时备份</div>
+                        <div class="setting-desc">节省设备电量</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <label class="setting-switch">
+                        <input type="checkbox" checked>
+                        <span class="setting-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 上传设置组 -->
+        <div class="settings-group">
+            <div class="group-title">上传设置</div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">speed</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">上传速度限制</div>
+                        <div class="setting-desc">控制上传带宽使用</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <span>无限制</span>
+                    <i class="material-icons">chevron_right</i>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">network_check</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">移动数据限制</div>
+                        <div class="setting-desc">大文件需确认</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <label class="setting-switch">
+                        <input type="checkbox">
+                        <span class="setting-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">data_usage</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">增量备份模式</div>
+                        <div class="setting-desc">仅上传变化部分</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <label class="setting-switch">
+                        <input type="checkbox" checked>
+                        <span class="setting-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 高级设置组 -->
+        <div class="settings-group">
+            <div class="group-title">高级设置</div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">history</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">备份版本保留</div>
+                        <div class="setting-desc">保留最近的7个版本</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <i class="material-icons">chevron_right</i>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-content">
+                    <div class="setting-icon">
+                        <i class="material-icons">delete</i>
+                    </div>
+                    <div class="setting-info">
+                        <div class="setting-name">删除处理策略</div>
+                        <div class="setting-desc">保留30天后删除</div>
+                    </div>
+                </div>
+                <div class="setting-action">
+                    <i class="material-icons">chevron_right</i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部操作栏 -->
+    <div class="action-bar">
+        <button class="action-button">保存设置</button>
+    </div>
+    
+    <script>
+        // 这里仅用于展示效果，没有实际功能
+    </script>
+</body>
+</html>
