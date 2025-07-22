@@ -1,11 +1,10 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from "@/pages/Home.vue";
-import Settings from "@/pages/Settings.vue";
+import Settings from "@/pages/setting/Settings.vue";
 import History from "@/pages/History.vue";
-
-// 其他页面组件的导入
-// import Review from "@/pages/Review.vue"
+import BackupSource from "@/pages/setting/BackupSource.vue";
+import DirSelect from "@/pages/setting/DirSelect.vue";
 
 
 Vue.use(VueRouter)
@@ -25,6 +24,17 @@ const router = new VueRouter({
         {
             path: '/settings',
             component: Settings,
+
+        },
+        {
+            path: '/settings/source',
+            component: BackupSource,
+
+        },
+        {
+            path: '/settings/source/select',
+            component: DirSelect,
+
         },
         {
             path: '/history',

@@ -253,7 +253,7 @@ export default {
 .content {
   margin: 0 auto;
   padding: 16px;
-  padding-top: 0px;
+  padding-top: 20px;
 
 }
 

@@ -67,7 +67,7 @@ public class WebAppInterface {
         }
 
         // 将数据传递给WebView
-        jsExecUtil.setData("files", fileArray);
+        jsExecUtil.exec("receiveFileList", fileArray,null);
 
     }
 
@@ -112,7 +112,7 @@ public class WebAppInterface {
         String rootDocId = DocumentsContract.getTreeDocumentId(uri);
         DirectoryItem root = new DirectoryItem("根目录", uri, rootDocId, 0, 0, true, rootDocId, "/");
         this.setRoot(root);
-        jsExecUtil.setData("root", GsonUtils.toJsonObject(root));
+        jsExecUtil.exec("receiveRoot", GsonUtils.toJsonObject(root),null);
 
         //拿到根目录下面的文件数据
         List<DirectoryItem> rootChild = getChildrenByDocId(uri, rootDocId, rootDocId);
