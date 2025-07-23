@@ -4,17 +4,17 @@
   <div class="bottom-nav">
 
 
-    <router-link to="/home" class="nav-item " active-class="active">
+    <router-link to="/home" class="nav-item " active-class="active" replace>
       <div class="nav-icon material-icons">home</div>
       <div>首页</div>
     </router-link>
 
-    <router-link to="/history" class="nav-item " active-class="active">
+    <router-link to="/history" class="nav-item " active-class="active" replace>
       <div class="nav-icon material-icons">history</div>
       <div>历史</div>
     </router-link>
 
-    <router-link to="/settings" class="nav-item " active-class="active">
+    <router-link to="/settings" class="nav-item " active-class="active" replace>
       <div class="nav-icon material-icons">settings</div>
       <div>设置</div>
     </router-link>

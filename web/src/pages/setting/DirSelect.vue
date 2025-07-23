@@ -25,6 +25,7 @@
 
 
 
+
         <!-- 一级目录 -->
         <div class="tree-item level-0"  v-for="(item, index) in files" :key="index">
           <div class="tree-icon folder">
@@ -36,6 +37,8 @@
           <div class="tree-checkbox">
             <input type="checkbox" >
           </div>
+
+
           <div class="tree-expand">
             <i class="material-icons">chevron_right</i>
           </div>
@@ -57,12 +60,24 @@ export default {
       currentPath: null,
 
       root: null,
-      files: [],
+      files: [
+        {
+          name:"aaaaa",
+        },
+        {
+          name:"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        },
+        {
+          name:"ccc",
+        },
+
+        {
+          name:"dddd",
+        },
+      ],
     }
   },
   created() {
-
-    console.log("window.vue存在吗？=", window.vue)
 
     window.vue.receiveFileList = this.receiveFileList;
     window.vue.receiveRoot = this.receiveRoot;
@@ -189,6 +204,7 @@ export default {
   padding: 12px 16px;
   border-bottom: 1px solid #f1f3f4;
   width: 100%;
+  justify-content: space-between;
 }
 
 .tree-item:last-child {
@@ -225,7 +241,8 @@ export default {
 .tree-content {
   display: flex;
   flex-direction: column;
-  width: 70%;
+  min-width: 0;
+  flex: 1;
 }
 
 .tree-name {
@@ -249,6 +266,53 @@ export default {
   height: 20px;
   accent-color: #1a73e8;
 }
+
+
+
+.custom-checkbox {
+  position: relative;
+  cursor: pointer;
+  margin-left: 16px;
+}
+
+.custom-checkbox input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+  border-radius: 4px;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid #1a73e8;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: #1a73e8;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+
 
 .tree-expand {
   margin-left: 16px;

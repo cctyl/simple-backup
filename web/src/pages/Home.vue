@@ -13,7 +13,7 @@
       <div class="status-indicator" :class="{'warning': !hasBackup}" id="statusIndicator"></div>
       <div class="card-header">
         <div class="card-title">备份状态</div>
-        <span class="material-icons" style="color: #5f6368;">info</span>
+        <span class="material-icons" style="color: #5f6368; ">info</span>
       </div>
       <div class="card-body " v-if="hasBackup">
         <div class="backup-info">
@@ -59,7 +59,6 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">本地存储空间</div>
-<!--        <span class="material-icons" style="color: #5f6368;">cloud</span>-->
         <span class="material-icons" style="color: #5f6368;">mobile_camera</span>
       </div>
       <div class="card-body">
@@ -81,6 +80,27 @@
         </div>
       </div>
     </div>
+
+
+    <!-- 已选文件夹 -->
+    <router-link to="/settings/source" tag="div" class="selected-folders">
+      <div class="selected-header ">
+        <div class="selected-title">将要备份的文件夹</div>
+        <div class="selected-count" >
+          <span class="material-icons" style="color: #5f6368; ">drive_folder_upload</span>
+        </div>
+      </div>
+      <div class="selected-list" >
+
+        <div class="selected-item" v-for="item in selectDirList" :key="item.relativePath">
+          <div class="selected-name">{{item.relativePath}}</div>
+        </div>
+
+
+
+      </div>
+    </router-link>
+
 
     <!-- 主操作按钮 -->
     <button class="primary-button" v-if="hasBackup" style="background: #1a73e8">
@@ -113,6 +133,11 @@ export default {
       total:0,
       available:0,
       progress:0,
+      selectDirList:[
+        {
+          relativePath:'aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa'
+        }
+      ]
     }
   },
   created() {
@@ -234,6 +259,68 @@ export default {
 </script>
 
 <style scoped>
+
+/* 已选文件夹 */
+.selected-folders {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.selected-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f1f3f4;
+  padding-bottom: 10px;
+
+}
+
+.selected-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #202124;
+
+}
+
+.selected-count {
+  color: #5f6368;
+  font-size: 14px;
+
+}
+
+.selected-list {
+  display: flex;
+  height: 150px;
+  overflow: auto;
+}
+
+.selected-item {
+  background: #f1f3f4;
+  border-radius: 24px;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 20%;
+}
+
+.selected-name {
+  margin-right: 8px;
+  font-size: 14px;
+  color: #202124;
+}
+
+.selected-remove {
+  color: #5f6368;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+
 
 /* Android状态栏 */
 .status-bar {

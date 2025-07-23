@@ -3,9 +3,14 @@
   <!-- 应用栏 -->
   <div class="app-bar">
     <span class="material-icons">cloud_done</span>
-    <div class="title">云备份</div>
+    <div class="title">{{currentTitle}}</div>
     <div style="flex: 1;"></div>
-    <span class="material-icons" style="margin-left: 16px;">settings_backup_restore</span>
+    <span class="material-icons" @click="clickSync" style="margin-left: 16px; "
+
+    :style="{
+      animation: spin?'spin 1s linear infinite':''
+    }"
+    >settings_backup_restore</span>
   </div>
 
 
@@ -13,7 +18,31 @@
 
 <script>
 export default {
-  name: 'header-view'
+  name: 'header-view',
+  data() {
+    return {
+      spin: false,
+      currentTitle:'',
+    }
+  },
+  watch: {
+    '$route'(to) {
+      this.currentTitle = to.meta.headerTitle || '默认标题'
+    }
+  },
+  mounted() {
+    this.currentTitle = this.$route.meta.headerTitle || '默认标题'
+  },
+  methods:{
+    clickSync() {
+      this.spin = true;
+
+      setTimeout(() => {
+        this.spin = false;
+      },1000)
+    },
+
+  }
 }
 
 </script>

@@ -14,31 +14,37 @@ const router = new VueRouter({
     routes: [
         {
             path: '/',
-            redirect: '/home'
+            redirect: '/home',
+            meta: { headerTitle: '首页' }
         },
         {
             path: '/home',
             component: Home,
+            meta: { headerTitle: '首页' }
         },
 
         {
             path: '/settings',
             component: Settings,
+            meta: { headerTitle: '设置' }
 
         },
         {
             path: '/settings/source',
             component: BackupSource,
+            meta: { headerTitle: '备份源管理' }
 
         },
         {
             path: '/settings/source/select',
             component: DirSelect,
+            meta: { headerTitle: '文件夹选择' }
 
         },
         {
             path: '/history',
             component: History,
+            meta: { headerTitle: '备份历史' }
         },
         // {
         //     path: '/blacklist',
