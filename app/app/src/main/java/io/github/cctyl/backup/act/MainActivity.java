@@ -180,6 +180,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("---->  MainActivity", String.valueOf(error.getErrorCode()));
             }
 
+
+
+
             //防止加载网页时调起系统浏览器
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {

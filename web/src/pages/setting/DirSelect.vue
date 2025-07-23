@@ -10,11 +10,11 @@
       <div class="file-tree">
 
         <!-- 根目录 -->
-        <div class="tree-item level-0">
+        <div class="tree-item level-0" @click="intoParent">
           <div class="tree-icon folder">
             <i class="material-icons">folder</i>
           </div>
-          <div class="tree-content">
+          <div class="tree-content" >
             <div class="tree-name">上级目录</div>
           </div>
 
@@ -28,20 +28,19 @@
 
         <!-- 一级目录 -->
         <div class="tree-item level-0"  v-for="(item, index) in files" :key="index">
-          <div class="tree-icon folder">
-            <i class="material-icons">folder</i>
+          <div class="tree-icon" :class="{
+            folder: item.isDirectory,
+          }"  @click="toChild(item)">
+            <i class="material-icons">{{getGoogleIconNameFromMimeType(item.mimeType)}}</i>
           </div>
-          <div class="tree-content">
-            <div class="tree-name">{{ item.name }}</div>
+          <div class="tree-content" @click="toChild(item)">
+            <div class="tree-name">{{ item.name }}  </div>
           </div>
-          <div class="tree-checkbox">
+          <div class="tree-checkbox" v-if="item.isDirectory">
             <input type="checkbox" >
           </div>
 
 
-          <div class="tree-expand">
-            <i class="material-icons">chevron_right</i>
-          </div>
         </div>
 
       </div>
@@ -58,21 +57,25 @@ export default {
   data() {
     return {
       currentPath: null,
-
       root: null,
       files: [
         {
           name:"aaaaa",
+          mimeType:"vnd.android.document/directory",
+          isDirectory:true
         },
         {
           name:"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          mimeType: "vnd.android.document/directory"
         },
         {
           name:"ccc",
+          mimeType: "vnd.android.document/directory"
         },
 
         {
           name:"dddd",
+          mimeType: "vnd.android.document/directory"
         },
       ],
     }
@@ -88,19 +91,87 @@ export default {
   },
   computed: {},
   methods: {
+    getGoogleIconNameFromMimeType(mimeType) {
+      const mimeTypeMap = {
+        // 文件夹
+        'vnd.android.document/directory': 'folder',
+
+        // 文本文件
+        'text/plain': 'description',
+        'text/html': 'code',
+        'text/css': 'code',
+        'text/javascript': 'code',
+        'application/json': 'code',
+
+        // PDF
+        'application/pdf': 'picture_as_pdf',
+
+        // 图片
+        'image/*': 'image',
+
+        // 视频
+        'video/*': 'video_file',
+
+        // 音频
+        'audio/*': 'audio_file',
+
+        // Word 文档
+        'application/msword': 'article',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'article',
+
+        // Excel 表格
+        'application/vnd.ms-excel': 'table_chart',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'table_chart',
+
+        // 压缩包
+        'application/zip': 'archive',
+        'application/x-rar-compressed': 'archive',
+        'application/x-7z-compressed': 'archive',
+        'application/x-tar': 'archive',
+        'application/gzip': 'archive',
+
+        // 可执行文件 / 未知
+        'application/octet-stream': 'insert_drive_file',
+        'application/x-executable': 'dangerous',
+        'application/vnd.android.package-archive': 'android',
+      };
+
+      // 精确匹配
+      if (mimeTypeMap[mimeType]) {
+        return mimeTypeMap[mimeType];
+      }
+
+      // 通配符匹配 image/*, video/* 等
+      const wildcardKey = Object.keys(mimeTypeMap).find(key => key.endsWith('/*') && mimeType.startsWith(key.split('/*')[0]));
+      if (wildcardKey) {
+        return mimeTypeMap[wildcardKey];
+      }
+
+      console.log(`${mimeType} 没有对应图标 `)
+
+      // 默认图标
+      return 'insert_drive_file';
+    },
     receiveRoot(root) {
       this.root = root;
     },
     receiveFileList(dirList) {
       this.files = dirList;
+
     },
     toChild(item) {
+
+      if (!item.isDirectory){
+        return;
+      }
+
       if (!this.currentPath) {
         this.currentPath = [this.root];
       } else {
         this.currentPath.push(item);
       }
-      window.Android.intoChild(JSON.stringify(item))
+      this.files  = JSON.parse(window.Android.intoChild(JSON.stringify(item)));
+
     },
     intoParent() {
 
@@ -120,11 +191,14 @@ export default {
         item = JSON.stringify(item);
 
         console.log("返回：" + item)
-        window.Android.intoParent(item)
+        this.files  = JSON.parse(   window.Android.intoParent(item))
       }
 
     },
-
+    handleBackButton(){
+      console.log("返回")
+      this.intoParent()
+    },
 
   }
 
@@ -205,6 +279,7 @@ export default {
   border-bottom: 1px solid #f1f3f4;
   width: 100%;
   justify-content: space-between;
+  min-height: 70px;
 }
 
 .tree-item:last-child {

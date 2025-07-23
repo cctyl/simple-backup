@@ -529,6 +529,9 @@ export default {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: background 0.2s;
+  outline: none; /* 去除默认的焦点轮廓 */
+  -webkit-tap-highlight-color: transparent; /* 去除点击时的高亮颜色 */
+
 }
 
 .primary-button i {
@@ -540,53 +543,9 @@ export default {
 }
 
 .primary-button:active {
-  background: #185abc;
+  background-color: #185abc; /* 按下时的背景颜色 */
+  transform: scale(0.98); /* 可选：轻微缩小按钮，模拟按下效果 */
 }
-
-/*
-
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.action-item {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-item:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
-}
-
-.action-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  background: #e8f0fe;
-  color: #1a73e8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 12px;
-}
-
-.action-icon i {
-  font-size: 20px;
-}
-
-.action-title {
-  font-size: 14px;
-  font-weight: 500;
-}
-*/
 
 /* 状态切换 */
 .state-toggle {

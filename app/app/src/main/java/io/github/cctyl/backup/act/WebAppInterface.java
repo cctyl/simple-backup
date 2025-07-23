@@ -110,7 +110,8 @@ public class WebAppInterface {
     public void initRootFileList(Uri uri) {
         //根节点的初始化
         String rootDocId = DocumentsContract.getTreeDocumentId(uri);
-        DirectoryItem root = new DirectoryItem("根目录", uri, rootDocId, 0, 0, true, rootDocId, "/");
+        DirectoryItem root = new DirectoryItem("根目录",
+                uri, rootDocId, 0, 0, true, rootDocId, "/",DocumentsContract.Document.MIME_TYPE_DIR);
         this.setRoot(root);
         jsExecUtil.exec("receiveRoot", GsonUtils.toJsonObject(root),null);
 
@@ -175,7 +176,7 @@ public class WebAppInterface {
                 boolean isDirectory = DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType);
                 String relativePath = childDocId.replaceAll(rootDocId, "");
 
-                list.add(new DirectoryItem(name, treeUri, childDocId, size, lastModified, isDirectory, rootDocId, relativePath));
+                list.add(new DirectoryItem(name, treeUri, childDocId, size, lastModified, isDirectory, rootDocId, relativePath,mimeType));
 
             }
         } finally {
@@ -228,17 +229,18 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void intoChild(String targetDirJson) {
+    public String intoChild(String targetDirJson) {
 
         Log.d("WebAppInterface", "intoChild: ");
         //转换 DirectoryItem
         DirectoryItem targetDir = GsonUtils.fromJson(targetDirJson, DirectoryItem.class);
         List<DirectoryItem> childrenByDocId = getChildrenByDocId(targetDir.getTreeUri(), targetDir.getDocId(), targetDir.getRootDocId());
 
-        context.runOnUiThread(() -> {
-            // 发送新目录的内容
-            sendFilesToWebView(childrenByDocId);
-        });
+
+
+
+
+        return GsonUtils.toJson(childrenByDocId);
 
     }
 
@@ -280,16 +282,13 @@ public class WebAppInterface {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @JavascriptInterface
-    public void intoParent(String parentDirJson) {
+    public String intoParent(String parentDirJson) {
 
 
         Log.d("WebAppInterface", "intoParent: ");
         if (parentDirJson == null) {
-            context.runOnUiThread(() -> {
-                // 发送新目录的内容
-                sendFilesToWebView(rootChild);
-            });
-            return;
+           
+            return GsonUtils.toJson(rootChild);
         }
         //转换 DirectoryItem
         DirectoryItem parentDir = GsonUtils.fromJson(parentDirJson, DirectoryItem.class);
@@ -297,10 +296,9 @@ public class WebAppInterface {
         Log.d("WebAppInterface", "intoParent: " + parentDir.getDocId());
         List<DirectoryItem> childrenByDocId = getChildrenByDocId(parentDir.getTreeUri(), parentDir.getDocId(), parentDir.getRootDocId());
 
-        context.runOnUiThread(() -> {
-            // 发送新目录的内容
-            sendFilesToWebView(childrenByDocId);
-        });
+
+
+        return GsonUtils.toJson(childrenByDocId);
 
     }
 

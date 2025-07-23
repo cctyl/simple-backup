@@ -14,6 +14,7 @@ public class DirectoryItem {
     private boolean isDirectory;//是否是目录
     private String rootDocId;//是否是目录
     private String relativePath;//是否是目录
+    private String mimeType;//是否是目录
 
     public String getRootDocId() {
         return rootDocId;
@@ -23,7 +24,16 @@ public class DirectoryItem {
         this.rootDocId = rootDocId;
     }
 
-    public DirectoryItem(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory, String rootDocId, String relativePath) {
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public DirectoryItem(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory, String rootDocId, String relativePath, String mimeType) {
         this.name = name;
         this.treeUri = treeUri;
         this.docId = docId;
@@ -32,6 +42,7 @@ public class DirectoryItem {
         this.isDirectory = isDirectory;
         this.rootDocId = rootDocId;
         this.relativePath = relativePath;
+        this.mimeType = mimeType;
     }
 
     public String getName() {
