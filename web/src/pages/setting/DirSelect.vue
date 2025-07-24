@@ -10,11 +10,13 @@
       <div class="file-tree">
 
         <!-- 根目录 -->
-        <div class="tree-item level-0" @click="intoParent">
+        <div class="tree-item level-0" style="background-color: #f5f5f5;" @click="intoParent"
+
+        >
           <div class="tree-icon folder">
             <i class="material-icons">folder</i>
           </div>
-          <div class="tree-content" >
+          <div class="tree-content">
             <div class="tree-name">上级目录</div>
           </div>
 
@@ -24,20 +26,21 @@
         </div>
 
 
-
-
         <!-- 一级目录 -->
-        <div class="tree-item level-0"  v-for="(item, index) in files" :key="index">
+        <div class="tree-item level-0"
+             :style="{ backgroundColor: item.checked ? 'rgba(26, 115, 232, 0.1)' : 'white' }"
+
+             v-for="item in files" :key="item.relativePath" @click="toChild(item)">
           <div class="tree-icon" :class="{
             folder: item.isDirectory,
-          }"  @click="toChild(item)">
-            <i class="material-icons">{{getGoogleIconNameFromMimeType(item.mimeType)}}</i>
+          }">
+            <i class="material-icons">{{ getGoogleIconNameFromMimeType(item.mimeType) }}</i>
           </div>
-          <div class="tree-content" @click="toChild(item)">
-            <div class="tree-name">{{ item.name }}  </div>
+          <div class="tree-content">
+            <div class="tree-name">{{ item.name }}</div>
           </div>
-          <div class="tree-checkbox" v-if="item.isDirectory">
-            <input type="checkbox" >
+          <div class="tree-checkbox" v-if="item.isDirectory" @click.stop="select(item)">
+            <input type="checkbox" :checked="item.checked">
           </div>
 
 
@@ -46,38 +49,43 @@
       </div>
     </div>
 
-
+    <Loading :show="showLoading" text="数据加载中..."/>
   </div>
 
 </template>
 <script>
+import {mapActions} from 'vuex'
+import Loading from "@/components/Loading.vue";
+
 export default {
   name: 'dir-select-view',
+  components: {Loading},
 
   data() {
     return {
+      showLoading: false,
       currentPath: null,
       root: null,
       files: [
         {
-          name:"aaaaa",
-          mimeType:"vnd.android.document/directory",
-          isDirectory:true
+          name: "aaaaa",
+          mimeType: "vnd.android.document/directory",
+          isDirectory: true
         },
         {
-          name:"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          name: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
           mimeType: "vnd.android.document/directory"
         },
         {
-          name:"ccc",
+          name: "ccc",
           mimeType: "vnd.android.document/directory"
         },
-
         {
-          name:"dddd",
+          name: "dddd",
           mimeType: "vnd.android.document/directory"
         },
       ],
+      selectedDir: [],
     }
   },
   created() {
@@ -86,11 +94,36 @@ export default {
     window.vue.receiveRoot = this.receiveRoot;
   },
   mounted() {
-
+    this.$bus.$on('iconCallBack', this.intoParent);
+    this.selectedDir = this.$store.state.selectedDir;
     window.Android.init();
+  },
+  watch: {
+    currentPath() {
+      //把数组：this.currentPath 用/ 拼接，得到一个字符串
+      let result = '/';
+      if (this.currentPath && this.currentPath.length > 0) {
+        result = this.currentPath[this.currentPath.length - 1].relativePath
+      }
+
+      if (!result.startsWith('/')) {
+        result = '/' + result
+      }
+      this.$store.commit('SET_HEADER_TITLE', result)
+    }
   },
   computed: {},
   methods: {
+    ...mapActions(['setSelectedDir']),
+    isSelected(selectedDir, list) {
+      // selectedDir.some(i => i.relativePath === item.relativePath)
+
+      //遍历list，然后判断list中元素的relativePath是否在selectedDir元素的relativePath字段相同，若相同则把list中这个元素加上一个字段checked
+      list.forEach(item => {
+        item.checked = selectedDir.some(i => i.relativePath === item.relativePath);
+      })
+
+    },
     getGoogleIconNameFromMimeType(mimeType) {
       const mimeTypeMap = {
         // 文件夹
@@ -156,50 +189,112 @@ export default {
       this.root = root;
     },
     receiveFileList(dirList) {
-      this.files = dirList;
+      this.handleData(dirList)
+    },
+
+    scrollTop() {
+      window.scrollTo(0, 0);
+      // 或者如果需要滚动特定容器，可以使用:
+      // this.$el.querySelector('.file-tree').scrollTop = 0;
 
     },
+    handleData(dirList) {
+      dirList.forEach(item => {
+        item.checked = false;
+      });
+      this.files = dirList;
+      this.isSelected(this.selectedDir, this.files);
+    },
+
+    select(item) {
+      item.checked = !item.checked;
+
+      if (item.checked) {
+
+        //判断是否已经存在，不存在才添加
+        if (this.selectedDir.some(i => i.relativePath === item.relativePath)) {
+          return;
+        }
+        this.selectedDir.push(item);
+
+      } else {
+        this.selectedDir = this.selectedDir.filter(i => i.relativePath !== item.relativePath);
+      }
+      this.setSelectedDir(this.selectedDir);
+    },
+
+
     toChild(item) {
 
-      if (!item.isDirectory){
+      if (!item.isDirectory) {
         return;
       }
+      this.showLoading = true;
 
-      if (!this.currentPath) {
-        this.currentPath = [this.root];
-      } else {
-        this.currentPath.push(item);
-      }
-      this.files  = JSON.parse(window.Android.intoChild(JSON.stringify(item)));
 
+      setTimeout(() => {
+        if (!this.currentPath) {
+          this.currentPath = [this.root];
+        } else {
+          this.currentPath.push(item);
+        }
+        let dirList = JSON.parse(window.Android.intoChild(JSON.stringify(item)));
+        // console.log(" toChild dirList length=" + dirList.length);
+        this.handleData(dirList);
+        this.scrollTop();
+        if (dirList.length < 20) {
+          // console.log("dirList length=" + dirList.length + ", 直接关闭 this.showLoading = "+this.showLoading)
+          this.showLoading = false;
+        } else {
+          this.$nextTick(function () {
+            // console.log("渲染后 直接关闭 this.showLoading = "+this.showLoading)
+            this.showLoading = false;
+
+          })
+        }
+      }, 50);
     },
     intoParent() {
 
+      if (!this.currentPath || this.currentPath.length === 0) {
+        this.$router.back();
 
-      if (this.currentPath && this.currentPath.length > 1) {
-
-        this.currentPath.pop();
       }
+      this.showLoading = true;
+      setTimeout(() => {
 
-      console.log(this.currentPath)
+        if (this.currentPath && this.currentPath.length > 0) {
+          this.currentPath.pop();
+        }
+        let dirList = [];
+        if (!this.currentPath || this.currentPath.length < 1) {
+          // console.log("回到顶级:" + this.root.relativePath)
+          dirList = JSON.parse(window.Android.intoParent(JSON.stringify(this.root)));
+          this.handleData(dirList)
+        } else if (this.currentPath.length > 0) {
+          let item = this.currentPath[this.currentPath.length - 1];
+          // console.log("回到上一级:" + item.relativePath)
+          item = JSON.stringify(item);
+          dirList = JSON.parse(window.Android.intoParent(item))
+          this.handleData(dirList)
+        }
+        this.scrollTop();
+        if (dirList.length < 20) {
+          // console.log("dirList length=" + dirList.length + ", 直接关闭")
+          this.showLoading = false;
+        } else {
+          this.$nextTick(function () {
+            this.showLoading = false;
+          })
+        }
 
-      if (!this.currentPath || this.currentPath.length < 1) {
-        console.log("回到根目录")
-        window.Android.intoParent(JSON.stringify(this.root));
-      } else if (this.currentPath.length > 0) {
-        let item = this.currentPath[this.currentPath.length - 1];
-        item = JSON.stringify(item);
-
-        console.log("返回：" + item)
-        this.files  = JSON.parse(   window.Android.intoParent(item))
-      }
-
+      }, 50);
     },
-    handleBackButton(){
-      console.log("返回")
-      this.intoParent()
-    },
 
+
+  },
+  beforeDestroy() {
+    this.$bus.$off(['iconCallBack'])
   }
 
 }
@@ -324,7 +419,7 @@ export default {
   font-size: 16px;
   margin-bottom: 2px;
   overflow: hidden;
-  word-wrap:break-word;
+  word-wrap: break-word;
 }
 
 .tree-info {
@@ -341,7 +436,6 @@ export default {
   height: 20px;
   accent-color: #1a73e8;
 }
-
 
 
 .custom-checkbox {
@@ -386,7 +480,6 @@ export default {
 .custom-checkbox input:checked ~ .checkmark:after {
   display: block;
 }
-
 
 
 .tree-expand {

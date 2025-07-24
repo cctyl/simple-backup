@@ -7,56 +7,39 @@
       <input type="text" placeholder="搜索文件夹...">
     </div>
 
-    <!-- 已选文件夹 -->
-    <div class="selected-folders">
-      <div class="selected-header ">
-        <div class="selected-title">已选文件夹</div>
-        <div class="selected-count">共3个</div>
-      </div>
-      <div class="selected-list">
 
-
-        <div class="selected-item">
-          <div class="selected-name">/a/b/b/c/s/d/e/Documents</div>
-          <i class="material-icons selected-remove">close</i>
-        </div>
-        <div class="selected-item">
-          <div class="selected-name">/a/b/b/c/s/d/e/Documents</div>
-          <i class="material-icons selected-remove">close</i>
-        </div>
-        <div class="selected-item">
-          <div class="selected-name">/a/b/b/c/s/d/e/Documents</div>
-          <i class="material-icons selected-remove">close</i>
-        </div>
-        <div class="selected-item">
-          <div class="selected-name">/a/b/b/c/s/d/e/Documents</div>
-          <i class="material-icons selected-remove">close</i>
-        </div>
-        <div class="selected-item">
-          <div class="selected-name">/a/b/b/c/s/d/e/Documents</div>
-          <i class="material-icons selected-remove">close</i>
-        </div>
-
-
-      </div>
-    </div>
-
+    <SelectFolder title="已选文件夹" :update="true"></SelectFolder>
     <!-- 底部操作栏 -->
     <div class="action-bar">
 
       <router-link to="/settings/source/select" tag="button" class="action-button cancel-button" >
-          选择文件夹
+          添加文件夹
       </router-link>
       <button class="action-button save-button">保存设置</button>
     </div>
   </div>
 </template>
 <script>
+import {mapActions} from 'vuex'
+import SelectFolder from "@/components/SelectFolder.vue";
 export default {
   name: 'backup-source-view',
-
+  components: {SelectFolder},
+  data(){
+    return {
+      selectedDir:[]
+    }
+  },
+  mounted() {
+    this.selectedDir = this.$store.state.selectedDir;
+  },
   methods:{
+    ...mapActions(['setSelectedDir']),
 
+    removeDir(dir){
+      this.selectedDir = this.selectedDir.filter(item => item.relativePath !== dir.relativePath);
+      this.setSelectedDir(this.selectedDir);
+    }
   }
 }
 </script>
@@ -168,6 +151,7 @@ export default {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  margin: 5px;
 }
 
 .selected-name {

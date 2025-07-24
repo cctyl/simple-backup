@@ -5,6 +5,7 @@ import Settings from "@/pages/setting/Settings.vue";
 import History from "@/pages/History.vue";
 import BackupSource from "@/pages/setting/BackupSource.vue";
 import DirSelect from "@/pages/setting/DirSelect.vue";
+import ServerConfig from "@/pages/setting/ServerConfig.vue";
 
 
 Vue.use(VueRouter)
@@ -30,6 +31,12 @@ const router = new VueRouter({
 
         },
         {
+            path: '/settings/server-config',
+            component: ServerConfig,
+            meta: { headerTitle: '服务器设置' }
+
+        },
+        {
             path: '/settings/source',
             component: BackupSource,
             meta: { headerTitle: '备份源管理' }
@@ -38,7 +45,15 @@ const router = new VueRouter({
         {
             path: '/settings/source/select',
             component: DirSelect,
-            meta: { headerTitle: '文件夹选择' }
+            meta: {
+                headerTitle: '文件夹选择',
+                icon:'keyboard_return',
+                callBack: function () {
+                    console.log("文件夹选择 callBack")
+                   this.$router.back()
+                },
+
+            }
 
         },
         {

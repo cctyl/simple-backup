@@ -2,8 +2,12 @@
 
   <!-- 应用栏 -->
   <div class="app-bar">
-    <span class="material-icons">cloud_done</span>
-    <div class="title">{{currentTitle}}</div>
+    <span class="material-icons" @click="iconCallBack">{{icon}}</span>
+    <div class="title">
+      {{ $store.state.headerTitle? $store.state.headerTitle:currentTitle}}
+
+<!--      /Android/data/com.tencent.mm/.fileexplorer/aa/bb/cc/dd/ee/ff/bb/cc/dd/ee/ff/bb/cc/dd/ee/ff-->
+    </div>
     <div style="flex: 1;"></div>
     <span class="material-icons" @click="clickSync" style="margin-left: 16px; "
 
@@ -23,17 +27,30 @@ export default {
     return {
       spin: false,
       currentTitle:'',
+      icon:'',
+
     }
   },
   watch: {
-    '$route'(to) {
-      this.currentTitle = to.meta.headerTitle || '默认标题'
+    '$route'() {
+      this.$store.commit("SET_HEADER_TITLE",null);
+      this.refresh()
     }
   },
   mounted() {
-    this.currentTitle = this.$route.meta.headerTitle || '默认标题'
+   this.refresh()
   },
   methods:{
+
+    iconCallBack(){
+      console.log('iconCallBack')
+      this.$bus.$emit("iconCallBack")
+    },
+    refresh(){
+      this.currentTitle = this.$route.meta.headerTitle || '默认标题'
+      this.icon= this.$route.meta.icon || 'cloud_done'
+
+    },
     clickSync() {
       this.spin = true;
 
@@ -65,6 +82,8 @@ export default {
 }
 
 .app-bar .title {
+  width: 80%;
+  overflow: hidden;
   font-size: 20px;
   font-weight: 500;
   margin-left: 16px;

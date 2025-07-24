@@ -4,9 +4,15 @@
   <!-- 内容区域 -->
   <div class="content">
     <!-- 状态切换按钮 -->
-    <!--      <div class="state-toggle">-->
-    <!--        <button class="toggle-btn" @click="changeState">切换备份状态</button>-->
-    <!--      </div>-->
+    <div class="state-toggle" v-if="!isReady">
+      <router-link to="/settings/server-config" tag="button" class="toggle-btn highlight" v-if="!serverSettingReady">
+        你还没有设置服务器信息，点我设置
+      </router-link>
+
+      <router-link to="/settings/source" tag="button" class="toggle-btn highlight" v-if="!sourceSettingReady">
+        你还没有添加备份源，点我添加
+      </router-link>
+    </div>
 
     <!-- 备份状态卡片 (默认显示有备份状态) -->
     <div class="card backup-status" id="backupCard">
@@ -22,13 +28,13 @@
           </div>
           <div class="device-info">
             <div class="device-name">我的手机</div>
-            <div class="device-model">{{phoneDetail}}</div>
+            <div class="device-model">{{ phoneDetail }}</div>
           </div>
         </div>
         <div class="backup-stats">
           <div class="stat-item">
             <div class="stat-label">上次备份</div>
-            <div class="stat-value">{{formatRelativeTime( backupList[0].backUpTime) }}</div>
+            <div class="stat-value">{{ formatRelativeTime(backupList[0].backUpTime) }}</div>
           </div>
           <div class="stat-item">
             <div class="stat-label">备份文件数</div>
@@ -36,7 +42,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-label">总大小</div>
-            <div class="stat-value">{{ formatStorage(backupList[0].totalFileSize)}}</div>
+            <div class="stat-value">{{ formatStorage(backupList[0].totalFileSize) }}</div>
           </div>
           <div class="stat-item">
             <div class="stat-label">花费时长</div>
@@ -63,7 +69,7 @@
       </div>
       <div class="card-body">
         <div class="storage-progress">
-          <div class="storage-bar" id="storageBar"  :style="{
+          <div class="storage-bar" id="storageBar" :style="{
             width: progress+'%',
            backgroundColor: progress >= 90 ? '#f44336' :
                      progress >= 80 ? '#ff9800' :
@@ -76,44 +82,39 @@
         </div>
         <div class="storage-info">
           <div class="storage-label">已使用</div>
-          <div class="storage-value" id="storageValue">{{formatSize(available) }} / {{ formatSize(total)}}</div>
+          <div class="storage-value" id="storageValue">{{ formatSize(available) }} / {{ formatSize(total) }}</div>
         </div>
       </div>
     </div>
 
 
-    <!-- 已选文件夹 -->
-    <router-link to="/settings/source" tag="div" class="selected-folders">
-      <div class="selected-header ">
-        <div class="selected-title">将要备份的文件夹</div>
-        <div class="selected-count" >
-          <span class="material-icons" style="color: #5f6368; ">drive_folder_upload</span>
-        </div>
-      </div>
-      <div class="selected-list" >
-
-        <div class="selected-item" v-for="item in selectDirList" :key="item.relativePath">
-          <div class="selected-name">{{item.relativePath}}</div>
-        </div>
-
-
-
-      </div>
-    </router-link>
+    <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
 
 
     <!-- 主操作按钮 -->
-    <button class="primary-button" v-if="hasBackup" style="background: #1a73e8">
-<!--      <i class="material-icons">cloud_upload</i>-->
-      <i class="material-icons" style="animation: spin 1s linear infinite">autorenew</i>
-      <span>立即备份</span>
+    <button class="primary-button"
+
+            :class="{ 'warning': !isReady }"
+            :style="{
+              background: hasBackup?'#1a73e8':'#34a853'
+            }"
+            @click="startBackup"
+    >
+      <i class="material-icons" :style="{animation:hasBackup? 'spin 1s linear infinite':''}">
+        {{ isReady ? (hasBackup ? 'autorenew' : 'cloud_upload') : 'error' }}
+      </i>
+      <span>
+        {{ isReady ? (hasBackup ? '立即备份' : '开始首次备份') : '请配置相关信息（点我）' }}
+      </span>
 
     </button>
-    <button class="primary-button" v-else style="background: #34a853">
-      <i class="material-icons">cloud_upload</i>
-      <span>开始首次备份</span>
+    <!--    <button class="primary-button"
+                :class="{ 'disabled': !isReady }"
+                v-else style="background: #34a853">
+          <i class="material-icons">cloud_upload</i>
+          <span></span>
 
-    </button>
+        </button>-->
 
 
   </div>
@@ -123,57 +124,85 @@
 
 <script>
 
+import SelectFolder from "@/components/SelectFolder.vue";
+
 export default {
   name: 'home-view',
+  components: {SelectFolder},
   data() {
     return {
       hasBackup: true,
       backupList: [{}],
-      phoneDetail:'',
-      total:0,
-      available:0,
-      progress:0,
-      selectDirList:[
-        {
-          relativePath:'aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa/aaaa'
-        }
-      ]
+      phoneDetail: '',
+      total: 0,
+      available: 0,
+      progress: 0,
+      selectedDir: [],
+      showLoading: true,
+
+
+      serverSettingReady: true,
+      sourceSettingReady: true,
     }
   },
   created() {
 
   },
   mounted() {
-
+    this.sourceSettingReady = this.$store.state.selectedDir.length > 0;
+    this.serverSettingReady = this.$store.state.addr && this.$store.state.secret;
     this.getBackupList();
     this.getPhoneDetail();
     this.getStorageInfo();
 
-    setTimeout(()=>{
+    setTimeout(() => {
       this.getProgress()
-    },500)
+    }, 500)
+
   },
   computed: {
 
+    isReady: function () {
+      return this.serverSettingReady && this.sourceSettingReady;
+    },
 
 
   },
   methods: {
-    getProgress(){
+
+
+    startBackup() {
+      if (!this.isReady) {
+
+        this.scrollTop();
+        return;
+      }
+    },
+    scrollTop() {
+      window.scrollTo(0, 0);
+      // 或者如果需要滚动特定容器，可以使用:
+      // this.$el.querySelector('.file-tree').scrollTop = 0;
+
+    },
+    toSource() {
+      console.log('toSource')
+      this.$router.push('/settings/source')
+    },
+    getProgress() {
       let a = this.available / this.total;
       //不保留小数
-      a =  100-Math.floor(a * 100);
+      a = 100 - Math.floor(a * 100);
       this.progress = a;
     },
 
-    getStorageInfo(){
+    getStorageInfo() {
 
       this.total = window.Android.getTotalStorage();
       this.available = window.Android.getAvailableStorage();
       console.log(this.total, this.available)
     },
 
-    getPhoneDetail(){
+    getPhoneDetail() {
       this.phoneDetail = window.Android.getPhoneDetail();
     },
     getBackupList() {
@@ -184,7 +213,7 @@ export default {
 
 
       if (this.backupList.length > 0) {
-         this.hasBackup = true;
+        this.hasBackup = true;
       }
     },
 
@@ -214,16 +243,13 @@ export default {
       // 判断时间范围并返回相应格式
       if (diffMinutes < 60) {
         return `${diffMinutes}分钟前`;
-      }
-      else if (diffHours < 24) {
+      } else if (diffHours < 24) {
         const hours = Math.floor(diffHours);
         const minutes = diffMinutes % 60;
         return `${hours}小时${minutes}分钟前`;
-      }
-      else if (diffDays <= 7) {
+      } else if (diffDays <= 7) {
         return `${diffDays}天前`;
-      }
-      else {
+      } else {
         // 超过7天显示具体日期
         const year = inputDate.getFullYear();
         const month = inputDate.getMonth() + 1; // 月份从0开始
@@ -240,7 +266,7 @@ export default {
     formatSize(size) {
       if (size < 1024) return size + ' B';
       else if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
-      else  if (size < 1024 * 1024 * 1024)
+      else if (size < 1024 * 1024 * 1024)
         return (size / (1024 * 1024)).toFixed(1) + ' MB';
       else return (size / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
     },
@@ -259,6 +285,87 @@ export default {
 </script>
 
 <style scoped>
+/* 警告状态的主按钮样式 */
+.primary-button.warning {
+  background: #fbbc04 !important; /* 警告黄色背景 */
+  color: #202124 !important; /* 深色文字确保可读性 */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.primary-button.warning:hover {
+  background: #f9ab00 !important; /* 悬停时稍深的黄色 */
+  transform: scale(1.02); /* 轻微放大效果 */
+}
+
+.primary-button.warning:active {
+  background: #f2994a !important; /* 按下时的背景颜色 */
+  transform: scale(0.98); /* 轻微缩小效果 */
+}
+
+.primary-button.warning i {
+  color: #202124 !important; /* 图标也使用深色 */
+  animation: warning-pulse 1.5s infinite; /* 添加脉冲动画 */
+}
+
+/* 警告图标脉冲动画 */
+@keyframes warning-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 警告状态下的禁用样式（如果需要） */
+.primary-button.warning.disabled {
+  background: #f1f3f4 !important;
+  color: #9aa0a6 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.primary-button.warning.disabled i {
+  animation: none !important;
+  color: #9aa0a6 !important;
+}
+
+
+
+
+
+
+
+
+
+/* 禁用状态的主按钮样式 */
+.primary-button.disabled {
+  background: #bdc1c6 !important; /* 灰色背景 */
+  color: #9aa0a6 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  animation: none !important; /* 移除动画 */
+}
+
+.primary-button.disabled:hover {
+  background: #bdc1c6 !important; /* 悬停时保持灰色 */
+  transform: none !important; /* 移除变换效果 */
+}
+
+.primary-button.disabled:active {
+  background: #bdc1c6 !important; /* 点击时保持灰色 */
+  transform: none !important;
+}
+
+.primary-button.disabled i {
+  animation: none !important; /* 移除图标动画 */
+  color: #9aa0a6 !important;
+}
+
 
 /* 已选文件夹 */
 .selected-folders {
@@ -319,7 +426,6 @@ export default {
   font-size: 18px;
   cursor: pointer;
 }
-
 
 
 /* Android状态栏 */
@@ -548,12 +654,6 @@ export default {
 }
 
 /* 状态切换 */
-.state-toggle {
-  display: flex;
-  justify-content: center;
-  margin: 16px 0;
-}
-
 .toggle-btn {
   background: #e8f0fe;
   color: #1a73e8;
@@ -562,6 +662,35 @@ export default {
   padding: 8px 16px;
   font-size: 14px;
   cursor: pointer;
+  margin: 5px;
+
+
+}
+
+.toggle-btn.highlight {
+  background: #fde293; /* 醒目的黄色背景 */
+  color: #e37400;
+  box-shadow: 0 0 0 2px #ffa000;
+  animation: pulse 0.8s infinite; /* 添加脉冲动画 */
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 160, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 160, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 160, 0, 0);
+  }
+}
+
+.state-toggle {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  margin: 16px 0px;
 }
 
 /* 响应式调整 */

@@ -42,5 +42,8 @@ body {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
-
+button{
+  outline: none; /* 去除默认的焦点轮廓 */
+  -webkit-tap-highlight-color: transparent; /* 去除点击时的高亮颜色 */
+}
 </style>

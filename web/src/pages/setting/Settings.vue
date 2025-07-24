@@ -22,7 +22,7 @@
           </div>
         </router-link>
 
-        <router-link to="/home"  class="setting-item">
+        <router-link to="/settings/server-config"  class="setting-item">
           <div class="setting-content">
             <div class="setting-icon">
               <i class="material-icons">backup</i>

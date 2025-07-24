@@ -287,7 +287,7 @@ public class WebAppInterface {
 
         Log.d("WebAppInterface", "intoParent: ");
         if (parentDirJson == null) {
-           
+
             return GsonUtils.toJson(rootChild);
         }
         //转换 DirectoryItem
