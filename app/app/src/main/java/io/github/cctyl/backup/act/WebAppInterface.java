@@ -1,5 +1,7 @@
 package io.github.cctyl.backup.act;
 
+import static io.github.cctyl.backup.act.MainActivity.REQUEST_CODE_SCAN;
+
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Intent;
@@ -13,6 +15,8 @@ import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ActivityOptionsCompat;
 
 import com.google.gson.JsonObject;
 
@@ -56,6 +60,13 @@ public class WebAppInterface {
         this.context = context;
         this.sharedPreference = sharedPreference;
         this.jsExecUtil = jsExecUtil;
+    }
+
+    @JavascriptInterface
+    public void startScan(Class<?> cls) {
+        ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeBasic();
+        Intent intent = new Intent(context, cls);
+        ActivityCompat.startActivityForResult(context, intent, REQUEST_CODE_SCAN, optionsCompat.toBundle());
     }
 
 

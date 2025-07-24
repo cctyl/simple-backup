@@ -71,15 +71,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static final int REQUEST_CODE_SCAN = 0x01;
-    public static final int REQUEST_CODE_PHOTO = 0x02;
-    private void startScan(Class<?> cls) {
-        ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeBasic();
-        Intent intent = new Intent(this, cls);
-        ActivityCompat.startActivityForResult(this, intent, REQUEST_CODE_SCAN, optionsCompat.toBundle());
-    }
+
 
     public void testScan(){
-        startScan(FullScreenQRCodeScanActivity.class);
+//        startScan(FullScreenQRCodeScanActivity.class);
     }
     public void testDb(){
 //        BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
@@ -138,7 +133,9 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             if (requestCode == REQUEST_CODE_SCAN) {
                 String result = CameraScan.parseScanResult(data);
+                //TODO 解析数据，存入数据库，并将数据传递给js
                 webAppInterface.toast(result);
+                Log.d("TAG", "onActivityResult: result="+result);
             }
 
         }
