@@ -35,6 +35,7 @@ import io.github.cctyl.backup.R;
 import io.github.cctyl.backup.dao.BackupHistoryDao;
 import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.DirectoryItem;
+import io.github.cctyl.backup.entity.ServerConfig;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
 
@@ -73,10 +74,11 @@ public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_SCAN = 0x01;
 
 
-    public void testScan(){
+    public void testScan() {
 //        startScan(FullScreenQRCodeScanActivity.class);
     }
-    public void testDb(){
+
+    public void testDb() {
 //        BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
 //        BackupHistory backupHistory = new BackupHistory();
 //        backupHistory.setBackupResult("成功");
@@ -133,9 +135,34 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             if (requestCode == REQUEST_CODE_SCAN) {
                 String result = CameraScan.parseScanResult(data);
+
                 //TODO 解析数据，存入数据库，并将数据传递给js
-                webAppInterface.toast(result);
-                Log.d("TAG", "onActivityResult: result="+result);
+
+                if (result != null && !result.isEmpty()) {
+
+                    Log.d("TAG", "onActivityResult: result=" + result);
+                    try {
+                        ServerConfig serverConfig = GsonUtils.fromJson(result, ServerConfig.class);
+                        webAppInterface.toast("解析成功：" + result);
+                        //2.获得SharedPreferences的编辑器
+                        SharedPreferences.Editor edit = sharedPreference.edit();
+                        edit.putString("addr", serverConfig.addr);
+                        edit.putString("secret", serverConfig.secret);
+                        edit.apply();
+
+
+                        //TODO 通知js获取该值
+
+                    } catch (Exception e) {
+
+                        Log.e("TAG", "onActivityResult: ", e);
+                        webAppInterface.toast("解析失败！");
+                    }
+
+
+                } else {
+                    webAppInterface.toast("解析失败！");
+                }
             }
 
         }
@@ -149,8 +176,6 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed(); // 否则按默认行为退出 Activity
         }
     }
-
-
 
 
     private void webviewInit() {
@@ -173,7 +198,6 @@ public class MainActivity extends AppCompatActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setOffscreenPreRaster(true); // 预渲染离屏内容（API 24+）
-
 
 
         // 添加 WebChromeClient 捕获 JS 错误
@@ -201,8 +225,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-
-
             //防止加载网页时调起系统浏览器
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -224,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
         webAppInterface = new WebAppInterface(this, sharedPreference, new JsExecUtil(webView));
         // 添加 JS 接口，"Android" 是接口名，JS 中通过这个名称调用
         webView.addJavascriptInterface(webAppInterface, "Android");
-
 
 
         // 加载本地文件（确保文件在 assets 目录）

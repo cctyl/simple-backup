@@ -33,6 +33,7 @@ import io.github.cctyl.backup.AppApplication;
 import io.github.cctyl.backup.dao.BackupHistoryDao;
 import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.DirectoryItem;
+import io.github.cctyl.backup.entity.ServerConfig;
 import io.github.cctyl.backup.utils.DeviceUtils;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
@@ -238,6 +239,17 @@ public class WebAppInterface {
             });
         }
     }
+
+
+    @JavascriptInterface
+    public String getServerConfig(){
+        ServerConfig serverConfig = new ServerConfig();
+        serverConfig.addr = sharedPreference.getString("addr",null);
+        serverConfig.secret = sharedPreference.getString("secret",null);
+
+        return GsonUtils.toJson(serverConfig);
+    }
+
 
     @JavascriptInterface
     public String intoChild(String targetDirJson) {
