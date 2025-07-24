@@ -3,6 +3,8 @@ package io.github.cctyl.backup.act;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ActivityOptionsCompat;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -25,6 +27,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+
+import com.king.camera.scan.CameraScan;
 
 import io.github.cctyl.backup.AppApplication;
 import io.github.cctyl.backup.R;
@@ -62,9 +66,21 @@ public class MainActivity extends AppCompatActivity {
 
 
         webviewInit();
+        testScan();
 
     }
 
+    public static final int REQUEST_CODE_SCAN = 0x01;
+    public static final int REQUEST_CODE_PHOTO = 0x02;
+    private void startScan(Class<?> cls) {
+        ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeBasic();
+        Intent intent = new Intent(this, cls);
+        ActivityCompat.startActivityForResult(this, intent, REQUEST_CODE_SCAN, optionsCompat.toBundle());
+    }
+
+    public void testScan(){
+        startScan(FullScreenQRCodeScanActivity.class);
+    }
     public void testDb(){
 //        BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
 //        BackupHistory backupHistory = new BackupHistory();
@@ -118,6 +134,13 @@ public class MainActivity extends AppCompatActivity {
                 edit.apply();
                 webAppInterface.initRootFileList(uri);
             }
+        }
+        if (resultCode == RESULT_OK && data != null) {
+            if (requestCode == REQUEST_CODE_SCAN) {
+                String result = CameraScan.parseScanResult(data);
+                webAppInterface.toast(result);
+            }
+
         }
     }
 
