@@ -99,10 +99,13 @@
       <i class="material-icons" :style="{animation:hasBackup? 'spin 1s linear infinite':''}">
         {{ isReady ? (hasBackup ? 'autorenew' : 'cloud_upload') : 'error' }}
       </i>
+
       <span>
         {{ isReady ? (hasBackup ? '立即备份' : '开始首次备份') : '请配置相关信息（点我）' }}
       </span>
-
+      <i class="material-icons" v-if="!isReady" style="margin-left: 20px">
+        arrow_circle_up
+      </i>
     </button>
     <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
 
