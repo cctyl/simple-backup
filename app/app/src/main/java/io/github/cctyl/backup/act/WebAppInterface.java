@@ -31,8 +31,10 @@ import java.util.List;
 
 import io.github.cctyl.backup.AppApplication;
 import io.github.cctyl.backup.dao.BackupHistoryDao;
+import io.github.cctyl.backup.dao.SelectDirDao;
 import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.DirectoryItem;
+import io.github.cctyl.backup.entity.SelectDir;
 import io.github.cctyl.backup.entity.ServerConfig;
 import io.github.cctyl.backup.utils.DeviceUtils;
 import io.github.cctyl.backup.utils.GsonUtils;
@@ -48,6 +50,12 @@ public class WebAppInterface {
     private DirectoryItem root;
 
     private BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
+    private SelectDirDao selectDirDao = AppApplication.getInstance().getApplicationDatabase().selectDirDao();
+
+
+    public JsExecUtil getJsExecUtil() {
+        return jsExecUtil;
+    }
 
     public void setRootChild(List<DirectoryItem> rootChild) {
         this.rootChild = rootChild;
@@ -64,9 +72,9 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void startScan(Class<?> cls) {
+    public void startScan() {
         ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeBasic();
-        Intent intent = new Intent(context, cls);
+        Intent intent = new Intent(context, FullScreenQRCodeScanActivity.class);
         ActivityCompat.startActivityForResult(context, intent, REQUEST_CODE_SCAN, optionsCompat.toBundle());
     }
 
@@ -103,6 +111,33 @@ public class WebAppInterface {
         return GsonUtils.toJson(list);
     }
 
+
+    @JavascriptInterface
+    public String getSelectDir(){
+
+        // 查询已选择的文件夹
+        List<SelectDir> all = selectDirDao.findAll();
+
+        Log.d("WebAppInterface", "getSelectDir: 查询结果："+all);
+        return GsonUtils.toJson(all);
+    }
+
+    @JavascriptInterface
+    public void setSelectDir(String json){
+
+        List<SelectDir> directoryItems = GsonUtils.fromJsonArr(json,SelectDir.class);
+        Log.d("WebAppInterface", "setSelectDir: "+directoryItems);
+
+        // 数据库更新选择的文件夹
+        int i = selectDirDao.deleteAll();
+
+        Log.d("WebAppInterface", "setSelectDir: 删除"+i);
+        List<Long> insert = selectDirDao.insert(directoryItems);
+
+        Log.d("WebAppInterface", "setSelectDir: 插入结果："+insert);
+
+        toast("保存成功");
+    }
 
     @JavascriptInterface
     public long getTotalStorage() {
@@ -250,7 +285,15 @@ public class WebAppInterface {
         return GsonUtils.toJson(serverConfig);
     }
 
+    @JavascriptInterface
+    public void setServerConfig(String json) {
+        ServerConfig serverConfig = GsonUtils.fromJson(json, ServerConfig.class);
+        sharedPreference.edit()
+                .putString("addr", serverConfig.addr)
+                .putString("secret", serverConfig.secret)
+                .apply();
 
+    }
     @JavascriptInterface
     public String intoChild(String targetDirJson) {
 

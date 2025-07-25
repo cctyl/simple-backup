@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e0d794fdf0f6f69fe586dd2b1e286828",
+    "identityHash": "3ca92ef856b6e695944f72a53c35d367",
     "entities": [
       {
         "tableName": "backup_history",
@@ -59,12 +59,62 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "select_dir",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT, `treeUri` TEXT, `docId` TEXT, `rootDocId` TEXT, `relativePath` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "treeUri",
+            "columnName": "treeUri",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "docId",
+            "columnName": "docId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rootDocId",
+            "columnName": "rootDocId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "relativePath",
+            "columnName": "relativePath",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e0d794fdf0f6f69fe586dd2b1e286828')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3ca92ef856b6e695944f72a53c35d367')"
     ]
   }
 }

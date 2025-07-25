@@ -10,27 +10,19 @@ export default {
     setSelectedDir(context, value) {
 
 
-        //TODO 向Android发起请求，更新数据
-
+        // 向Android发起请求，更新数据
+        window.Android.setSelectDir(JSON.stringify(value));
         //commit
         context.commit('SET_SELECTED_DIR', value)
     },
 
-    setAddr(context, value) {
 
 
-        //TODO 向Android发起请求，更新数据
+    setServerConfig(context, value) {
 
+        // 向Android发起请求，更新数据
+        window.Android.setServerConfig(JSON.stringify( value));
         //commit
-        context.commit('SET_ADDR', value)
-    },
-
-    setSecret(context, value) {
-
-
-        //TODO 向Android发起请求，更新数据
-
-        //commit
-        context.commit('SET_SECRET', value)
+        context.commit('SET_SERVER_CONFIG', value)
     },
 }

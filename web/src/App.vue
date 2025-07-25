@@ -5,7 +5,7 @@
       <router-view></router-view>
     </div>
 
-    <Footer ></Footer>
+    <Footer></Footer>
   </div>
 </template>
 
@@ -13,11 +13,40 @@
 
 import Header from "@/components/Header.vue";
 import Footer from "@/components/Footer.vue";
+import {mapMutations} from "vuex";
+
 export default {
   name: 'App',
   components: {
-  Header,Footer
-  }
+      Header, Footer
+  },
+  created() {
+    this.initDateFromAndroid();
+  },
+  methods:{
+    ...mapMutations(['SET_SERVER_CONFIG','SET_SELECTED_DIR']),
+
+    /**
+     * 向android请求数据然后存入vuex
+     */
+    initDateFromAndroid(){
+      this.getServerConfig();
+      this.getSelectDir();
+    },
+
+    getServerConfig(){
+      let config = JSON.parse(window.Android.getServerConfig());
+      console.log("App getServerConfig=", config)
+      this.SET_SERVER_CONFIG(config);
+    },
+
+    getSelectDir(){
+      let arr = JSON.parse(window.Android.getSelectDir());
+      console.log("App getSelectDir=", arr)
+      this.SET_SELECTED_DIR(arr)
+    },
+
+  },
 }
 </script>
 
@@ -25,9 +54,11 @@ export default {
 html body {
   height: 100%;
 }
-#app{
+
+#app {
   height: 100%;
 }
+
 body {
   font-family: 'Roboto', sans-serif;
   background-color: #f5f5f5;
@@ -36,13 +67,15 @@ body {
   padding: 0;
 
 }
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
-button{
+
+button {
   outline: none; /* 去除默认的焦点轮廓 */
   -webkit-tap-highlight-color: transparent; /* 去除点击时的高亮颜色 */
 }

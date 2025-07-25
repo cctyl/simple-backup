@@ -4,41 +4,40 @@
     <!-- 搜索栏 -->
     <div class="search-container">
       <i class="material-icons">search</i>
-      <input type="text" placeholder="搜索文件夹...">
+      <input type="text" placeholder="搜索文件夹..." v-model="filter">
     </div>
 
 
-    <SelectFolder title="已选文件夹" :update="true"></SelectFolder>
+    <SelectFolder :filter="filter"  title="已选文件夹" :update="true"></SelectFolder>
     <!-- 底部操作栏 -->
     <div class="action-bar">
 
-      <router-link to="/settings/source/select" tag="button" class="action-button cancel-button" >
-          添加文件夹
+      <router-link to="/settings/source/select" tag="button" class="action-button cancel-button">
+        添加文件夹
       </router-link>
-      <button class="action-button save-button">保存设置</button>
+      <button class="action-button save-button" @click="saveSelectDir">保存设置</button>
     </div>
   </div>
 </template>
 <script>
-import {mapActions} from 'vuex'
+
 import SelectFolder from "@/components/SelectFolder.vue";
+import {mapActions} from "vuex";
+
 export default {
   name: 'backup-source-view',
   components: {SelectFolder},
-  data(){
+  data() {
     return {
-      selectedDir:[]
+      filter:'',
     }
   },
   mounted() {
-    this.selectedDir = this.$store.state.selectedDir;
   },
-  methods:{
+  methods: {
     ...mapActions(['setSelectedDir']),
-
-    removeDir(dir){
-      this.selectedDir = this.selectedDir.filter(item => item.relativePath !== dir.relativePath);
-      this.setSelectedDir(this.selectedDir);
+    saveSelectDir(){
+      this.setSelectedDir(this.$store.state.selectedDir)
     }
   }
 }
@@ -53,7 +52,7 @@ export default {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .search-container i {
@@ -103,8 +102,6 @@ export default {
   color: white;
   box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
 }
-
-
 
 
 /* 已选文件夹 */
@@ -172,7 +169,6 @@ export default {
   padding: 16px;
   margin: 0 auto;
 }
-
 
 
 </style>

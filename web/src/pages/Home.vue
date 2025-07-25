@@ -131,8 +131,8 @@ export default {
   components: {SelectFolder},
   data() {
     return {
-      hasBackup: true,
-      backupList: [{}],
+      hasBackup: false,
+      backupList: [],
       phoneDetail: '',
       total: 0,
       available: 0,
@@ -150,7 +150,7 @@ export default {
   },
   mounted() {
     this.sourceSettingReady = this.$store.state.selectedDir.length > 0;
-    this.serverSettingReady = this.$store.state.addr && this.$store.state.secret;
+    this.serverSettingReady = this.$store.state.serverConfig.addr && this.$store.state.serverConfig.secret;
     this.getBackupList();
     this.getPhoneDetail();
     this.getStorageInfo();
@@ -173,19 +173,16 @@ export default {
 
     startBackup() {
       if (!this.isReady) {
-
         this.scrollTop();
         return;
       }
     },
     scrollTop() {
       window.scrollTo(0, 0);
-      // 或者如果需要滚动特定容器，可以使用:
-      // this.$el.querySelector('.file-tree').scrollTop = 0;
+
 
     },
     toSource() {
-      console.log('toSource')
       this.$router.push('/settings/source')
     },
     getProgress() {
@@ -214,6 +211,8 @@ export default {
 
       if (this.backupList.length > 0) {
         this.hasBackup = true;
+      }else {
+        this.hasBackup = false;
       }
     },
 

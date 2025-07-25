@@ -10,7 +10,7 @@
     </div>
     <div class="selected-list" v-if="  selectedDir.length>0">
 
-      <div class="selected-item" v-for="item in selectedDir" :key="item.relativePath">
+      <div class="selected-item" v-for="item in filterSelectDir" :key="item.relativePath">
         <div class="selected-name">{{ item.relativePath }}</div>
         <i v-if="update" class="material-icons selected-remove" @click="removeDir(item)">close</i>
       </div>
@@ -25,7 +25,7 @@
 
 </template>
 <script>
-import {mapActions} from "vuex";
+import { mapMutations} from "vuex";
 
 export default {
   name: 'select-folder-view',
@@ -34,6 +34,7 @@ export default {
     showCount: Boolean,
     update: Boolean,
     title: String,
+    filter: String,
   },
   data() {
     return {
@@ -41,16 +42,29 @@ export default {
 
     }
   },
+  computed:{
+    filterSelectDir() {
+      if (this.filter){
+        return this.selectedDir.filter(dir =>
+            dir.name.toLowerCase().includes(this.filter.toLowerCase())
+        );
+      }else {
+        return this.selectedDir;
+      }
+
+    },
+
+  },
   mounted() {
     this.selectedDir = this.$store.state.selectedDir;
   },
   methods: {
 
-    ...mapActions(['setAddr','setSecret']),
+    ...mapMutations(['SET_SELECTED_DIR']),
 
     removeDir(dir) {
       this.selectedDir = this.selectedDir.filter(item => item.relativePath !== dir.relativePath);
-      this.setSelectedDir(this.selectedDir);
+      this.SET_SELECTED_DIR(this.selectedDir);
     }
   }
 }

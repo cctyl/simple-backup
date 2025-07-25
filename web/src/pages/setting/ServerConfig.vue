@@ -3,7 +3,7 @@
   <div class="content">
     <!-- 服务器设置卡片 -->
     <div class="settings-card">
-      <div class="card-header">服务器连接设置</div>
+      <div class="card-header">服务器连接设置(或右上角扫码)</div>
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">服务器地址</label>
@@ -30,7 +30,7 @@
               class="form-input"
               :class="{ 'input-error': validationErrors.accessToken }"
               placeholder="输入您的访问令牌"
-              v-model="accessToken">
+              v-model="secret">
             <span class="password-toggle material-icons" @click="togglePasswordVisibility">
               {{ showPassword ? 'visibility_off' : 'visibility' }}
             </span>
@@ -65,14 +65,14 @@
 </template>
 
 <script>
-import {mapActions} from "vuex";
+import {mapActions, mapMutations} from "vuex";
 
 export default {
   name: 'server-config-view',
   data() {
     return {
       showPassword: false,
-      accessToken: '',
+      secret: '',
       addr: '',
       showTestResult: false,
       testMsg: '',
@@ -86,12 +86,14 @@ export default {
   },
 
   mounted() {
-    this.addr = this.$store.state.addr;
-    this.accessToken = this.$store.state.secret;
-
+    this.addr = this.$store.state.serverConfig.addr;
+    this.secret = this.$store.state.serverConfig.secret;
+    this.$bus.$on('rightIconCallBack', this.scanQrCode);
+    window.vue.receiveServerConfig = this.receiveServerConfig;
   },
   methods: {
-    ...mapActions(['setAddr','setSecret']),
+    ...mapActions(['setServerConfig']),
+    ...mapMutations(['SET_SERVER_CONFIG']),
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword;
     },
@@ -112,7 +114,7 @@ export default {
         hasError = true;
       }
 
-      if (!this.accessToken) {
+      if (!this.secret) {
         this.validationErrors.accessToken = true;
         hasError = true;
       }
@@ -124,8 +126,11 @@ export default {
         return;
       }
 
-      this.setAddr(this.addr);
-      this.setSecret(this.accessToken);
+      this.setServerConfig({
+        addr: this.addr,
+        secret: this.secret
+      })
+
 
       this.testMsg = ' 保存设置成功！';
 
@@ -133,6 +138,26 @@ export default {
       this.showTestResult = true;
 
     },
+    scanQrCode(){
+      window.Android.startScan();
+    },
+
+    /**
+     * 接收结果
+     * @param config
+     */
+    receiveServerConfig(config){
+
+      console.log("ServerConfig receiveServerConfig=", config)
+      this.SET_SERVER_CONFIG( config)
+      this.addr = config.addr;
+      this.secret = config.secret;
+    }
+
+
+  },
+  beforeDestroy() {
+    this.$bus.$off(['rightIconCallBack'])
   }
 }
 </script>

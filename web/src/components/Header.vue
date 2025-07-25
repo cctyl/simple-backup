@@ -2,19 +2,16 @@
 
   <!-- 应用栏 -->
   <div class="app-bar">
-    <span class="material-icons" @click="iconCallBack">{{icon}}</span>
+    <span class="material-icons" @click="iconCallBack">{{ icon }}</span>
     <div class="title">
-      {{ $store.state.headerTitle? $store.state.headerTitle:currentTitle}}
-
-<!--      /Android/data/com.tencent.mm/.fileexplorer/aa/bb/cc/dd/ee/ff/bb/cc/dd/ee/ff/bb/cc/dd/ee/ff-->
+      {{ $store.state.headerTitle ? $store.state.headerTitle : currentTitle }}
     </div>
     <div style="flex: 1;"></div>
     <span class="material-icons" @click="clickSync" style="margin-left: 16px; "
-
-    :style="{
-      animation: spin?'spin 1s linear infinite':''
-    }"
-    >settings_backup_restore</span>
+          :style="{
+              animation: spin?'spin 1s linear infinite':''
+          }"
+    >{{rightIcon}}</span>
   </div>
 
 
@@ -26,37 +23,39 @@ export default {
   data() {
     return {
       spin: false,
-      currentTitle:'',
-      icon:'',
+      currentTitle: '',
+      icon: '',
+      rightIcon:''
 
     }
   },
   watch: {
     '$route'() {
-      this.$store.commit("SET_HEADER_TITLE",null);
+      this.$store.commit("SET_HEADER_TITLE", null);
       this.refresh()
     }
   },
   mounted() {
-   this.refresh()
+    this.refresh()
   },
-  methods:{
+  methods: {
 
-    iconCallBack(){
+    iconCallBack() {
       console.log('iconCallBack')
       this.$bus.$emit("iconCallBack")
     },
-    refresh(){
+    refresh() {
       this.currentTitle = this.$route.meta.headerTitle || '默认标题'
-      this.icon= this.$route.meta.icon || 'cloud_done'
+      this.icon = this.$route.meta.icon || 'cloud_done'
+      this.rightIcon = this.$route.meta.rightIcon || 'settings_backup_restore'
 
     },
     clickSync() {
       this.spin = true;
-
+      this.$bus.$emit("rightIconCallBack")
       setTimeout(() => {
         this.spin = false;
-      },1000)
+      }, 500)
     },
 
   }
@@ -77,7 +76,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 56px;
 }
 

@@ -54,7 +54,7 @@
 
 </template>
 <script>
-import {mapActions} from 'vuex'
+import { mapMutations} from 'vuex'
 import Loading from "@/components/Loading.vue";
 
 export default {
@@ -114,7 +114,7 @@ export default {
   },
   computed: {},
   methods: {
-    ...mapActions(['setSelectedDir']),
+    ...mapMutations(['SET_SELECTED_DIR']),
     isSelected(selectedDir, list) {
       // selectedDir.some(i => i.relativePath === item.relativePath)
 
@@ -210,17 +210,15 @@ export default {
       item.checked = !item.checked;
 
       if (item.checked) {
-
         //判断是否已经存在，不存在才添加
         if (this.selectedDir.some(i => i.relativePath === item.relativePath)) {
           return;
         }
         this.selectedDir.push(item);
-
       } else {
         this.selectedDir = this.selectedDir.filter(i => i.relativePath !== item.relativePath);
       }
-      this.setSelectedDir(this.selectedDir);
+      this.SET_SELECTED_DIR(this.selectedDir);
     },
 
 

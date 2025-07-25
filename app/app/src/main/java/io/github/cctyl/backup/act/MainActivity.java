@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         webviewInit();
-        testScan();
+//        testDb();
 
     }
 
@@ -79,21 +79,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void testDb() {
-//        BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
-//        BackupHistory backupHistory = new BackupHistory();
-//        backupHistory.setBackupResult("成功");
-//        backupHistory.setSuccess(true);
-//        backupHistory.setBackUpTime(LocalDateTime.now());
-//        backupHistory.setBackUpNum(1L);
-//        backupHistory.setBackUpCostTime(1);
-//        backupHistory.setTotalFileSize(1);
-//        backupHistoryDao.insertOne(backupHistory);
-//
-//        Log.d("MainActivity", "testDb: 插入成功");
+        BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
+        BackupHistory backupHistory = new BackupHistory();
+        backupHistory.setBackupResult("成功");
+        backupHistory.setSuccess(true);
+        backupHistory.setBackUpTime(LocalDateTime.now());
+        backupHistory.setBackUpNum(1L);
+        backupHistory.setBackUpCostTime(1);
+        backupHistory.setTotalFileSize(1);
+        backupHistoryDao.insertOne(backupHistory);
+
+        Log.d("MainActivity", "testDb: 插入成功");
 
 
-//        List<BackupHistory> all = backupHistoryDao.findAll();
-//        Log.d("MainActivity", "testDb: "+all);
+        List<BackupHistory> all = backupHistoryDao.findAll();
+        Log.d("MainActivity", "testDb: "+all);
 
 
     }
@@ -136,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
             if (requestCode == REQUEST_CODE_SCAN) {
                 String result = CameraScan.parseScanResult(data);
 
-                //TODO 解析数据，存入数据库，并将数据传递给js
 
                 if (result != null && !result.isEmpty()) {
 
@@ -150,8 +149,11 @@ public class MainActivity extends AppCompatActivity {
                         edit.putString("secret", serverConfig.secret);
                         edit.apply();
 
-
-                        //TODO 通知js获取该值
+                        //通知js获取该值
+                        webAppInterface.getJsExecUtil().exec("receiveServerConfig",
+                                GsonUtils.toJsonObject(serverConfig),
+                                null
+                        );
 
                     } catch (Exception e) {
 

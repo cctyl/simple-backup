@@ -7,13 +7,16 @@ import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 import io.github.cctyl.backup.utils.gson.LocalDateTimeAdapter;
 import io.github.cctyl.backup.utils.gson.UriTypeAdapter;
@@ -35,7 +38,13 @@ public class GsonUtils {
     }
 
     public static<T> T fromJson(String json,Class<T> clazz){
+
         return gson.fromJson(json,clazz);
+    }
+
+    public static <T> List<T> fromJsonArr(String json,Class<T> clazz){
+        Type type = TypeToken.getParameterized(List.class, clazz).getType();
+        return gson.fromJson(json, type);
     }
 
     public static JSONObject toJsonObject(Object o){

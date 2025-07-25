@@ -33,7 +33,7 @@ const router = new VueRouter({
         {
             path: '/settings/server-config',
             component: ServerConfig,
-            meta: { headerTitle: '服务器设置' }
+            meta: { headerTitle: '服务器设置',rightIcon:'qr_code_scanner' }
 
         },
         {
