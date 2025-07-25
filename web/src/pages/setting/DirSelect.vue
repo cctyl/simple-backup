@@ -54,7 +54,7 @@
 
 </template>
 <script>
-import { mapMutations} from 'vuex'
+import {mapMutations} from 'vuex'
 import Loading from "@/components/Loading.vue";
 
 export default {
@@ -86,6 +86,7 @@ export default {
         },
       ],
       selectedDir: [],
+      timer: null,
     }
   },
   created() {
@@ -223,14 +224,17 @@ export default {
 
 
     toChild(item) {
-
+      if (this.timer != null) {
+        window.Android.toast("点太快了");
+        return;
+      }
       if (!item.isDirectory) {
         return;
       }
       this.showLoading = true;
 
 
-      setTimeout(() => {
+      this.timer = setTimeout(() => {
         if (!this.currentPath) {
           this.currentPath = [this.root];
         } else {
@@ -250,16 +254,22 @@ export default {
 
           })
         }
+
+
+        this.timer = null;
       }, 50);
     },
     intoParent() {
 
+      if (this.timer != null) {
+        window.Android.toast("点太快了");
+        return;
+      }
       if (!this.currentPath || this.currentPath.length === 0) {
         this.$router.back();
-
       }
       this.showLoading = true;
-      setTimeout(() => {
+      this.timer = setTimeout(() => {
 
         if (this.currentPath && this.currentPath.length > 0) {
           this.currentPath.pop();
@@ -285,10 +295,10 @@ export default {
             this.showLoading = false;
           })
         }
-
+        this.timer = null;
       }, 50);
     },
-    onAppBackPressed(){
+    onAppBackPressed() {
       console.log("dir select 接收到返回，保存一次数据")
       this.intoParent()
     },
@@ -297,7 +307,7 @@ export default {
   },
   beforeDestroy() {
     this.$bus.$off([
-        'iconCallBack',
+      'iconCallBack',
 
       'onAppBackPressed'])
   }
