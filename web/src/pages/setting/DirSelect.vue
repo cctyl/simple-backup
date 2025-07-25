@@ -73,7 +73,7 @@ export default {
           isDirectory: true
         },
         {
-          name: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          name: "bbb",
           mimeType: "vnd.android.document/directory"
         },
         {
@@ -94,6 +94,7 @@ export default {
     window.vue.receiveRoot = this.receiveRoot;
   },
   mounted() {
+    this.$bus.$on('onAppBackPressed', this.onAppBackPressed);
     this.$bus.$on('iconCallBack', this.intoParent);
     this.selectedDir = this.$store.state.selectedDir;
     window.Android.init();
@@ -116,7 +117,6 @@ export default {
   methods: {
     ...mapMutations(['SET_SELECTED_DIR']),
     isSelected(selectedDir, list) {
-      // selectedDir.some(i => i.relativePath === item.relativePath)
 
       //遍历list，然后判断list中元素的relativePath是否在selectedDir元素的relativePath字段相同，若相同则把list中这个元素加上一个字段checked
       list.forEach(item => {
@@ -180,7 +180,7 @@ export default {
         return mimeTypeMap[wildcardKey];
       }
 
-      console.log(`${mimeType} 没有对应图标 `)
+      // console.log(`${mimeType} 没有对应图标 `)
 
       // 默认图标
       return 'insert_drive_file';
@@ -288,11 +288,18 @@ export default {
 
       }, 50);
     },
+    onAppBackPressed(){
+      console.log("dir select 接收到返回，保存一次数据")
+      this.intoParent()
+    },
 
 
   },
   beforeDestroy() {
-    this.$bus.$off(['iconCallBack'])
+    this.$bus.$off([
+        'iconCallBack',
+
+      'onAppBackPressed'])
   }
 
 }

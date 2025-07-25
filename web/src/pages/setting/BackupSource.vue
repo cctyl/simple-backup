@@ -8,14 +8,22 @@
     </div>
 
 
-    <SelectFolder :filter="filter"  title="已选文件夹" :update="true"></SelectFolder>
+    <SelectFolder :filter="filter" title="已选文件夹" :update="true"></SelectFolder>
     <!-- 底部操作栏 -->
     <div class="action-bar">
 
-      <router-link to="/settings/source/select" tag="button" class="action-button cancel-button">
+      <router-link to="/settings/source/select" tag="button" class="action-button save-button" v-if="hasPermission">
         添加文件夹
       </router-link>
-      <button class="action-button save-button" @click="saveSelectDir">保存设置</button>
+      <button class="action-button  cancel-button" @click="saveSelectDir" :disabled="!hasPermission"
+              v-if="hasPermission">保存设置
+      </button>
+      <button class="action-button authorization-button"
+              :class="{secondary: hasPermission}"
+              @click="applyPermission">
+        {{ hasPermission ? '重新选择根目录' : '请授权app访问目录' }}
+      </button>
+
     </div>
   </div>
 </template>
@@ -29,20 +37,82 @@ export default {
   components: {SelectFolder},
   data() {
     return {
-      filter:'',
+      filter: '',
+      hasPermission: false,
     }
   },
+  created() {
+
+  },
   mounted() {
+    window.vue.checkPermission = this.checkPermission;
+    this.$bus.$on('onAppBackPressed', this.onAppBackPressed);
+    console.log("backup mounted")
+    this.checkPermission();
   },
   methods: {
     ...mapActions(['setSelectedDir']),
-    saveSelectDir(){
+    saveSelectDir() {
       this.setSelectedDir(this.$store.state.selectedDir)
-    }
+    },
+    checkPermission() {
+      this.hasPermission = Boolean(window.Android.getDirUri());
+    },
+    applyPermission() {
+
+      window.Android.applyPermission(this.hasPermission);
+    },
+    onAppBackPressed(){
+      this.saveSelectDir()
+      this.$router.back();
+    },
+
+  },
+  beforeDestroy() {
+    this.$bus.$off(['onAppBackPressed']);
   }
 }
 </script>
 <style scoped>
+
+
+.authorization-button {
+  background: linear-gradient(45deg, #4CAF50, #8BC34A);
+  color: white;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  border: none;
+  font-weight: 600;
+}
+
+.authorization-button:hover {
+  background: linear-gradient(45deg, #43A047, #7CB342);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
+
+.authorization-button.secondary {
+  background: #f1f3f4;
+  color: #5f6368;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: normal;
+}
+
+.authorization-button.secondary:hover {
+  background: #e8eaed;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.authorization-button {
+  background: linear-gradient(45deg, #4CAF50, #8BC34A);
+  color: white;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  border: none;
+  font-weight: 600;
+}
+
+.authorization-button:hover {
+  background: linear-gradient(45deg, #43A047, #7CB342);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
 
 /* 搜索栏 */
 .search-container {

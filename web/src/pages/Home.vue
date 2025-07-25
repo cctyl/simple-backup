@@ -42,7 +42,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-label">总大小</div>
-            <div class="stat-value">{{ formatStorage(backupList[0].totalFileSize) }}</div>
+            <div class="stat-value">{{ formatSize(backupList[0].totalFileSize) }}</div>
           </div>
           <div class="stat-item">
             <div class="stat-label">花费时长</div>
@@ -87,10 +87,6 @@
       </div>
     </div>
 
-
-    <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
-
-
     <!-- 主操作按钮 -->
     <button class="primary-button"
 
@@ -108,13 +104,9 @@
       </span>
 
     </button>
-    <!--    <button class="primary-button"
-                :class="{ 'disabled': !isReady }"
-                v-else style="background: #34a853">
-          <i class="material-icons">cloud_upload</i>
-          <span></span>
+    <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
 
-        </button>-->
+
 
 
   </div>
@@ -176,6 +168,9 @@ export default {
         this.scrollTop();
         return;
       }
+
+
+      window.Android.addTestHistory();
     },
     scrollTop() {
       window.scrollTo(0, 0);
@@ -231,6 +226,7 @@ export default {
     formatRelativeTime(isoDateTime) {
       // 解析输入时间
       const inputDate = new Date(isoDateTime);
+      console.log(inputDate)
       const now = new Date();
 
       // 计算时间差（毫秒）

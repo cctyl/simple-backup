@@ -21,6 +21,10 @@ public class BackupHistory {
     @ColumnInfo(name = "backup_result")
     private String backupResult;
 
+
+    @ColumnInfo(name = "backup_detail")
+    private String backupDetail;
+
     /**
      * 是否成功
      */
@@ -54,7 +58,22 @@ public class BackupHistory {
     private Integer totalFileSize;
 
 
+    /**
+     * 备份的路径，逗号隔开
+     */
+    @ColumnInfo(name = "back_up_path_arr")
+    private String backUpPathArr;
+
     public BackupHistory() {
+    }
+
+
+    public String getBackupDetail() {
+        return backupDetail;
+    }
+
+    public void setBackupDetail(String backupDetail) {
+        this.backupDetail = backupDetail;
     }
 
     public Integer getId() {
@@ -114,17 +133,11 @@ public class BackupHistory {
     }
 
 
-    @Override
-    @Ignore
-    public String toString() {
-        return "BackupHistory{" +
-                "id=" + id +
-                ", backupResult='" + backupResult + '\'' +
-                ", success=" + success +
-                ", backUpTime=" + backUpTime +
-                ", backUpNum=" + backUpNum +
-                ", backUpCostTime=" + backUpCostTime +
-                ", totalFileSize=" + totalFileSize +
-                '}';
+    public String getBackUpPathArr() {
+        return backUpPathArr;
+    }
+
+    public void setBackUpPathArr(String backUpPathArr) {
+        this.backUpPathArr = backUpPathArr;
     }
 }

@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <Header></Header>
+    <Header   :style="{
+      paddingTop: statusBarHeight+'px'
+    }"></Header>
     <div style="padding-bottom: 100px;padding-top: 60px;  ">
       <router-view></router-view>
     </div>
@@ -20,8 +22,19 @@ export default {
   components: {
       Header, Footer
   },
+  data(){
+
+    return{
+      statusBarHeight:45
+    }
+  },
   created() {
-    this.initDateFromAndroid();
+    this.statusBarHeight = window.Android.getStatusBarHeight();
+
+    window.vue.onAppBackPressed = this.onAppBackPressed;
+    this.initDataFromAndroid();
+  },
+  mounted() {
   },
   methods:{
     ...mapMutations(['SET_SERVER_CONFIG','SET_SELECTED_DIR']),
@@ -29,10 +42,11 @@ export default {
     /**
      * 向android请求数据然后存入vuex
      */
-    initDateFromAndroid(){
+    initDataFromAndroid(){
       this.getServerConfig();
       this.getSelectDir();
     },
+
 
     getServerConfig(){
       let config = JSON.parse(window.Android.getServerConfig());
@@ -46,16 +60,22 @@ export default {
       this.SET_SELECTED_DIR(arr)
     },
 
+    onAppBackPressed(){
+      console.log("app 发送返回信号")
+      this.$bus.$emit("onAppBackPressed")
+    }
   },
 }
 </script>
 
 <style>
+
 html body {
   height: 100%;
 }
 
 #app {
+
   height: 100%;
 }
 
