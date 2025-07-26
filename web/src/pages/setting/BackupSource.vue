@@ -38,7 +38,7 @@ export default {
   data() {
     return {
       filter: '',
-      hasPermission: false,
+      hasPermission: true,
     }
   },
   created() {
@@ -70,6 +70,7 @@ export default {
   },
   beforeDestroy() {
     this.$bus.$off(['onAppBackPressed']);
+    this.saveSelectDir();
   }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
 
   <!-- 底部导航 -->
-  <div class="bottom-nav">
+  <div class="bottom-nav" >
 
 
     <router-link to="/home" class="nav-item " active-class="active" replace>

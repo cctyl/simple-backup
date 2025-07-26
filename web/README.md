@@ -1,5 +1,8 @@
 # web
 
+## 注意
+	node 版本22
+
 ## Project setup
 ```
 npm install

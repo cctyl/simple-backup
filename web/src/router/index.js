@@ -53,6 +53,8 @@ const router = new VueRouter({
                    this.$router.back()
                 },
 
+                hideFooter:true
+
             }
 
         },

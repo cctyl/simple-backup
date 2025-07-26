@@ -41,6 +41,8 @@
           </div>
           <div class="tree-checkbox" v-if="item.isDirectory" @click.stop="select(item)">
             <input type="checkbox" :checked="item.checked">
+
+
           </div>
 
 
@@ -444,14 +446,41 @@ export default {
 
 .tree-checkbox {
   margin-left: 16px;
+  margin-right: 20px;
 }
 
 .tree-checkbox input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   accent-color: #1a73e8;
 }
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
 
+input[type="checkbox"]:checked {
+  background-color: #1a73e8; /* 选中时的颜色 */
+}
+
+input[type="checkbox"]:checked::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 4px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
 
 .custom-checkbox {
   position: relative;

@@ -321,7 +321,7 @@ public class WebAppInterface {
 
         Log.d("WebAppInterface", "setSelectDir: 插入结果：" + insert);
 
-        toast("保存成功");
+        toast("文件夹保存成功");
     }
 
     @JavascriptInterface
