@@ -340,6 +340,23 @@ public class WebAppInterface {
         return DeviceUtils.getPhoneDetail();
     }
 
+
+    @JavascriptInterface
+    public void startBackup(){
+        //TODO 开始备份
+
+
+        Log.d("WebAppInterface", "startBackup: 耗时操作开始 ");
+
+        try {
+            Thread.sleep(10000);
+            Log.d("WebAppInterface", "startBackup: 耗时操作结束");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     @JavascriptInterface
     public void completeBackup(){
         //TODO  提前结束备份

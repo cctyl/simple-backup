@@ -176,7 +176,7 @@ export default {
       this.$store.commit("SET_BACKUP_STATUS",1)
 
 
-      window.Android.addTestHistory();
+      window.Android.startBackup();
     },
     scrollTop() {
       window.scrollTo(0, 0);
