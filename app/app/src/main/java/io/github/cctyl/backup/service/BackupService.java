@@ -58,6 +58,7 @@ public class BackupService extends Service {
     public BackupService() {
     }
 
+    //TODO 单进程似乎没有bind的必要，直接startService即可
     @Override
     public IBinder onBind(Intent intent) {
         Log.d("BackupService", "onBind: ");
