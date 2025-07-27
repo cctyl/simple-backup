@@ -23,4 +23,8 @@ export default {
     SET_SERVER_CONFIG(state,value){
         state.serverConfig=value
     },
+
+    SET_BACKUP_STATUS(state,value){
+        state.backupStatus=value
+    }
 }

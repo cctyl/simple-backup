@@ -340,6 +340,19 @@ public class WebAppInterface {
         return DeviceUtils.getPhoneDetail();
     }
 
+    @JavascriptInterface
+    public void completeBackup(){
+        //TODO  提前结束备份
+    }
+    @JavascriptInterface
+    public void resumeBackup(){
+        //TODO  继续备份
+    }
+    @JavascriptInterface
+    public void pauseBackup(){
+        //TODO 暂停备份
+    }
+
     public void initRootFileList(Uri uri) {
         //根节点的初始化
         String rootDocId = DocumentsContract.getTreeDocumentId(uri);

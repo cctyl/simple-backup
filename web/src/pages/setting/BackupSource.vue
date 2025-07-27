@@ -38,7 +38,7 @@ export default {
   data() {
     return {
       filter: '',
-      hasPermission: true,
+      hasPermission: false,
     }
   },
   created() {

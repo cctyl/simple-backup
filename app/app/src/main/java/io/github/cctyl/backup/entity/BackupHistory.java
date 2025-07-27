@@ -64,6 +64,18 @@ public class BackupHistory {
     @ColumnInfo(name = "back_up_path_arr")
     private String backUpPathArr;
 
+    @ColumnInfo(name = "task_finish")
+    private Boolean taskFinish;
+
+
+    public Boolean getTaskFinish() {
+        return taskFinish;
+    }
+
+    public void setTaskFinish(Boolean taskFinish) {
+        this.taskFinish = taskFinish;
+    }
+
     public BackupHistory() {
     }
 

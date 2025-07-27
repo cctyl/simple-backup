@@ -2,11 +2,11 @@
 
 
   <!-- 内容区域 -->
-  <div >
-
-  <BackupReadyView></BackupReadyView>
-
-
+  <div class="transition-container">
+    <AnimatedTransition>
+      <BackupReady v-if="$store.state.backupStatus===0" :key="0"></BackupReady>
+      <BackupRunning v-else :key="1"></BackupRunning>
+    </AnimatedTransition>
   </div>
 
 
@@ -14,14 +14,16 @@
 
 <script>
 
-import BackupReadyView from "./setting/BackupReady";
+import BackupReady from "./home/BackupReady";
+import BackupRunning from "./home/BackupRunning";
+import AnimatedTransition from "@/components/AnimatedTransition.vue";
 
 export default {
   name: 'home-view',
-  components: {BackupReadyView},
+  components: {AnimatedTransition, BackupReady, BackupRunning},
   data() {
     return {
-
+      running: true
     }
   },
   created() {
@@ -31,19 +33,15 @@ export default {
 
 
   },
-  computed: {
 
-
-
-  },
-  methods: {
-
-
-
-  }
+  computed: {},
+  methods: {}
 }
 </script>
 
 <style scoped>
-
+.transition-container {
+  position: relative;
+  min-height: 500px; /* 根据实际内容调整 */
+}
 </style>
