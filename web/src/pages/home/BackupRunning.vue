@@ -134,6 +134,8 @@ export default {
   },
   computed: {},
   methods: {
+
+
     resumeBackup() {
       this.$store.commit('SET_BACKUP_STATUS', 1)
       window.android.resumeBackup();
@@ -261,7 +263,12 @@ export default {
       return 'insert_drive_file';
     },
     receiveProgressData(progressInfo) {
-      this.progressInfo = progressInfo;
+      this.totalPercent = progressInfo.totalPercent;
+      this.alreadyUploadFileSize = progressInfo.alreadyUploadFileSize;
+      this.currentFile = progressInfo.currentFile;
+      this.speed = progressInfo.speed;
+      this.startTime = progressInfo.startTime;
+      this.alreadyUploadFileNum = progressInfo.alreadyUploadFileNum;
     },
   }
 }
