@@ -1,14 +1,18 @@
 package io.github.cctyl.backup.act;
 
+import static android.content.Context.BIND_AUTO_CREATE;
 import static io.github.cctyl.backup.act.MainActivity.REQUEST_CODE_SCAN;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.IBinder;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
@@ -17,8 +21,6 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ActivityOptionsCompat;
-
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 
@@ -37,6 +39,7 @@ import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.DirectoryItem;
 import io.github.cctyl.backup.entity.SelectDir;
 import io.github.cctyl.backup.entity.ServerConfig;
+import io.github.cctyl.backup.service.BackupService;
 import io.github.cctyl.backup.utils.DeviceUtils;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
@@ -54,6 +57,43 @@ public class WebAppInterface {
     private BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
     private SelectDirDao selectDirDao = AppApplication.getInstance().getApplicationDatabase().selectDirDao();
 
+
+    private static boolean isBind = false;
+
+    public void bindBackupService() {
+        Log.d("WebAppInterface", "bindBackupService: ");
+        Intent bindIntent = new Intent(context, BackupService.class);
+        context.bindService(bindIntent, connection, BIND_AUTO_CREATE); // 绑定服务
+    }
+
+    public void unbindBackupService() {
+        if (isBind) {
+
+            isBind = false;
+            context.unbindService(connection);
+        } else {
+
+            Log.d("WebAppInterface", "unbindBackupService: 未绑定，不要重复解绑");
+        }
+    }
+
+    private BackupService.LocalBinder binder;
+    private ServiceConnection connection = new ServiceConnection() {
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            isBind = true;
+            binder = (BackupService.LocalBinder) service;
+
+            Log.d("TestServiceActivity", "onServiceConnected: 链接了");
+
+
+        }
+    };
 
     public JsExecUtil getJsExecUtil() {
         return jsExecUtil;
@@ -80,6 +120,24 @@ public class WebAppInterface {
         ActivityCompat.startActivityForResult(context, intent, REQUEST_CODE_SCAN, optionsCompat.toBundle());
     }
 
+
+    @JavascriptInterface
+    public int getStatus(){
+
+        if (binder==null ){
+
+            if ( BackupService.isBinder){
+                Log.d("WebAppInterface", "getStatus: 重新绑定");
+                bindBackupService();
+                return binder.getStatus();
+            }else {
+                return 0;
+            }
+        }else {
+            return binder.getStatus();
+        }
+
+    }
 
     public void sendFilesToWebView(List<DirectoryItem> list) {
         JSONArray fileArray = new JSONArray();
@@ -265,17 +323,17 @@ public class WebAppInterface {
         if (resourceId > 0) {
             result = context.getResources().getDimensionPixelSize(resourceId);
         }
-        return result/2;
+        return result / 2;
     }
 
     @JavascriptInterface
-    public void applyPermission(boolean refresh){
-        
-        if (refresh){
+    public void applyPermission(boolean refresh) {
+
+        if (refresh) {
 
             Log.d("WebAppInterface", "applyPermission: 刷新uri");
             openFolderPicker(124);
-        }else {
+        } else {
             String uri = sharedPreference.getString("uri", null);
             if (uri == null) {
 
@@ -287,12 +345,12 @@ public class WebAppInterface {
                 toast("已授权！请继续操作");
             }
         }
-       
+
     }
 
 
     @JavascriptInterface
-    public String getDirUri(){
+    public String getDirUri() {
         return sharedPreference.getString("uri", null);
 
     }
@@ -342,32 +400,30 @@ public class WebAppInterface {
 
 
     @JavascriptInterface
-    public void startBackup(){
-        //TODO 开始备份
+    public void startBackup() {
+        // 开始备份
+        bindBackupService();
+    }
 
+    @JavascriptInterface
+    public void completeBackup() {
+        //  提前结束备份
 
-        Log.d("WebAppInterface", "startBackup: 耗时操作开始 ");
-
-        try {
-            Thread.sleep(10000);
-            Log.d("WebAppInterface", "startBackup: 耗时操作结束");
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        binder.setStatus(0);
+        unbindBackupService();
 
     }
 
     @JavascriptInterface
-    public void completeBackup(){
-        //TODO  提前结束备份
+    public void resumeBackup() {
+        // 继续备份
+        binder.setStatus(1);
     }
+
     @JavascriptInterface
-    public void resumeBackup(){
-        //TODO  继续备份
-    }
-    @JavascriptInterface
-    public void pauseBackup(){
-        //TODO 暂停备份
+    public void pauseBackup() {
+        // 暂停备份
+        binder.setStatus(2);
     }
 
     public void initRootFileList(Uri uri) {

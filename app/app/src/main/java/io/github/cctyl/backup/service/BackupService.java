@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
@@ -12,31 +13,45 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import java.util.function.Function;
 
 import io.github.cctyl.backup.R;
+import io.github.cctyl.backup.act.MainActivity;
 import io.github.cctyl.backup.act.TestServiceActivity;
 
 public class BackupService extends Service {
+    public static boolean isBinder = false;
 
     private LocalBinder binder = new LocalBinder();
+    String foregroundChannelId = "foregroundChannelId";
+    String foregroundChannelName = "备份进度通知";
 
+
+    String completeChannelId = "completeChannelId";
+    String completeChannelName = "备份完成通知";
     private Thread t = null;
+
+
+
 
     private Function<String,String> mCallBack;
     /**
      * 状态，0结束，1运行中，2暂停，
      */
-    private int status ;
+    private int mStatus = 0;
 
     public class LocalBinder extends Binder {
 
 
-        public void receiveCallback(Function<String,String> callBack ){
-            mCallBack = callBack;
+        public void setStatus(int status){
+            mStatus = status;
+        }
+
+
+        public int getStatus(){
+            return mStatus;
         }
     }
 
@@ -55,145 +70,178 @@ public class BackupService extends Service {
         super.onCreate();
         Log.d("BackupService", "onCreate: ");
         setNotification();
-        status = 1;
+        mStatus = 1;
+        isBinder = true;
 
         t = new Thread(() -> {
 
             while (true){
 
-               if (status==1){
-
+               if (mStatus ==1){
                    try {
                        task();
-                       mCallBack.apply("运行一次");
                    } catch (InterruptedException e) {
-
                        Log.d("BackupService", "onCreate: 睡眠被中断，结束线程运行");
                        break;
                    }
-
-               }else if (status==2){
-
-
+               }else if (mStatus ==2){
                    Log.d("BackupService", "onCreate: 暂停中");
-
+                   updateStopStateProgress();
                    try {
                        Thread.sleep(1000);
                    } catch (InterruptedException e) {
                        Log.d("BackupService", "onCreate: 睡眠被中断，结束线程运行");
                        break;
                    }
-               }else {
+               } else {
 
                    Log.d("BackupService", "onCreate: 结束线程");
                    break;
                }
-
-
             }
 
-
-
-
+            stopForeground(STOP_FOREGROUND_REMOVE);
+            finishNotify();
+            stopSelf();
         });
 
         t.start();
 
     }
 
-
+    /**
+     * 初始化设置通知
+     */
     public void setNotification() {
         // 创建通知渠道（Android 8.0+ 必需）
-        String channelId = "my_channel_id";
-        String channelName = "My Foreground Service";
+        startForeground(1, getNotification(0,"备份中","正在准备中。。。"));
+    }
+
+    /**
+     * 创建通知信息
+     * @param progress
+     * @param title
+     * @param contentText
+     * @return
+     */
+    private Notification getNotification(int progress, String title ,String contentText) {
+
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    channelId,
-                    channelName,
-                    NotificationManager.IMPORTANCE_DEFAULT);
             NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel);
+
+            if (manager.getNotificationChannel(foregroundChannelId) == null){
+                NotificationChannel channel = new NotificationChannel(
+                        foregroundChannelId,
+                        foregroundChannelName,
+                        NotificationManager.IMPORTANCE_DEFAULT);
+                manager.createNotificationChannel(channel);
+            }
         }
 
-        Intent intent = new Intent(this, TestServiceActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         // 创建带进度条的通知
-        Notification notification = new NotificationCompat.Builder(this, channelId)
-                .setContentTitle("This is content title")
-                .setContentText("This is content text")
+        // 必须设置，且不能为0
+        // 设置优先级
+        // 添加进度条：最大值100，当前进度0，不确定模式false
+        return new NotificationCompat.Builder(this, foregroundChannelId)
+                .setContentTitle(title)
+                .setContentText(contentText)
+                .setSubText("简单备份")
                 .setWhen(System.currentTimeMillis())
                 .setSmallIcon(R.mipmap.ic_launcher)  // 必须设置，且不能为0
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
                 .setContentIntent(pi)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)  // 设置优先级
-                .setProgress(100, 0, false)  // 添加进度条：最大值100，当前进度0，不确定模式false
+                .setProgress(100, progress, false)  // 添加进度条：最大值100，当前进度0，不确定模式false
                 .build();
-
-        startForeground(1, notification);
     }
 
-    // 更新进度条
-    private void updateNotificationProgress(int progress) {
-        String channelId = "my_channel_id"; // 必须与创建时相同
+    /**
+     * 结束时的通知
+     */
+    public void finishNotify(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = getSystemService(NotificationManager.class);
 
-        Notification notification = new NotificationCompat.Builder(this, channelId)
-                .setContentTitle("This is content title")
-                .setContentText("This is content text")
-                .setSmallIcon(R.mipmap.ic_launcher) // 必须设置且有效
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
-                .setProgress(100, progress, false) // 更新进度
-                .build();
+            if (manager.getNotificationChannel(completeChannelId) == null){
+                NotificationChannel channel = new NotificationChannel(
+                        completeChannelId,
+                        completeChannelName,
+                        NotificationManager.IMPORTANCE_HIGH);
+                manager.createNotificationChannel(channel);
+            }
+        }
 
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        manager.notify(1, notification); // 必须使用与startForeground相同的ID
-    }
-
-
-    public void finishNottify(){
-        String channelId = "my_channel_id"; // 必须与创建时相同
-
-        Notification notification = new NotificationCompat.Builder(this, channelId)
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification notification = new NotificationCompat.Builder(this, completeChannelId)
                 .setContentTitle("备份完成")
                 .setSmallIcon(R.mipmap.ic_launcher) // 必须设置且有效
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setContentIntent(pi)
                 .build();
 
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.notify((int) System.currentTimeMillis(), notification); // 必须使用与startForeground相同的ID
     }
-    private int progress = 95;
+
+
+    public void updateStopStateProgress(){
+        getSystemService(NotificationManager.class).notify(1, getNotification(progress,"已暂停","点击继续备份"));
+    }
+
+
+    public void updateProgress(int progress){
+        getSystemService(NotificationManager.class).notify(1, getNotification(progress,"备份中", progress+"%"));
+    }
+
+    private int progress = 60;
+
+
+    /**
+     * 主逻辑，
+     * 必须支持随时打断，打断后可恢复
+     * @throws InterruptedException
+     */
     public void task() throws InterruptedException {
 
+        //TODO 必须支持随时打断，打断后可恢复
 
         if (progress>=100){
-
-            status = 0;
-            stopForeground(STOP_FOREGROUND_REMOVE);
-            finishNottify();
-            stopSelf();
+            mStatus = 0;
             return;
         }
 
         Log.d("BackupService", "task: 模拟任务运行...");
         Thread.sleep(1000);
 
-        updateNotificationProgress(++progress);
+        updateProgress(++progress);
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    /**
+     * 随时随地打断程序
+     * @throws InterruptedException
+     */
+    public void anytimeInterrupted() throws InterruptedException {
 
-        Log.d("BackupService", "onStartCommand: ");
+        if(mStatus!=1){
+            throw new InterruptedException();
+        }
 
-        return super.onStartCommand(intent, flags, startId);
     }
+
 
     @Override
     public void onDestroy() {
         Log.d("BackupService", "onDestroy: ");
         t.interrupt();
+        isBinder = false;
         super.onDestroy();
     }
 }

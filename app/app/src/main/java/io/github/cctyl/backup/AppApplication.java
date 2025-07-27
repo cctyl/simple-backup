@@ -14,6 +14,7 @@ public class AppApplication extends Application {
     private static Context context;
     private ApplicationDatabase mApplicationDatabase;
 
+
     public static AppApplication getInstance() {
         return mApp;
     }

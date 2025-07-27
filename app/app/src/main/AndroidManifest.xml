@@ -22,11 +22,11 @@
         <activity
             android:name=".act.TestServiceActivity"
             android:exported="true">
-            <intent-filter>
+       <!--     <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            </intent-filter>-->
         </activity>
 
         <service
@@ -37,11 +37,11 @@
         <activity
             android:name=".act.MainActivity"
             android:exported="true">
-          <!--  <intent-filter>
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>-->
+            </intent-filter>
         </activity>
         <activity
             android:name=".act.FullScreenQRCodeScanActivity"

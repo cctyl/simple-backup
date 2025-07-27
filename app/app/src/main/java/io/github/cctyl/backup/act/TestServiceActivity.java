@@ -42,12 +42,6 @@ public class TestServiceActivity extends AppCompatActivity implements View.OnCli
             binder = (BackupService.LocalBinder) service;
 
             Log.d("TestServiceActivity", "onServiceConnected: 链接了");
-            binder.receiveCallback(s -> {
-
-
-                Log.d("TestServiceActivity", "receiveCallback: "+s);
-                return "";
-            });
 
         }
     };

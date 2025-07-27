@@ -7,15 +7,18 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.ActivityOptionsCompat;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
@@ -41,6 +44,7 @@ import io.github.cctyl.backup.dao.BackupHistoryDao;
 import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.DirectoryItem;
 import io.github.cctyl.backup.entity.ServerConfig;
+import io.github.cctyl.backup.service.BackupService;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
 import io.github.cctyl.backup.utils.ToastUtil;
@@ -71,11 +75,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        //沉浸式状态栏
         makeStatusBarTransparent();
         setLightStatusBarIcons();
+
+        //webview初始化
         webviewInit();
-//        testDb();
 
 
     }
@@ -262,6 +267,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
+
+
     private void webviewInit() {
         WebView.setWebContentsDebuggingEnabled(true);
         webView = findViewById(R.id.web_view);
@@ -336,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
 //        webView.loadUrl("file:///android_asset/index.html");
 
 
-        webView.loadUrl("http://192.168.31.151:8080");
+        webView.loadUrl("http://192.168.43.137:8080");
     }
 
 }

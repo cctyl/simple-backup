@@ -138,11 +138,11 @@ export default {
 
     resumeBackup() {
       this.$store.commit('SET_BACKUP_STATUS', 1)
-      window.android.resumeBackup();
+      window.Android.resumeBackup();
     },
     pauseBackup() {
       this.$store.commit('SET_BACKUP_STATUS', 2)
-      window.android.pauseBackup();
+      window.Android.pauseBackup();
     },
     completeBackup() {
       this.showConfirmModal = true;
@@ -153,7 +153,7 @@ export default {
       console.log("修改状态")
       this.showConfirmModal = false;
       this.$store.commit('SET_BACKUP_STATUS', 0)
-      window.android.completeBackup();
+      window.Android.completeBackup();
     },
     handleCancelComplete() {
       this.showConfirmModal = false;
