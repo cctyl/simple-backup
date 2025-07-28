@@ -1,0 +1,27 @@
+package io.github.cctyl.backup.dao;
+
+import androidx.room.Dao;
+import androidx.room.Insert;
+import androidx.room.Query;
+
+import java.util.List;
+
+import io.github.cctyl.backup.entity.BackupFile;
+import io.github.cctyl.backup.entity.SelectDir;
+
+@Dao
+public interface BackupFileDao {
+
+
+    @Insert
+    Long insertOne(BackupFile selectDir);
+
+    @Insert
+    List<Long> insert(List<BackupFile>  selectDirs);
+
+    @Query(" delete from backup_file ")
+    int deleteAll();
+
+    @Query(" select * from backup_file order by id desc ")
+    List<BackupFile> findAll();
+}

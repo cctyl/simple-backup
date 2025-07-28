@@ -2,18 +2,41 @@ package io.github.cctyl.backup.entity;
 
 import android.net.Uri;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 
-public class DirectoryItem {
+
+@Entity(tableName = "backup_file")
+public class BackupFile {
+
+    @PrimaryKey(autoGenerate = true)
+    private Integer id;
+
+
     private String name;        //文件名
+
+
+    @ColumnInfo(name = "tree_uri")
     private Uri treeUri;      // 用于访问该目录内容的Uri
+
+    @ColumnInfo(name = "doc_id")
     private String docId;       // 当前目录的docId（用于构建子目录Uri）
     private long size;          //文件大小，byte
+    @ColumnInfo(name = "last_modified")
     private long lastModified;  //最后修改时间，时间戳
+
+    @ColumnInfo(name = "is_directory")
     private boolean isDirectory;//是否是目录
+
+    @ColumnInfo(name = "root_doc_id")
     private String rootDocId;//是否是目录
+
+    @ColumnInfo(name = "relative_path")
     private String relativePath;//是否是目录
+
+    @ColumnInfo(name = "mime_type")
     private String mimeType;//是否是目录
 
     public String getRootDocId() {
@@ -33,7 +56,19 @@ public class DirectoryItem {
         this.mimeType = mimeType;
     }
 
-    public DirectoryItem(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory, String rootDocId, String relativePath, String mimeType) {
+    public BackupFile() {
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    @Ignore
+    public BackupFile(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory, String rootDocId, String relativePath, String mimeType) {
         this.name = name;
         this.treeUri = treeUri;
         this.docId = docId;
@@ -101,34 +136,5 @@ public class DirectoryItem {
         this.relativePath = relativePath;
     }
 
-    //    public static JSONObject toJson(DirectoryItem item) {
-//        JSONObject parentObj = new JSONObject();
-//        try {
-//            parentObj.put("name", item.getName());
-//            parentObj.put("docId", item.getDocId());
-//            parentObj.put("treeUri", item.getTreeUri().toString());
-//            parentObj.put("size", item.getSize());
-//            parentObj.put("lastModified", item.getLastModified());
-//            parentObj.put("isDirectory", item.isDirectory());
-//            parentObj.put("rootDocId", item.getRootDocId());
-//            return parentObj;
-//        } catch (JSONException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-//
-//    public static DirectoryItem fromJson(JSONObject jsonObject) {
-//        try {
-//            String name = jsonObject.getString("name");
-//            String docId = jsonObject.getString("docId");
-//            Uri treeUri = Uri.parse(jsonObject.getString("treeUri"));
-//            long size = jsonObject.getLong("size");
-//            long lastModified = jsonObject.getLong("lastModified");
-//            boolean isDirectory = jsonObject.getBoolean("isDirectory");
-//            String rootDocId = jsonObject.getString("rootDocId");
-//            return new DirectoryItem(name, treeUri, docId, size, lastModified, isDirectory,rootDocId);
-//        } catch (JSONException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+
 }

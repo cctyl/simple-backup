@@ -36,7 +36,7 @@ import io.github.cctyl.backup.AppApplication;
 import io.github.cctyl.backup.dao.BackupHistoryDao;
 import io.github.cctyl.backup.dao.SelectDirDao;
 import io.github.cctyl.backup.entity.BackupHistory;
-import io.github.cctyl.backup.entity.DirectoryItem;
+import io.github.cctyl.backup.entity.BackupFile;
 import io.github.cctyl.backup.entity.SelectDir;
 import io.github.cctyl.backup.entity.ServerConfig;
 import io.github.cctyl.backup.service.BackupService;
@@ -51,8 +51,8 @@ public class WebAppInterface {
     private MainActivity context;
     private SharedPreferences sharedPreference;
     private JsExecUtil jsExecUtil;
-    private List<DirectoryItem> rootChild;
-    private DirectoryItem root;
+    private List<BackupFile> rootChild;
+    private BackupFile root;
 
     private BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
     private SelectDirDao selectDirDao = AppApplication.getInstance().getApplicationDatabase().selectDirDao();
@@ -99,11 +99,11 @@ public class WebAppInterface {
         return jsExecUtil;
     }
 
-    public void setRootChild(List<DirectoryItem> rootChild) {
+    public void setRootChild(List<BackupFile> rootChild) {
         this.rootChild = rootChild;
     }
 
-    public void setRoot(DirectoryItem root) {
+    public void setRoot(BackupFile root) {
         this.root = root;
     }
 
@@ -139,10 +139,10 @@ public class WebAppInterface {
 
     }
 
-    public void sendFilesToWebView(List<DirectoryItem> list) {
+    public void sendFilesToWebView(List<BackupFile> list) {
         JSONArray fileArray = new JSONArray();
         // 添加文件列表
-        for (DirectoryItem item : list) {
+        for (BackupFile item : list) {
             fileArray.put(GsonUtils.toJsonObject(item));
         }
 
@@ -175,7 +175,7 @@ public class WebAppInterface {
     }
 
 
-    @JavascriptInterface
+
     public void addTestHistory() {
 
 
@@ -429,21 +429,21 @@ public class WebAppInterface {
     public void initRootFileList(Uri uri) {
         //根节点的初始化
         String rootDocId = DocumentsContract.getTreeDocumentId(uri);
-        DirectoryItem root = new DirectoryItem("根目录",
+        BackupFile root = new BackupFile("根目录",
                 uri, rootDocId, 0, 0, true, rootDocId, "/", DocumentsContract.Document.MIME_TYPE_DIR);
         this.setRoot(root);
         jsExecUtil.exec("receiveRoot", GsonUtils.toJsonObject(root), null);
 
         //拿到根目录下面的文件数据
-        List<DirectoryItem> rootChild = getChildrenByDocId(uri, rootDocId, rootDocId);
+        List<BackupFile> rootChild = getChildrenByDocId(uri, rootDocId, rootDocId);
         this.setRootChild(rootChild);
         sendFilesToWebView(rootChild);
     }
 
     @SuppressLint("Range")
-    public List<DirectoryItem> getChildrenByDocId(Uri treeUri, String parentDocId, String rootDocId) {
+    public List<BackupFile> getChildrenByDocId(Uri treeUri, String parentDocId, String rootDocId) {
 
-        List<DirectoryItem> list = new ArrayList<>();
+        List<BackupFile> list = new ArrayList<>();
         ContentResolver resolver = context.getContentResolver();
 
 
@@ -496,7 +496,7 @@ public class WebAppInterface {
 //                String relativePath = childDocId.replaceAll(rootDocId, "");
                 String relativePath = childDocId.replaceAll("primary:", "");
 
-                list.add(new DirectoryItem(name, treeUri, childDocId, size, lastModified, isDirectory, rootDocId, relativePath, mimeType));
+                list.add(new BackupFile(name, treeUri, childDocId, size, lastModified, isDirectory, rootDocId, relativePath, mimeType));
 
             }
         } finally {
@@ -506,9 +506,9 @@ public class WebAppInterface {
         }
 
 
-        Collections.sort(list, new Comparator<DirectoryItem>() {
+        Collections.sort(list, new Comparator<BackupFile>() {
             @Override
-            public int compare(DirectoryItem o1, DirectoryItem o2) {
+            public int compare(BackupFile o1, BackupFile o2) {
 
                 //对list排序，如果isDirectory=true，排在前面，其次再按照name排序
                 if (o1.isDirectory() && !o2.isDirectory()) {
@@ -573,8 +573,8 @@ public class WebAppInterface {
 
         Log.d("WebAppInterface", "intoChild: ");
         //转换 DirectoryItem
-        DirectoryItem targetDir = GsonUtils.fromJson(targetDirJson, DirectoryItem.class);
-        List<DirectoryItem> childrenByDocId = getChildrenByDocId(targetDir.getTreeUri(), targetDir.getDocId(), targetDir.getRootDocId());
+        BackupFile targetDir = GsonUtils.fromJson(targetDirJson, BackupFile.class);
+        List<BackupFile> childrenByDocId = getChildrenByDocId(targetDir.getTreeUri(), targetDir.getDocId(), targetDir.getRootDocId());
 
 
         return GsonUtils.toJson(childrenByDocId);
@@ -608,7 +608,7 @@ public class WebAppInterface {
 
         Log.d("WebAppInterface", "getMd5: ");
         //转换 DirectoryItem
-        DirectoryItem targetDir = GsonUtils.fromJson(targetDirJson, DirectoryItem.class);
+        BackupFile targetDir = GsonUtils.fromJson(targetDirJson, BackupFile.class);
         Uri uri = DocumentsContract.buildDocumentUriUsingTree(targetDir.getTreeUri(), targetDir.getDocId());
         String fileMD5 = getFileMD5(uri);
 
@@ -628,10 +628,10 @@ public class WebAppInterface {
             return GsonUtils.toJson(rootChild);
         }
         //转换 DirectoryItem
-        DirectoryItem parentDir = GsonUtils.fromJson(parentDirJson, DirectoryItem.class);
+        BackupFile parentDir = GsonUtils.fromJson(parentDirJson, BackupFile.class);
 
         Log.d("WebAppInterface", "intoParent: " + parentDir.getDocId());
-        List<DirectoryItem> childrenByDocId = getChildrenByDocId(parentDir.getTreeUri(), parentDir.getDocId(), parentDir.getRootDocId());
+        List<BackupFile> childrenByDocId = getChildrenByDocId(parentDir.getTreeUri(), parentDir.getDocId(), parentDir.getRootDocId());
 
 
         return GsonUtils.toJson(childrenByDocId);

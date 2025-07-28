@@ -3,62 +3,42 @@ package io.github.cctyl.backup.act;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.ActivityOptionsCompat;
 
 import android.annotation.SuppressLint;
-import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
-import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 import com.king.camera.scan.CameraScan;
 
 import io.github.cctyl.backup.AppApplication;
 import io.github.cctyl.backup.R;
+import io.github.cctyl.backup.dao.BackupFileDao;
 import io.github.cctyl.backup.dao.BackupHistoryDao;
+import io.github.cctyl.backup.entity.BackupFile;
 import io.github.cctyl.backup.entity.BackupHistory;
-import io.github.cctyl.backup.entity.DirectoryItem;
 import io.github.cctyl.backup.entity.ServerConfig;
-import io.github.cctyl.backup.service.BackupService;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
 import io.github.cctyl.backup.utils.ToastUtil;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.InputStream;
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -150,6 +130,25 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void testDb2(){
+
+        BackupFileDao backupFileDao = AppApplication.getInstance().getApplicationDatabase().backupFileDao();
+
+
+        BackupFile b = new BackupFile();
+        b.setName("a.txt");
+        b.setTreeUri(Uri.parse("content://com.android.externalstorage.documents/tree/primary%3A/document/primary%3A/"));
+        b.setDocId("1");
+        b.setSize(1L);
+        b.setLastModified(1L);
+        b.setDirectory(false);
+        b.setRelativePath("a.txt");
+        b.setMimeType("text/plain");
+
+        backupFileDao.insertOne(b);
+
+
+    }
 
     @Override
     protected void onDestroy() {
@@ -344,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
 //        webView.loadUrl("file:///android_asset/index.html");
 
 
-        webView.loadUrl("http://192.168.43.137:8080");
+        webView.loadUrl("http://192.168.43.149:8080");
     }
 
 }

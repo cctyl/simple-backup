@@ -28,7 +28,7 @@ export default {
   },
   created() {
 
-    window.Android.toast("当前状态="+window.Android.getStatus());
+    //window.Android.toast("当前状态="+window.Android.getStatus());
     this.$store.commit("SET_BACKUP_STATUS",window.Android.getStatus());
   },
   mounted() {
