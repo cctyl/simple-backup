@@ -146,7 +146,10 @@ export default {
   mounted() {
     window.scrollTo(0, 0);
     this.sourceSettingReady = this.$store.state.selectedDir.length > 0;
-    this.serverSettingReady = this.$store.state.serverConfig.addr && this.$store.state.serverConfig.secret;
+
+    //TODO 临时关闭
+    // this.serverSettingReady = this.$store.state.serverConfig.addr && this.$store.state.serverConfig.secret;
+    this.serverSettingReady = true;
     this.getBackupList();
     this.getPhoneDetail();
     this.getStorageInfo();
@@ -176,7 +179,7 @@ export default {
       this.$store.commit("SET_BACKUP_STATUS",1)
 
 
-      window.Android.startBackup();
+
     },
     scrollTop() {
       window.scrollTo(0, 0);

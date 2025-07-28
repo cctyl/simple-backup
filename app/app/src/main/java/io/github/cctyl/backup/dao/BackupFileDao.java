@@ -3,6 +3,7 @@ package io.github.cctyl.backup.dao;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import java.util.List;
 
@@ -24,4 +25,10 @@ public interface BackupFileDao {
 
     @Query(" select * from backup_file order by id desc ")
     List<BackupFile> findAll();
+
+    @Query(" select * from backup_file where relative_path = :relativePath limit 1 ")
+    BackupFile findByRelativePath(String relativePath);
+
+    @Update
+    int updateOne(BackupFile user);
 }

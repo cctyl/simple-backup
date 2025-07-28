@@ -57,6 +57,9 @@ public class WebAppInterface {
     private BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
     private SelectDirDao selectDirDao = AppApplication.getInstance().getApplicationDatabase().selectDirDao();
 
+    public MainActivity getContext() {
+        return context;
+    }
 
     private static boolean isBind = false;
 
@@ -68,11 +71,9 @@ public class WebAppInterface {
 
     public void unbindBackupService() {
         if (isBind) {
-
             isBind = false;
             context.unbindService(connection);
         } else {
-
             Log.d("WebAppInterface", "unbindBackupService: 未绑定，不要重复解绑");
         }
     }
@@ -88,10 +89,8 @@ public class WebAppInterface {
         public void onServiceConnected(ComponentName name, IBinder service) {
             isBind = true;
             binder = (BackupService.LocalBinder) service;
-
+            binder.receiveWebInterface(WebAppInterface.this);
             Log.d("TestServiceActivity", "onServiceConnected: 链接了");
-
-
         }
     };
 
@@ -176,145 +175,6 @@ public class WebAppInterface {
 
 
 
-    public void addTestHistory() {
-
-
-        List<BackupHistory> testData = new ArrayList<>();
-
-        // 2025-07-25 晚间备份 - 成功
-        BackupHistory history1 = new BackupHistory();
-        history1.setId(11);
-        history1.setBackupResult("备份完成");
-        history1.setBackupDetail("成功备份了今日新增的156张照片和12个文档");
-        history1.setSuccess(true);
-        history1.setBackUpTime(LocalDateTime.of(2025, 7, 25, 22, 30, 15));
-        history1.setBackUpNum(168L);
-        history1.setBackUpCostTime(285);
-        history1.setTotalFileSize(842);
-        history1.setBackUpPathArr("/storage/emulated/0/DCIM/Camera,/storage/emulated/0/Documents");
-        testData.add(history1);
-
-        // 2025-07-24 晚间备份 - 成功
-        BackupHistory history2 = new BackupHistory();
-        history2.setId(12);
-        history2.setBackupResult("备份完成");
-        history2.setBackupDetail("成功备份了工作项目文件");
-        history2.setSuccess(true);
-        history2.setBackUpTime(LocalDateTime.of(2025, 7, 24, 23, 15, 30));
-        history2.setBackUpNum(78L);
-        history2.setBackUpCostTime(122);
-        history2.setTotalFileSize(1520);
-        history2.setBackUpPathArr("/storage/emulated/0/WorkProjects");
-        testData.add(history2);
-
-        // 2025-07-23 晚间备份 - 失败
-        BackupHistory history3 = new BackupHistory();
-        history3.setId(13);
-        history3.setBackupResult("备份失败");
-        history3.setBackupDetail("网络连接中断，未能完成云同步");
-        history3.setSuccess(false);
-        history3.setBackUpTime(LocalDateTime.of(2025, 7, 23, 21, 45, 5));
-        history3.setBackUpNum(0L);
-        history3.setBackUpCostTime(35);
-        history3.setTotalFileSize(0);
-        history3.setBackUpPathArr("/storage/emulated/0/CloudSync");
-        testData.add(history3);
-
-        // 2025-07-22 晚间备份 - 成功
-        BackupHistory history4 = new BackupHistory();
-        history4.setId(14);
-        history4.setBackupResult("备份完成");
-        history4.setBackupDetail("成功备份了手机数据");
-        history4.setSuccess(true);
-        history4.setBackUpTime(LocalDateTime.of(2025, 7, 22, 20, 5, 42));
-        history4.setBackUpNum(25L);
-        history4.setBackUpCostTime(480);
-        history4.setTotalFileSize(3650);
-        history4.setBackUpPathArr("/data/data/com.android.contacts,/data/data/com.android.sms");
-        testData.add(history4);
-
-        // 2025-07-21 晚间备份 - 成功
-        BackupHistory history5 = new BackupHistory();
-        history5.setId(15);
-        history5.setBackupResult("备份完成");
-        history5.setBackupDetail("成功备份了媒体文件");
-        history5.setSuccess(true);
-        history5.setBackUpTime(LocalDateTime.of(2025, 7, 21, 23, 52, 18));
-        history5.setBackUpNum(892L);
-        history5.setBackUpCostTime(650);
-        history5.setTotalFileSize(4280);
-        history5.setBackUpPathArr("/storage/emulated/0/Music,/storage/emulated/0/Movies");
-        testData.add(history5);
-
-        // 2025-07-20 晚间备份 - 失败
-        BackupHistory history6 = new BackupHistory();
-        history6.setId(16);
-        history6.setBackupResult("备份失败");
-        history6.setBackupDetail("存储空间不足，仅备份了部分文件");
-        history6.setSuccess(false);
-        history6.setBackUpTime(LocalDateTime.of(2025, 7, 20, 22, 18, 33));
-        history6.setBackUpNum(423L);
-        history6.setBackUpCostTime(120);
-        history6.setTotalFileSize(2100);
-        history6.setBackUpPathArr("/storage/emulated/0/Downloads,/storage/emulated/0/DCIM/Screenshots");
-        testData.add(history6);
-
-        // 2025-07-19 晚间备份 - 成功
-        BackupHistory history7 = new BackupHistory();
-        history7.setId(17);
-        history7.setBackupResult("备份完成");
-        history7.setBackupDetail("成功备份了重要文档和表格");
-        history7.setSuccess(true);
-        history7.setBackUpTime(LocalDateTime.of(2025, 7, 19, 19, 35, 7));
-        history7.setBackUpNum(36L);
-        history7.setBackUpCostTime(75);
-        history7.setTotalFileSize(265);
-        history7.setBackUpPathArr("/storage/emulated/0/Documents/Work,/storage/emulated/0/Sheets");
-        testData.add(history7);
-
-        // 2025-07-18 晚间备份 - 成功
-        BackupHistory history8 = new BackupHistory();
-        history8.setId(18);
-        history8.setBackupResult("备份完成");
-        history8.setBackupDetail("成功备份了所有选定数据");
-        history8.setSuccess(true);
-        history8.setBackUpTime(LocalDateTime.of(2025, 7, 18, 21, 22, 50));
-        history8.setBackUpNum(1542L);
-        history8.setBackUpCostTime(520);
-        history8.setTotalFileSize(3890);
-        history8.setBackUpPathArr("/storage/emulated/0/DCIM,/storage/emulated/0/Pictures,/storage/emulated/0/Documents");
-        testData.add(history8);
-
-        // 2025-07-17 晚间备份 - 失败
-        BackupHistory history9 = new BackupHistory();
-        history9.setId(19);
-        history9.setBackupResult("备份失败");
-        history9.setBackupDetail("用户取消了备份操作");
-        history9.setSuccess(false);
-        history9.setBackUpTime(LocalDateTime.of(2025, 7, 17, 20, 10, 25));
-        history9.setBackUpNum(0L);
-        history9.setBackUpCostTime(0);
-        history9.setTotalFileSize(0);
-        history9.setBackUpPathArr("/storage/emulated/0/AllFiles");
-        testData.add(history9);
-
-        // 2025-07-16 晚间备份 - 成功
-        BackupHistory history10 = new BackupHistory();
-        history10.setId(20);
-        history10.setBackupResult("备份完成");
-        history10.setBackupDetail("成功备份了系统设置和应用数据");
-        history10.setSuccess(true);
-        history10.setBackUpTime(LocalDateTime.of(2025, 7, 16, 22, 45, 11));
-        history10.setBackUpNum(18L);
-        history10.setBackUpCostTime(320);
-        history10.setTotalFileSize(125);
-        history10.setBackUpPathArr("/system/settings,/data/app");
-        testData.add(history10);
-
-
-        backupHistoryDao.insert(testData);
-
-    }
 
     @JavascriptInterface
     public int getStatusBarHeight() {
@@ -430,7 +290,15 @@ public class WebAppInterface {
         //根节点的初始化
         String rootDocId = DocumentsContract.getTreeDocumentId(uri);
         BackupFile root = new BackupFile("根目录",
-                uri, rootDocId, 0, 0, true, rootDocId, "/", DocumentsContract.Document.MIME_TYPE_DIR);
+                uri, rootDocId,
+                0,
+                0,
+                true,
+                rootDocId, "/",
+                DocumentsContract.Document.MIME_TYPE_DIR,
+                ""
+
+        );
         this.setRoot(root);
         jsExecUtil.exec("receiveRoot", GsonUtils.toJsonObject(root), null);
 
@@ -439,9 +307,12 @@ public class WebAppInterface {
         this.setRootChild(rootChild);
         sendFilesToWebView(rootChild);
     }
-
     @SuppressLint("Range")
     public List<BackupFile> getChildrenByDocId(Uri treeUri, String parentDocId, String rootDocId) {
+        return getChildrenByDocId(treeUri, parentDocId, rootDocId,false);
+    }
+    @SuppressLint("Range")
+    public List<BackupFile> getChildrenByDocId(Uri treeUri, String parentDocId, String rootDocId,boolean needMd5) {
 
         List<BackupFile> list = new ArrayList<>();
         ContentResolver resolver = context.getContentResolver();
@@ -495,8 +366,11 @@ public class WebAppInterface {
                 boolean isDirectory = DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType);
 //                String relativePath = childDocId.replaceAll(rootDocId, "");
                 String relativePath = childDocId.replaceAll("primary:", "");
-
-                list.add(new BackupFile(name, treeUri, childDocId, size, lastModified, isDirectory, rootDocId, relativePath, mimeType));
+                String md5 = "";
+                if (needMd5){
+                    md5 = getFileMD5(DocumentsContract.buildDocumentUriUsingTree(treeUri, childDocId));
+                }
+                list.add(new BackupFile(name, treeUri, childDocId, size, lastModified, isDirectory, rootDocId, relativePath, mimeType,md5));
 
             }
         } finally {

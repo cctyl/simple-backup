@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey;
 public class SelectDir {
 
     @PrimaryKey(autoGenerate = true)
-    private Integer id;
+    private Long id;
     private String name;        //文件名
     private Uri treeUri;      // 用于访问该目录内容的Uri
     private String docId;       // 当前目录的docId（用于构建子目录Uri）
@@ -33,11 +33,11 @@ public class SelectDir {
         return treeUri;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

@@ -73,7 +73,7 @@ public class JsExecUtil {
             }
         }
         sb.append(")");
-        Log.d("---->  JsExecUtil", sb.toString());
+//        Log.d("---->  JsExecUtil", sb.toString());
         webView.evaluateJavascript(
                 sb.toString(),
                 resultCallback
@@ -106,11 +106,11 @@ public class JsExecUtil {
                         String.class.equals(value.getClass())
 
         ) {
-            Log.d("---->  JsExecUtil","是string"+value.getClass().getName()     );
+//            Log.d("---->  JsExecUtil","是string"+value.getClass().getName()     );
             value = handleStringTransfer((String) value);
         }
         String ling = "vue.setData('" + key + "'," + value + ")";
-        Log.d("---->  JsExecUtil", ling);
+//        Log.d("---->  JsExecUtil", ling);
         webView.evaluateJavascript(
                 ling,
                 null
@@ -120,7 +120,7 @@ public class JsExecUtil {
     public void setData(String key, JSONArray value) {
 
         String ling = "vue.setData('" + key + "'," + value + ")";
-        Log.d("---->  JsExecUtil", ling);
+//        Log.d("---->  JsExecUtil", ling);
         webView.evaluateJavascript(
                 ling,
                 null
@@ -130,7 +130,7 @@ public class JsExecUtil {
     public void setData(String key, JSONObject value) {
 
         String ling = "vue.setData('" + key + "'," + value + ")";
-        Log.d("---->  JsExecUtil", ling);
+//        Log.d("---->  JsExecUtil", ling);
         webView.evaluateJavascript(
                 ling,
                 null

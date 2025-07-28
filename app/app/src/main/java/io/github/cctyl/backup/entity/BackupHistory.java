@@ -13,7 +13,7 @@ public class BackupHistory {
 
 
     @PrimaryKey(autoGenerate = true)
-    private Integer id;
+    private Long id;
 
     /**
      * 备份结果
@@ -88,11 +88,11 @@ public class BackupHistory {
         this.backupDetail = backupDetail;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

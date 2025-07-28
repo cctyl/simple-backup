@@ -12,10 +12,11 @@ import androidx.room.PrimaryKey;
 public class BackupFile {
 
     @PrimaryKey(autoGenerate = true)
-    private Integer id;
+    private Long id;
 
 
     private String name;        //文件名
+
 
 
     @ColumnInfo(name = "tree_uri")
@@ -31,13 +32,16 @@ public class BackupFile {
     private boolean isDirectory;//是否是目录
 
     @ColumnInfo(name = "root_doc_id")
-    private String rootDocId;//是否是目录
+    private String rootDocId;//根目录的docId
 
     @ColumnInfo(name = "relative_path")
-    private String relativePath;//是否是目录
+    private String relativePath;//相对路径
 
     @ColumnInfo(name = "mime_type")
     private String mimeType;//是否是目录
+
+    private String md5;
+
 
     public String getRootDocId() {
         return rootDocId;
@@ -59,16 +63,23 @@ public class BackupFile {
     public BackupFile() {
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
+    public String getMd5() {
+        return md5;
+    }
+
+    public void setMd5(String md5) {
+        this.md5 = md5;
+    }
     @Ignore
-    public BackupFile(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory, String rootDocId, String relativePath, String mimeType) {
+    public BackupFile(String name, Uri treeUri, String docId, long size, long lastModified, boolean isDirectory, String rootDocId, String relativePath, String mimeType, String md5) {
         this.name = name;
         this.treeUri = treeUri;
         this.docId = docId;
@@ -78,7 +89,13 @@ public class BackupFile {
         this.rootDocId = rootDocId;
         this.relativePath = relativePath;
         this.mimeType = mimeType;
+        this.md5 = md5;
     }
+
+
+
+
+
 
     public String getName() {
         return name;

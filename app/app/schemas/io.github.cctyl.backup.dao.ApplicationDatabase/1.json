@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ff11bd188ccedc7b16d333a7fcabc5ba",
+    "identityHash": "d4756a0df41b31aa6f72e2067d7c0426",
     "entities": [
       {
         "tableName": "backup_history",
@@ -130,7 +130,7 @@
       },
       {
         "tableName": "backup_file",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT, `tree_uri` TEXT, `doc_id` TEXT, `size` INTEGER NOT NULL, `last_modified` INTEGER NOT NULL, `is_directory` INTEGER NOT NULL, `root_doc_id` TEXT, `relative_path` TEXT, `mime_type` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT, `tree_uri` TEXT, `doc_id` TEXT, `size` INTEGER NOT NULL, `last_modified` INTEGER NOT NULL, `is_directory` INTEGER NOT NULL, `root_doc_id` TEXT, `relative_path` TEXT, `mime_type` TEXT, `md5` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -191,6 +191,12 @@
             "columnName": "mime_type",
             "affinity": "TEXT",
             "notNull": false
+          },
+          {
+            "fieldPath": "md5",
+            "columnName": "md5",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -206,7 +212,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ff11bd188ccedc7b16d333a7fcabc5ba')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd4756a0df41b31aa6f72e2067d7c0426')"
     ]
   }
 }
