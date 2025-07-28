@@ -5,40 +5,44 @@
     <div class="progress-card pulse">
       <div class="progress-title" :style="{
            color: $store.state.backupStatus ===1?'#1a73e8': '#f97316'
-      }">{{
-          $store.state.backupStatus === 1 ? '备份中' : '已暂停'
+      }">
+
+        <!--  $store.state.backupStatus === 1 ? '备份中' : '已暂停'       -->
+        {{
+          progressData.circleTitle
         }}
       </div>
       <div class="progress-subtitle">
 
+        <!--    $store.state.backupStatus === 1 ? '请不要关闭应用或断开网络' : '点击下方按钮继续备份'      -->
         {{
-          $store.state.backupStatus === 1 ? '请不要关闭应用或断开网络' : '点击下方按钮继续备份'
+          progressData.circleDesc
         }}
       </div>
 
       <!-- 圆形进度条 -->
       <div style="display: flex;flex-direction: row;justify-content: center;align-items: center;margin-bottom: 20px">
 
-        <CircularProgress :status="$store.state.backupStatus" :size="170" :progress="totalPercent"></CircularProgress>
+        <CircularProgress :status="$store.state.backupStatus" :size="170" :progress="progressData.totalPercent"></CircularProgress>
       </div>
 
-      <div class="progress-text">已上传 {{ formatSize(alreadyUploadFileSize) }}</div>
+      <div class="progress-text">已上传 {{ formatSize(progressData.alreadyUploadFileSize) }}</div>
     </div>
 
     <!-- 当前文件信息 -->
     <div class="file-info">
       <div class="file-header">
         <div class="file-icon">
-          <i class="material-icons">{{ getGoogleIconNameFromMimeType(currentFile.mimeType) }}</i>
+          <i class="material-icons">{{ getGoogleIconNameFromMimeType(progressData.currentFile.mimeType) }}</i>
         </div>
         <div class="file-details">
-          <div class="file-name">{{ currentFile.name }}</div>
-          <div class="file-path">{{ currentFile.relativePath }}</div>
+          <div class="file-name">{{ progressData.currentFile.name }}</div>
+          <div class="file-path">{{ progressData.currentFile.relativePath }}</div>
         </div>
       </div>
       <div class="file-progress-container">
         <div class="file-progress-bar" :style="{
-          width:currentFile.percent+'%',
+          width:progressData.currentFile.percent+'%',
           background: $store.state.backupStatus ===1?'#1a73e8': '#f97316'
         }"></div>
       </div>
@@ -47,19 +51,19 @@
     <!-- 统计信息 -->
     <div class="stats-container">
       <div class="stat-card">
-        <div class="stat-value">{{ formatSize(speed) }}/s</div>
+        <div class="stat-value">{{ formatSize(progressData.speed) }}/s</div>
         <div class="stat-label">上传速度</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">{{ formatRelativeTime(startTime) }}</div>
+        <div class="stat-value">{{ formatRelativeTime(progressData.startTime) }}</div>
         <div class="stat-label">已用时间</div>
       </div>
-      <!--      <div class="stat-card">
-              <div class="stat-value">05:23</div>
-              <div class="stat-label">剩余时间</div>
-            </div>-->
       <div class="stat-card">
-        <div class="stat-value">{{ formatNumberWithCommas(alreadyUploadFileNum) }}</div>
+        <div class="stat-value">{{ formatNumberWithCommas(progressData.needUploadFileNum) }}</div>
+        <div class="stat-label">需要备份的文件数量</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ formatNumberWithCommas(progressData.alreadyUploadFileNum) }}</div>
         <div class="stat-label">已处理文件</div>
       </div>
     </div>
@@ -113,23 +117,36 @@ export default {
   data() {
     return {
 
-      totalPercent: 30,
-      alreadyUploadFileSize: 72,
-      currentFile: {
-        mimeType: 'text/html',
-        name: 'IMG_20230715_184523.jpg',
-        relativePath: '内部存储/DCIM/Camera',
-        percent: 90,
+      progressData:{
+        totalPercent: 30,
+        needUploadFileNum:0,
+        alreadyUploadFileSize: 72,
+        currentFile: {
+          mimeType: 'text/html',
+          name: 'IMG_20230715_184523.jpg',
+          relativePath: '内部存储/DCIM/Camera',
+          percent: 90,
+        },
+        speed: 20481,//上传速度
+        startTime: '2025-07-26T18:45:23Z', //ISO 8601 格式的时间字符串 示例："2023-07-15T18:45:23Z"
+        alreadyUploadFileNum: 1,
+
+        circleTitle: '',
+        circleDesc: '',
       },
-      speed: 20481,//上传速度
-      startTime: '2025-07-26T18:45:23Z', //ISO 8601 格式的时间字符串 示例："2023-07-15T18:45:23Z"
-      alreadyUploadFileNum: 1,
+
+
+
       showConfirmModal: false
     }
   },
+  created() {
+    console.log("backup running created")
+    window.vue.receiveProgressData = this.receiveProgressData;
+  },
   mounted() {
     window.scrollTo(0, 0);
-    window.vue.receiveProgressData = this.receiveProgressData;
+    window.Android.startBackup();
 
   },
   computed: {},
@@ -263,12 +280,16 @@ export default {
       return 'insert_drive_file';
     },
     receiveProgressData(progressInfo) {
-      this.totalPercent = progressInfo.totalPercent;
-      this.alreadyUploadFileSize = progressInfo.alreadyUploadFileSize;
-      this.currentFile = progressInfo.currentFile;
-      this.speed = progressInfo.speed;
-      this.startTime = progressInfo.startTime;
-      this.alreadyUploadFileNum = progressInfo.alreadyUploadFileNum;
+      // this.totalPercent = progressInfo.totalPercent;
+      // this.alreadyUploadFileSize = progressInfo.alreadyUploadFileSize;
+      // this.currentFile = progressInfo.currentFile;
+      // this.speed = progressInfo.speed;
+      // this.startTime = progressInfo.startTime;
+      // this.alreadyUploadFileNum = progressInfo.alreadyUploadFileNum;
+      // this.circleTitle = progressInfo.
+
+
+      this.progressData = progressInfo;
     },
   }
 }
