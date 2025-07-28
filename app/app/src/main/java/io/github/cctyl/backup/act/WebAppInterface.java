@@ -23,6 +23,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.ActivityOptionsCompat;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -261,6 +262,7 @@ public class WebAppInterface {
 
     @JavascriptInterface
     public void startBackup() {
+        Log.d("WebAppInterface", "startBackup: ");
         // 开始备份
         bindBackupService();
     }
@@ -513,4 +515,24 @@ public class WebAppInterface {
     }
 
 
+    public void receiveBackupStatus(int mStatus) {
+
+        Log.d("WebAppInterface", "receiveBackupStatus: 更新界面备份状态 ");
+        context.runOnUiThread(() -> {
+            jsExecUtil.exec("receiveBackupStatus",
+                    mStatus,
+                    null
+            );
+        });
+    }
+
+    public void receiveProgressData(JSONObject jsonObject) {
+
+        context.runOnUiThread(() -> {
+            jsExecUtil.exec("receiveProgressData",
+                    jsonObject,
+                    null
+            );
+        });
+    }
 }

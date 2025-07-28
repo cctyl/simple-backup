@@ -141,11 +141,12 @@ export default {
     }
   },
   created() {
-    console.log("backup running created")
+    console.log("backupRunning.vue created")
     window.vue.receiveProgressData = this.receiveProgressData;
   },
   mounted() {
     window.scrollTo(0, 0);
+    console.log("backupRunning.vue startBackup")
     window.Android.startBackup();
 
   },

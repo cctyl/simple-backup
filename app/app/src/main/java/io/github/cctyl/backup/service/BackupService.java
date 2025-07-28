@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.provider.DocumentsContract;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,7 +40,7 @@ import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.SelectDir;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.ToastUtil;
-
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class BackupService extends Service {
     public static boolean isBinder = false;
 
@@ -97,10 +99,10 @@ public class BackupService extends Service {
     private ProgressDto progressDto = new ProgressDto();
 
     /**
-     * TODO 修改ui以及通知信息
+     *  更新准备中的界面信息
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public void updateUiData(BackupFile file, int needUploadFileNum) {
+    public void updateUiCheckData(BackupFile file, int needUploadFileNum) {
         /*
 
 
@@ -124,7 +126,7 @@ public class BackupService extends Service {
         progressDto.setTotalPercent(progress);
         progressDto.setAlreadyUploadFileSize(0L);
         progressDto.setSpeed(0);
-        progressDto.setStartTime(startTime);
+
         progressDto.setAlreadyUploadFileNum(0);
         progressDto.setCircleTitle("准备中");
         progressDto.setCircleDesc("请稍后，正在检查哪些文件需要备份...");
@@ -134,6 +136,26 @@ public class BackupService extends Service {
         currentFile.setName(file.getName());
         currentFile.setRelativePath(file.getRelativePath());
         currentFile.setPercent(100);
+
+        mWebAppInterface.getContext().runOnUiThread(() -> {
+            mWebAppInterface.getJsExecUtil().exec("receiveProgressData",
+                    GsonUtils.toJsonObject(progressDto),
+                    null
+            );
+        });
+
+    }
+
+
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void updateUiStopData() {
+
+
+        progressDto.setSpeed(0);
+        progressDto.setCircleTitle("已暂停");
+        progressDto.setCircleDesc("点击下方按钮继续备份");
 
         mWebAppInterface.getContext().runOnUiThread(() -> {
             mWebAppInterface.getJsExecUtil().exec("receiveProgressData",
@@ -188,7 +210,7 @@ public class BackupService extends Service {
 
 
             // 查找文件时，需要给前端一个友好提示，也就是需要更新界面
-            updateUiData(real,updatedIds.size());
+            updateUiCheckData(real,updatedIds.size());
 
             if (real.isDirectory()) {
                 // 查出real的子级，继续递归
@@ -258,10 +280,12 @@ public class BackupService extends Service {
         isBinder = true;
 
         t = new Thread(() -> {
+            Log.d("BackupService", "onCreate: 线程启动");
             startTime = LocalDateTime.now();
             BackupHistory backupHistory = null;
             BackupHistory dto = new BackupHistory();
             try {
+                progressDto.setStartTime(startTime);
                 getSystemService(NotificationManager.class).notify(1,
                         getNotification(100, "准备中", "请稍后，正在检查哪些文件需要备份...")
                 );
@@ -278,44 +302,81 @@ public class BackupService extends Service {
 
                 //任务流程是： 先找到需要备份的，然后逐个上传，所以是局部循环，而不是整体循环
 
-                // 递归查找需要备份的文件
+                //1. 递归查找需要备份的文件
                 Set<Long> updatedIds = new HashSet<>();
-                List<BackupFile> initParent = selectDirList.stream().map(selectDir -> {
-
-                    // 真的拿到实际数据
-                    BackupFile backupFile = new BackupFile();
-                    backupFile.setName(selectDir.getName());
-                    backupFile.setTreeUri(selectDir.getTreeUri());
-                    backupFile.setDocId(selectDir.getDocId());
-                    backupFile.setRootDocId(selectDir.getRootDocId());
-                    backupFile.setRelativePath(selectDir.getRelativePath());
-                    backupFile.setDirectory(true);
-                    backupFile.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
-                    //目录不需要md5
-                    backupFile.setMd5("");
-                    return backupFile;
-                }).collect(Collectors.toList());
+                List<BackupFile> initParent = getBackupFileFromSelectDir(selectDirList);
                 recursiveGetChildren(initParent, updatedIds);
-
-
                 Log.d("BackupService", "onCreate: 文件查找完成");
 
 
+
+
                 //TODO 逐个上传文件
-                //每个文件上传时，要通知前端和更新通知栏
+                updateProgress(0);
+                int totalSize = updatedIds.size();
+                progressDto.setNeedUploadFileNum(totalSize);
+                progressDto.setCircleTitle("备份中");
+                progressDto.setCircleDesc("请不要杀死应用或断开网络");
+                double count = 0;
+                for (Long updatedId : updatedIds) {
+
+                    BackupFile file  = backupFileDao.findById(updatedId);
+
+                    //模拟上传耗时
+                    Thread.sleep(200);
+                    count++;
+
+                    progressDto.setAlreadyUploadFileNum((int) count);
+                    progressDto.setAlreadyUploadFileSize(
+                            progressDto.getAlreadyUploadFileSize()+file.getSize()
+
+                    );
+                    progressDto.setTotalPercent((int) (count/ totalSize *100));
+                    progressDto.setSpeed(ThreadLocalRandom.current().nextInt(1, 10000000));//TODO 上传速度
+                    updateProgress(progressDto.getTotalPercent());
+                    ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
+                    currentFile.setMimeType(file.getMimeType());
+                    currentFile.setName(file.getName());
+                    currentFile.setRelativePath(file.getRelativePath());
+                    currentFile.setPercent(ThreadLocalRandom.current().nextInt(1, 100));//TODO 当前文件上传进度
+
+                    mWebAppInterface.receiveProgressData( GsonUtils.toJsonObject(progressDto));
+
+                }
+
+                dto.setBackUpNum((long) count);
+                dto.setBackupResult("备份成功");
+                dto.setBackupDetail("今天也保证了数据安全！");
+                dto.setSuccess(true);
+                dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
 
             } catch (InterruptedException e) {
+                dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
+                dto.setBackupResult("备份中断");
+                dto.setBackupDetail("备份过程中被取消了");
+                dto.setSuccess(false);
+                dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
 
 
                 Log.d("BackupService", "onCreate: 线程被打断运行");
                 ToastUtil.toast("备份已取消！");
 
             } catch (Exception e) {
+                dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
+                dto.setBackupResult("备份出错");
+                dto.setBackupDetail("备份过程中出现错误");
+                dto.setSuccess(false);
+                dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
                 ToastUtil.toastLong("备份异常！错误信息：" + e.getMessage());
             }
 
             updateHistory(backupHistory, dto);
+            mStatus = 0;
+            //通知界面备份完成
+            mWebAppInterface.receiveBackupStatus(mStatus);
 
+            Log.d("BackupService", "onCreate: 线程结束");
+            ToastUtil.toastLong("备份完成！");
             stopForeground(STOP_FOREGROUND_REMOVE);
             finishNotify();
             stopSelf();
@@ -324,6 +385,26 @@ public class BackupService extends Service {
 
         t.start();
 
+    }
+
+    @NonNull
+    private static List<BackupFile> getBackupFileFromSelectDir(List<SelectDir> selectDirList) {
+        List<BackupFile> initParent = selectDirList.stream().map(selectDir -> {
+
+            // 真的拿到实际数据
+            BackupFile backupFile = new BackupFile();
+            backupFile.setName(selectDir.getName());
+            backupFile.setTreeUri(selectDir.getTreeUri());
+            backupFile.setDocId(selectDir.getDocId());
+            backupFile.setRootDocId(selectDir.getRootDocId());
+            backupFile.setRelativePath(selectDir.getRelativePath());
+            backupFile.setDirectory(true);
+            backupFile.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
+            //目录不需要md5
+            backupFile.setMd5("");
+            return backupFile;
+        }).collect(Collectors.toList());
+        return initParent;
     }
 
 
@@ -430,7 +511,9 @@ public class BackupService extends Service {
         backupHistory.setSuccess(dto.getSuccess());
         backupHistory.setBackUpNum(dto.getBackUpNum());
         backupHistory.setTotalFileSize(dto.getTotalFileSize());
-        backupHistory.setTaskFinish(true);
+
+
+        backupHistoryDao.updateOne(backupHistory);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -535,7 +618,7 @@ public class BackupService extends Service {
 
 
     public void updateStopStateProgress() {
-        getSystemService(NotificationManager.class).notify(1, getNotification(progress, "已暂停", "点击继续备份"));
+        getSystemService(NotificationManager.class).notify(1, getNotification(progressDto.getTotalPercent(), "已暂停", "点击继续备份"));
     }
 
 
@@ -543,29 +626,7 @@ public class BackupService extends Service {
         getSystemService(NotificationManager.class).notify(1, getNotification(progress, "备份中", progress + "%"));
     }
 
-    private int progress = 60;
 
-
-    /**
-     * 主逻辑，
-     * 必须支持随时打断，打断后可恢复
-     *
-     * @throws InterruptedException
-     */
-    public void task(BackupHistory dto) throws InterruptedException {
-
-        //TODO 必须支持随时打断，打断后可恢复
-
-        if (progress >= 100) {
-            mStatus = 0;
-            return;
-        }
-
-        Log.d("BackupService", "task: 模拟任务运行...");
-        Thread.sleep(1000);
-
-        updateProgress(++progress);
-    }
 
 
     /**
@@ -583,6 +644,7 @@ public class BackupService extends Service {
      *
      * @throws InterruptedException
      */
+
     public void anytimeInterrupted() throws InterruptedException {
 
         if (mStatus == 1) {
@@ -590,14 +652,18 @@ public class BackupService extends Service {
         } else if (mStatus == 2) {
             Log.d("BackupService", "onCreate: 暂停中");
             updateStopStateProgress();
+            updateUiStopData();
             try {
                 while (mStatus == 2) {
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                 }
             } catch (InterruptedException e) {
                 Log.d("BackupService", "onCreate: 睡眠被中断，结束线程运行");
                 throw e;
             }
+
+            Log.d("BackupService", "anytimeInterrupted: 结束暂停，继续备份");
+
         } else {
 
             Log.d("BackupService", "onCreate: 结束线程,mStatus=" + mStatus);

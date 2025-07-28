@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         backupHistory.setBackUpTime(LocalDateTime.now());
         backupHistory.setBackUpNum(1L);
         backupHistory.setBackUpCostTime(1);
-        backupHistory.setTotalFileSize(1);
+        backupHistory.setTotalFileSize(1L);
         backupHistoryDao.insertOne(backupHistory);
 
         Log.d("MainActivity", "testDb: 插入成功");
@@ -343,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
 //        webView.loadUrl("file:///android_asset/index.html");
 
 
-        webView.loadUrl("http://192.168.43.149:8080");
+        webView.loadUrl("http://192.168.31.151:8080");
     }
 
 }

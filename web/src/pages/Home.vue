@@ -32,12 +32,18 @@ export default {
     this.$store.commit("SET_BACKUP_STATUS",window.Android.getStatus());
   },
   mounted() {
-
-
+    window.vue.receiveBackupStatus = this.receiveBackupStatus;
   },
 
   computed: {},
-  methods: {}
+  methods: {
+
+    receiveBackupStatus(status){
+      console.log("收到android的备份状态="+status)
+      this.$store.commit("SET_BACKUP_STATUS",status);
+    }
+
+  }
 }
 </script>
 

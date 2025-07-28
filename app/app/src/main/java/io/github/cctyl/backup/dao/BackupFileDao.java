@@ -31,4 +31,7 @@ public interface BackupFileDao {
 
     @Update
     int updateOne(BackupFile user);
+
+    @Query(" select * from backup_file where id = :id ")
+    BackupFile findById(Long id);
 }

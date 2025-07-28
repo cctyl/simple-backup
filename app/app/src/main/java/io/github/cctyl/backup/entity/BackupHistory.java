@@ -55,7 +55,7 @@ public class BackupHistory {
      * 总文件大小,MB
      */
     @ColumnInfo(name = "total_file_size")
-    private Integer totalFileSize;
+    private Long totalFileSize;
 
 
     /**
@@ -64,17 +64,9 @@ public class BackupHistory {
     @ColumnInfo(name = "back_up_path_arr")
     private String backUpPathArr;
 
-    @ColumnInfo(name = "task_finish")
-    private Boolean taskFinish;
 
 
-    public Boolean getTaskFinish() {
-        return taskFinish;
-    }
 
-    public void setTaskFinish(Boolean taskFinish) {
-        this.taskFinish = taskFinish;
-    }
 
     public BackupHistory() {
     }
@@ -136,11 +128,11 @@ public class BackupHistory {
         this.backUpCostTime = backUpCostTime;
     }
 
-    public Integer getTotalFileSize() {
+    public Long getTotalFileSize() {
         return totalFileSize;
     }
 
-    public void setTotalFileSize(Integer totalFileSize) {
+    public void setTotalFileSize(Long totalFileSize) {
         this.totalFileSize = totalFileSize;
     }
 
