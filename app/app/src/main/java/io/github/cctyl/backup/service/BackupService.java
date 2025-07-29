@@ -17,13 +17,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -40,6 +40,13 @@ import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.SelectDir;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.ToastUtil;
+import io.github.cctyl.backup.utils.http.ProgressListener;
+import io.github.cctyl.backup.utils.http.ProgressRequestBody;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class BackupService extends Service {
 
@@ -83,6 +90,60 @@ public class BackupService extends Service {
             mWebAppInterface = webAppInterface;
         }
 
+
+        public void uploadFile(BackupFile file, ProgressListener listener) throws FileNotFoundException {
+
+            String token = "";
+            String serverAddr = "192.168.43.149:8082";
+
+            ProgressRequestBody progressBody = new ProgressRequestBody(file,listener);
+
+            MultipartBody body = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("name", file.getName())
+                    .addFormDataPart("treeUri", file.getTreeUri().toString())
+                    .addFormDataPart("docId", file.getDocId())
+                    .addFormDataPart("relativePath", file.getRelativePath())
+                    .addFormDataPart("isDirectory", String.valueOf(file.isDirectory()))
+                    .addFormDataPart("md5", file.getMd5())
+                    .addFormDataPart("file", file.getName(), progressBody)
+                    .build();
+
+
+
+            Log.d("LocalBinder", "uploadFile: body= "+body);
+
+            Request request = new Request.Builder()
+                    .url("http://"+serverAddr+"/api/file/upload")
+                    .header("authorization",token)
+                    .post(body)
+                    .build();
+
+            OkHttpClient client = new OkHttpClient();
+
+            try {
+                Response execute = client.newCall(request)
+                        .execute();
+                String bodyString = execute.body().string();
+
+                Log.d("LocalBinder", "uploadFile: 上传的响应="+bodyString);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+//            client.newCall(request).enqueue(new Callback() {
+//                @Override
+//                public void onFailure(Call call, IOException e) {
+//
+//                    Log.e("LocalBinder", "onFailure: ",e);
+//                }
+//
+//                @Override
+//                public void onResponse(Call call, Response response) {
+//                    // 处理响应
+//                    Log.d("LocalBinder", "onResponse: "+response.toString());
+//                }
+//            });
+        }
 
         public void start(){
             setNotification();
@@ -138,28 +199,38 @@ public class BackupService extends Service {
                     progressDto.setCheckFinish(true);
                     double count = 0;
                     for (Long updatedId : updatedIds) {
-
-                        BackupFile file  = backupFileDao.findById(updatedId);
-
-                        //模拟上传耗时
-                        Thread.sleep(200);
                         count++;
+                        BackupFile file  = backupFileDao.findById(updatedId);
+                        //TODO 后期要删除，文件夹也需要上传
+                        if (!file.isDirectory()){
+                            //模拟上传耗时
+                            double finalCount = count;
+                            uploadFile(file,  (uploaded, total, speed, timeDelta) -> {
+                                // 通过LiveData/Handler/RxJava传递到UI层
+                                Log.d("ProgressRequestBody",
+                                        "main: 上传进度变化: " + uploaded + "/" + total + " (" + speed + "B/s),花费时间（毫秒）="+timeDelta);
 
-                        progressDto.setAlreadyUploadFileNum((int) count);
-                        progressDto.setAlreadyUploadFileSize(
-                                progressDto.getAlreadyUploadFileSize()+file.getSize()
 
-                        );
-                        progressDto.setTotalPercent((int) (count/ totalSize *100));
-                        progressDto.setSpeed(ThreadLocalRandom.current().nextInt(1, 10000000));//TODO 上传速度
-                        updateProgress(progressDto.getTotalPercent());
-                        ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
-                        currentFile.setMimeType(file.getMimeType());
-                        currentFile.setName(file.getName());
-                        currentFile.setRelativePath(file.getRelativePath());
-                        currentFile.setPercent(ThreadLocalRandom.current().nextInt(1, 100));//TODO 当前文件上传进度
+                                progressDto.setAlreadyUploadFileNum((int) finalCount);
+                                progressDto.setAlreadyUploadFileSize(
+                                        progressDto.getAlreadyUploadFileSize()+uploaded
 
-                        mWebAppInterface.receiveProgressData( GsonUtils.toJsonObject(progressDto));
+                                );
+                                progressDto.setTotalPercent((int) (finalCount / totalSize *100));
+                                progressDto.setSpeed((int) speed);//TODO 上传速度
+                                updateProgress(progressDto.getTotalPercent());
+                                ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
+                                currentFile.setMimeType(file.getMimeType());
+                                currentFile.setName(file.getName());
+                                currentFile.setRelativePath(file.getRelativePath());
+                                currentFile.setPercent((int) (uploaded*1.0/total));//TODO 当前文件上传进度
+
+                                mWebAppInterface.receiveProgressData( GsonUtils.toJsonObject(progressDto));
+                            });
+
+                        }
+
+
 
                     }
 

@@ -24,7 +24,7 @@ import io.github.cctyl.backup.utils.gson.UriTypeAdapter;
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class GsonUtils {
 
-    private static final Gson gson = new GsonBuilder()
+    public static final Gson INSTANCE = new GsonBuilder()
             .registerTypeAdapter(Uri.class, new UriTypeAdapter())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create()
@@ -34,22 +34,22 @@ public class GsonUtils {
 
     public static String toJson(Object o){
 
-        return gson.toJson(o);
+        return INSTANCE.toJson(o);
     }
 
     public static<T> T fromJson(String json,Class<T> clazz){
 
-        return gson.fromJson(json,clazz);
+        return INSTANCE.fromJson(json,clazz);
     }
 
     public static <T> List<T> fromJsonArr(String json,Class<T> clazz){
         Type type = TypeToken.getParameterized(List.class, clazz).getType();
-        return gson.fromJson(json, type);
+        return INSTANCE.fromJson(json, type);
     }
 
     public static JSONObject toJsonObject(Object o){
         try {
-            JSONObject jsonObject = new JSONObject(gson.toJson(o));
+            JSONObject jsonObject = new JSONObject(INSTANCE.toJson(o));
 
             return jsonObject;
         } catch (JSONException e) {

@@ -33,6 +33,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:3.14.+'
     implementation 'com.github.jenly1314:zxing-lite:3.3.0'
     implementation 'androidx.room:room-runtime:2.2.5'
     implementation 'androidx.activity:activity:1.8.0'
