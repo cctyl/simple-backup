@@ -1,20 +1,23 @@
 use std::any::Any;
 
+use crate::utils::id;
 use crate::{
     app::{
-        database::CONTEXT, error::HttpError, response::{FailRespExt, OkRespExt, R, RR}
+        database::CONTEXT,
+        error::HttpError,
+        response::{FailRespExt, OkRespExt, R, RR},
     },
     dao::file::FileDao,
 };
 use axum::{
-    debug_handler, extract::{Json, Multipart}, Router
+    Router, debug_handler,
+    extract::{Json, Multipart},
 };
-use  rbatis::plugin::object_id::ObjectId;
 use log::{error, info};
+use rbatis::plugin::object_id::ObjectId;
 use serde::{Deserialize, Serialize};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
-use crate::utils::id;
 pub fn create_router() -> Router {
     Router::new()
         .route("/compare", axum::routing::post(compare))
@@ -94,36 +97,41 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     .unwrap_or(false)
             }
             "file" => {
-                 let path = relative_path.clone().ok_or(HttpError::BadRequest("必须提供releactivePath！".to_string()))?;
-                 if path=="/" {
+                let mut path = relative_path.clone().ok_or(HttpError::BadRequest(
+                    "必须提供releactivePath！".to_string(),
+                ))?;
+                if path == "/" {
                     return RR::success(());
                 }
-                    info!("path={path}");
+
+
+                if path.starts_with("/"){
+                    path = path[1..].to_string();
+                }
+
+                let path =  format!("./upload/{}",path);
+
+                info!("path={path}");
                 let path = std::path::Path::new(&path);
                 if let Some(parent) = path.parent() {
                     info!("父目录不存在，创建中");
                     // 递归创建所有缺失的父目录
-                    tokio::fs::create_dir_all(parent).await?; 
+                    tokio::fs::create_dir_all(parent).await?;
                 }
-               
-             
+
                 let write = tokio::fs::write(path, &data).await?;
             }
             _ => {}
         }
     }
 
-
-
-    let file = crate::entity::models::File{
+    let file = crate::entity::models::File {
         id: id::next_id(),
-        name:name.unwrap(),
-        doc_id:doc_id.unwrap(),
-        relative_path:relative_path.unwrap(),
+        name: name.unwrap(),
+        doc_id: doc_id.unwrap(),
+        relative_path: relative_path.unwrap(),
         is_directory,
-        md5:md5.unwrap()
-
-
+        md5: md5.unwrap(),
     };
 
     crate::entity::models::File::insert(&CONTEXT.rb, &file).await?;

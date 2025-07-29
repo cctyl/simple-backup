@@ -1,0 +1,4 @@
+{
+"addr":"192.168.31.151:8082",
+"secret":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9s"
+}
