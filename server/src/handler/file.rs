@@ -15,6 +15,7 @@ use axum::{
 };
 use log::{error, info};
 use rbatis::plugin::object_id::ObjectId;
+use rbs::value;
 use serde::{Deserialize, Serialize};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -124,6 +125,17 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
             _ => {}
         }
     }
+
+
+    let data = crate::entity::models::File::delete_by_map(
+        &CONTEXT.rb,
+        value! {
+            "relative_path":relative_path.clone().unwrap()
+        },
+    )
+    .await?;
+
+    info!("del: {data}");
 
     let file = crate::entity::models::File {
         id: id::next_id(),
