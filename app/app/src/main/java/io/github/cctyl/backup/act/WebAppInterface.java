@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import io.github.cctyl.backup.AppApplication;
+import io.github.cctyl.backup.dao.BackupFileDao;
 import io.github.cctyl.backup.dao.BackupHistoryDao;
 import io.github.cctyl.backup.dao.SelectDirDao;
 import io.github.cctyl.backup.entity.BackupHistory;
@@ -58,6 +59,7 @@ public class WebAppInterface {
     private BackupService.LocalBinder binder;
 
     private BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
+    private BackupFileDao backupFileDao = AppApplication.getInstance().getApplicationDatabase().backupFileDao();
     private SelectDirDao selectDirDao = AppApplication.getInstance().getApplicationDatabase().selectDirDao();
 
     public MainActivity getContext() {
@@ -224,8 +226,20 @@ public class WebAppInterface {
     @JavascriptInterface
     public void startBackup() {
         Log.d("WebAppInterface", "startBackup: ");
+
+        ServerConfig serverConfig = new ServerConfig();
+        serverConfig.addr = sharedPreference.getString("addr", null);
+        serverConfig.secret = sharedPreference.getString("secret", null);
+
+
         // 开始备份
-        binder.start();
+        binder.start(serverConfig);
+    }
+
+    @JavascriptInterface
+    public void delBackupInfo(){
+        backupHistoryDao.deleteAll();
+        backupFileDao.deleteAll();
     }
 
     @JavascriptInterface

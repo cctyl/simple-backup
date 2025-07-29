@@ -11,9 +11,7 @@ use axum::{
 use log::info;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    app::{error::{ErrorMessage, HttpError}, response::R}
-};
+use crate::app::{database::CONTEXT, error::{ErrorMessage, HttpError}, response::R};
 
 
 pub async fn auth(
@@ -32,15 +30,15 @@ pub async fn auth(
         }
     });
 
-    //TODO 暂时关闭验证
-    // let token = token
-    //     .ok_or_else(|| HttpError::Unauthorized(ErrorMessage::TokenNotProvided.to_string()))?;
+    // 暂时关闭验证
+    let token = token
+        .ok_or_else(|| HttpError::Unauthorized(ErrorMessage::TokenNotProvided.to_string()))?;
 
     
-    // if token!= app_state.env.secret{
-    //     info!("访问失败：token={}",token);
-    //     return Err(HttpError::Unauthorized(ErrorMessage::InvalidToken.to_string()));
-    // } 
+    if token!= CONTEXT.config.secret{
+        info!("访问失败：token={}",token);
+        return Err(HttpError::Unauthorized(ErrorMessage::InvalidToken.to_string()));
+    } 
 
 
 

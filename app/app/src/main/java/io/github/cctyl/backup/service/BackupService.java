@@ -17,13 +17,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,6 +38,7 @@ import io.github.cctyl.backup.dto.ProgressDto;
 import io.github.cctyl.backup.entity.BackupFile;
 import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.SelectDir;
+import io.github.cctyl.backup.entity.ServerConfig;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.ToastUtil;
 import io.github.cctyl.backup.utils.http.ProgressListener;
@@ -71,7 +72,7 @@ public class BackupService extends Service {
      */
     private int mStatus = 0;
 
-
+    private ServerConfig mServerConfig;
     public class LocalBinder extends Binder {
 
 
@@ -91,10 +92,11 @@ public class BackupService extends Service {
         }
 
 
-        public void uploadFile(BackupFile file, ProgressListener listener) throws FileNotFoundException {
+        public void uploadFile(BackupFile file, ProgressListener listener) {
 
-            String token = "";
-            String serverAddr = "192.168.43.149:8082";
+            //从配置文件中读取
+            String token = "Bearer "+mServerConfig.secret;
+            String serverAddr = mServerConfig.addr;
 
             ProgressRequestBody progressBody = new ProgressRequestBody(file,listener);
 
@@ -145,10 +147,10 @@ public class BackupService extends Service {
 //            });
         }
 
-        public void start(){
+        public void start(ServerConfig serverConfig){
             setNotification();
             mStatus = 1;
-
+            mServerConfig = serverConfig;
             t = new Thread(() -> {
                 Log.d("BackupService", "onCreate: 线程启动");
                 startTime = LocalDateTime.now();
@@ -192,7 +194,7 @@ public class BackupService extends Service {
 
 
 
-                    //TODO 逐个上传文件
+                    // 逐个上传文件
                     updateProgress(0);
                     int totalSize = updatedIds.size();
                     progressDto.setNeedUploadFileNum(totalSize);
@@ -201,32 +203,30 @@ public class BackupService extends Service {
                     for (Long updatedId : updatedIds) {
                         count++;
                         BackupFile file  = backupFileDao.findById(updatedId);
-                        //TODO 后期要删除，文件夹也需要上传
                         if (!file.isDirectory()){
+                            long standSize = progressDto.getAlreadyUploadFileSize();
                             //模拟上传耗时
                             double finalCount = count;
                             uploadFile(file,  (uploaded, total, speed, timeDelta) -> {
-                                // 通过LiveData/Handler/RxJava传递到UI层
-                                Log.d("ProgressRequestBody",
-                                        "main: 上传进度变化: " + uploaded + "/" + total + " (" + speed + "B/s),花费时间（毫秒）="+timeDelta);
-
-
                                 progressDto.setAlreadyUploadFileNum((int) finalCount);
                                 progressDto.setAlreadyUploadFileSize(
-                                        progressDto.getAlreadyUploadFileSize()+uploaded
-
+                                        standSize+uploaded
                                 );
                                 progressDto.setTotalPercent((int) (finalCount / totalSize *100));
-                                progressDto.setSpeed((int) speed);//TODO 上传速度
+                                progressDto.setSpeed((int) speed);
                                 updateProgress(progressDto.getTotalPercent());
                                 ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
                                 currentFile.setMimeType(file.getMimeType());
                                 currentFile.setName(file.getName());
                                 currentFile.setRelativePath(file.getRelativePath());
-                                currentFile.setPercent((int) (uploaded*1.0/total));//TODO 当前文件上传进度
-
+                                int tempPercent = (int) ( Double.valueOf(uploaded)/total *100);
+                                currentFile.setPercent(tempPercent);
                                 mWebAppInterface.receiveProgressData( GsonUtils.toJsonObject(progressDto));
                             });
+
+                            progressDto.setAlreadyUploadFileSize(
+                                    standSize+ file.getSize()
+                            );
 
                         }
 

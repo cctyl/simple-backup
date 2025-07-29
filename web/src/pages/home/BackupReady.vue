@@ -109,6 +109,16 @@
         arrow_circle_up
       </i>
     </button>
+
+    <button class="primary-button"
+            @click="delBackupInfo"
+    >
+
+      <span>
+        删除备份记录
+      </span>
+
+    </button>
     <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
 
 
@@ -150,8 +160,8 @@ export default {
     this.sourceSettingReady = this.$store.state.selectedDir.length > 0;
 
     //TODO 临时关闭
-    // this.serverSettingReady = this.$store.state.serverConfig.addr && this.$store.state.serverConfig.secret;
-    this.serverSettingReady = true;
+    this.serverSettingReady = this.$store.state.serverConfig.addr && this.$store.state.serverConfig.secret;
+    // this.serverSettingReady = true;
     this.getBackupList();
     this.getPhoneDetail();
     this.getStorageInfo();
@@ -172,7 +182,10 @@ export default {
   methods: {
 
 
+    delBackupInfo(){
 
+      window.Android.delBackupInfo()
+    },
     startBackup() {
       if (!this.isReady) {
         this.scrollTop();
