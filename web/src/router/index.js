@@ -49,10 +49,10 @@ const router = new VueRouter({
                 headerTitle: '文件夹选择',
                 icon:'keyboard_return',
                 callBack: function () {
-                    console.log("文件夹选择 callBack")
+                    //console.log("文件夹选择 callBack")
                    this.$router.back()
                 },
-
+                rightIcon:'done',
                 hideFooter:true
 
             }

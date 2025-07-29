@@ -12,9 +12,19 @@ public class ProgressDto {
     LocalDateTime startTime;
     int alreadyUploadFileNum;
 
-    String circleTitle;
+    /**
+     * 检查文件是否已经完成
+     */
+    boolean checkFinish;
 
-    String circleDesc;
+
+    public boolean isCheckFinish() {
+        return checkFinish;
+    }
+
+    public void setCheckFinish(boolean checkFinish) {
+        this.checkFinish = checkFinish;
+    }
 
     public int getTotalPercent() {
         return totalPercent;
@@ -64,21 +74,6 @@ public class ProgressDto {
         this.alreadyUploadFileNum = alreadyUploadFileNum;
     }
 
-    public String getCircleTitle() {
-        return circleTitle;
-    }
-
-    public void setCircleTitle(String circleTitle) {
-        this.circleTitle = circleTitle;
-    }
-
-    public String getCircleDesc() {
-        return circleDesc;
-    }
-
-    public void setCircleDesc(String circleDesc) {
-        this.circleDesc = circleDesc;
-    }
 
     public int getNeedUploadFileNum() {
         return needUploadFileNum;

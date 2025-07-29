@@ -41,7 +41,7 @@ export default {
   methods: {
 
     iconCallBack() {
-      console.log('iconCallBack')
+      // console.log('iconCallBack')
       this.$bus.$emit("iconCallBack")
     },
     refresh() {

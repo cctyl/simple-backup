@@ -200,7 +200,7 @@ export default {
 
       this.total = window.Android.getTotalStorage();
       this.available = window.Android.getAvailableStorage();
-      console.log(this.total, this.available)
+      //console.log(this.total, this.available)
     },
 
     getPhoneDetail() {
@@ -209,8 +209,7 @@ export default {
     getBackupList() {
 
       this.backupList = JSON.parse(window.Android.getBackupHistory());
-      console.log(this.backupList.length)
-      console.log(this.backupList)
+
 
 
       if (this.backupList.length > 0) {
@@ -235,7 +234,6 @@ export default {
     formatRelativeTime(isoDateTime) {
       // 解析输入时间
       const inputDate = new Date(isoDateTime);
-      console.log(inputDate)
       const now = new Date();
 
       // 计算时间差（毫秒）

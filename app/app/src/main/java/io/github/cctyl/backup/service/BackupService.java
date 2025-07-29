@@ -128,8 +128,7 @@ public class BackupService extends Service {
         progressDto.setSpeed(0);
 
         progressDto.setAlreadyUploadFileNum(0);
-        progressDto.setCircleTitle("准备中");
-        progressDto.setCircleDesc("请稍后，正在检查哪些文件需要备份...");
+        progressDto.setCheckFinish(false);
         progressDto.setNeedUploadFileNum(needUploadFileNum);
         ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
         currentFile.setMimeType(file.getMimeType());
@@ -154,15 +153,10 @@ public class BackupService extends Service {
 
 
         progressDto.setSpeed(0);
-        progressDto.setCircleTitle("已暂停");
-        progressDto.setCircleDesc("点击下方按钮继续备份");
+        progressDto.setCheckFinish(true);
 
-        mWebAppInterface.getContext().runOnUiThread(() -> {
-            mWebAppInterface.getJsExecUtil().exec("receiveProgressData",
-                    GsonUtils.toJsonObject(progressDto),
-                    null
-            );
-        });
+        mWebAppInterface.receiveProgressData( GsonUtils.toJsonObject(progressDto));
+
 
     }
 
@@ -315,8 +309,7 @@ public class BackupService extends Service {
                 updateProgress(0);
                 int totalSize = updatedIds.size();
                 progressDto.setNeedUploadFileNum(totalSize);
-                progressDto.setCircleTitle("备份中");
-                progressDto.setCircleDesc("请不要杀死应用或断开网络");
+                progressDto.setCheckFinish(true);
                 double count = 0;
                 for (Long updatedId : updatedIds) {
 

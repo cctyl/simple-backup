@@ -38,16 +38,16 @@ export default {
   data() {
     return {
       filter: '',
-      hasPermission: false,
+      hasPermission: true,
     }
   },
   created() {
 
   },
   mounted() {
+
     window.vue.checkPermission = this.checkPermission;
     this.$bus.$on('onAppBackPressed', this.onAppBackPressed);
-    console.log("backup mounted")
     this.checkPermission();
   },
   methods: {

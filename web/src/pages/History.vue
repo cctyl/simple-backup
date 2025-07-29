@@ -222,7 +222,7 @@ export default {
 
   mounted() {
     this.backupList = JSON.parse(window.Android.getBackupHistory());
-    console.log(this.backupList)
+    // console.log(this.backupList)
   },
   methods: {
     formatNumberWithCommas(num) {
@@ -238,7 +238,7 @@ export default {
       return roundedNum.toLocaleString('en-US');
     },
     formatRelativeTime(isoDateTime) {
-      console.log(isoDateTime)
+      //console.log(isoDateTime)
       // 解析输入时间
       const inputDate = new Date(isoDateTime);
       const now = new Date();

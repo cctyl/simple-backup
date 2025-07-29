@@ -148,7 +148,7 @@ export default {
      */
     receiveServerConfig(config){
 
-      console.log("ServerConfig receiveServerConfig=", config)
+      //console.log("ServerConfig receiveServerConfig=", config)
       this.SET_SERVER_CONFIG( config)
       this.addr = config.addr;
       this.secret = config.secret;

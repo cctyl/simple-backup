@@ -66,7 +66,7 @@ export default {
   data() {
     return {
       showLoading: false,
-      currentPath: null,
+      currentPath: [],
       root: null,
       files: [
         {
@@ -97,9 +97,11 @@ export default {
     window.vue.receiveRoot = this.receiveRoot;
   },
   mounted() {
+    this.$bus.$on('rightIconCallBack', this.selectDone);
     this.$bus.$on('onAppBackPressed', this.onAppBackPressed);
     this.$bus.$on('iconCallBack', this.intoParent);
     this.selectedDir = this.$store.state.selectedDir;
+    //console.log("window.Android.init()")
     window.Android.init();
   },
   watch: {
@@ -119,6 +121,12 @@ export default {
   computed: {},
   methods: {
     ...mapMutations(['SET_SELECTED_DIR']),
+
+
+    selectDone() {
+      this.$router.back();
+    },
+
     isSelected(selectedDir, list) {
 
       //遍历list，然后判断list中元素的relativePath是否在selectedDir元素的relativePath字段相同，若相同则把list中这个元素加上一个字段checked
@@ -189,9 +197,16 @@ export default {
       return 'insert_drive_file';
     },
     receiveRoot(root) {
+      //console.log("--------receiveRoot:--------")
+
       this.root = root;
+      this.currentPath.push(this.root)
+      //console.log(this.root)
+      //console.log("--------receiveRoot:--------")
     },
     receiveFileList(dirList) {
+      //console.log("receiveFileList:")
+      //console.log(dirList)
       this.handleData(dirList)
     },
 
@@ -225,72 +240,70 @@ export default {
     },
 
 
+
+
     toChild(item) {
+      //console.log("--------toChild:--------")
       if (this.timer != null) {
+        //console.log("点太快")
         window.Android.toast("点太快了");
         return;
       }
       if (!item.isDirectory) {
+        //console.log("这不是一个目录")
         return;
       }
       this.showLoading = true;
 
 
       this.timer = setTimeout(() => {
-        if (!this.currentPath) {
-          this.currentPath = [this.root];
-        } else {
-          this.currentPath.push(item);
-        }
+        //console.log("定时器开始...")
+
+        //console.log("当前目录正常加入到path")
+        //console.log("item=")
+        //console.log(item)
+        //console.log(this.currentPath)
+        this.currentPath.push(item);
+        //console.log("向android发送item")
+        //console.log(item)
         let dirList = JSON.parse(window.Android.intoChild(JSON.stringify(item)));
-        // console.log(" toChild dirList length=" + dirList.length);
+        //console.log("android返回dirList:")
+        //console.log(dirList)
+
         this.handleData(dirList);
         this.scrollTop();
         if (dirList.length < 20) {
-          // console.log("dirList length=" + dirList.length + ", 直接关闭 this.showLoading = "+this.showLoading)
           this.showLoading = false;
         } else {
           this.$nextTick(function () {
-            // console.log("渲染后 直接关闭 this.showLoading = "+this.showLoading)
             this.showLoading = false;
 
           })
         }
-
-
         this.timer = null;
+        //console.log("--------toChild:--------")
       }, 50);
     },
     intoParent() {
-
+      //console.log("--------intoParent:--------")
       if (this.timer != null) {
         window.Android.toast("点太快了");
         return;
       }
-      if (!this.currentPath || this.currentPath.length === 0) {
+      if ( this.currentPath.length === 1) {
+        //console.log("this.currentPath  只有一个元素，直接返回上一级")
         this.$router.back();
+        return;
       }
       this.showLoading = true;
       this.timer = setTimeout(() => {
+        //console.log("定时器开始")
 
-        if (this.currentPath && this.currentPath.length > 0) {
-          this.currentPath.pop();
-        }
-        let dirList = [];
-        if (!this.currentPath || this.currentPath.length < 1) {
-          // console.log("回到顶级:" + this.root.relativePath)
-          dirList = JSON.parse(window.Android.intoParent(JSON.stringify(this.root)));
-          this.handleData(dirList)
-        } else if (this.currentPath.length > 0) {
-          let item = this.currentPath[this.currentPath.length - 1];
-          // console.log("回到上一级:" + item.relativePath)
-          item = JSON.stringify(item);
-          dirList = JSON.parse(window.Android.intoParent(item))
-          this.handleData(dirList)
-        }
+        this.currentPath.pop();
+        let dirList  = JSON.parse(window.Android.intoParent(JSON.stringify(this.currentPath[this.currentPath.length-1])))
+        this.handleData(dirList)
         this.scrollTop();
         if (dirList.length < 20) {
-          // console.log("dirList length=" + dirList.length + ", 直接关闭")
           this.showLoading = false;
         } else {
           this.$nextTick(function () {
@@ -298,10 +311,16 @@ export default {
           })
         }
         this.timer = null;
+
+        //console.log("--------intoParent:--------")
       }, 50);
     },
+
+
+
+
     onAppBackPressed() {
-      console.log("dir select 接收到返回，保存一次数据")
+      //console.log("dir select 接收到返回，保存一次数据")
       this.intoParent()
     },
 
@@ -310,7 +329,7 @@ export default {
   beforeDestroy() {
     this.$bus.$off([
       'iconCallBack',
-
+      'rightIconCallBack',
       'onAppBackPressed'])
   }
 
@@ -454,6 +473,7 @@ export default {
   height: 28px;
   accent-color: #1a73e8;
 }
+
 input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;

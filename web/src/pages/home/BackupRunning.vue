@@ -9,14 +9,14 @@
 
         <!--  $store.state.backupStatus === 1 ? '备份中' : '已暂停'       -->
         {{
-          progressData.circleTitle
+         circleTitle
         }}
       </div>
       <div class="progress-subtitle">
 
         <!--    $store.state.backupStatus === 1 ? '请不要关闭应用或断开网络' : '点击下方按钮继续备份'      -->
         {{
-          progressData.circleDesc
+          circleDesc
         }}
       </div>
 
@@ -130,7 +130,7 @@ export default {
         speed: 20481,//上传速度
         startTime: '2025-07-26T18:45:23Z', //ISO 8601 格式的时间字符串 示例："2023-07-15T18:45:23Z"
         alreadyUploadFileNum: 1,
-
+        checkFinish:false,
         circleTitle: '',
         circleDesc: '',
       },
@@ -141,16 +141,48 @@ export default {
     }
   },
   created() {
-    console.log("backupRunning.vue created")
+    //console.log("backupRunning.vue created")
     window.vue.receiveProgressData = this.receiveProgressData;
   },
   mounted() {
     window.scrollTo(0, 0);
-    console.log("backupRunning.vue startBackup")
+    //console.log("backupRunning.vue startBackup")
     window.Android.startBackup();
 
   },
-  computed: {},
+  computed: {
+
+
+    circleTitle(){
+
+      if (this.$store.state.backupStatus === 1){
+
+        if (this.progressData.checkFinish){
+         return  '备份中'
+        }else {
+          return '准备中'
+        }
+      }else {
+        return '已暂停';
+      }
+
+    },
+
+    circleDesc(){
+
+      if (this.$store.state.backupStatus === 1){
+
+        if (this.progressData.checkFinish){
+          return  '请不要关闭应用或断开网络'
+        }else {
+          return '请稍后，正在检查哪些文件需要备份...'
+        }
+      }else {
+        return '点击下方按钮继续备份';
+      }
+
+    },
+  },
   methods: {
 
 
@@ -164,11 +196,11 @@ export default {
     },
     completeBackup() {
       this.showConfirmModal = true;
-      console.log("准备结束")
+      //console.log("准备结束")
 
     },
     handleConfirmComplete() {
-      console.log("修改状态")
+      //console.log("修改状态")
       this.showConfirmModal = false;
       this.$store.commit('SET_BACKUP_STATUS', 0)
       window.Android.completeBackup();
@@ -366,6 +398,7 @@ export default {
 
 .file-details {
   flex: 1;
+  min-width: 0;
 }
 
 .file-name {
@@ -374,6 +407,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 100%;
 }
 
 .file-path {
