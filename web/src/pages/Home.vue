@@ -7,6 +7,9 @@
       <BackupReady v-if="$store.state.backupStatus===0" :key="0"></BackupReady>
       <BackupRunning v-else :key="1"></BackupRunning>
     </AnimatedTransition>
+
+
+
   </div>
 
 

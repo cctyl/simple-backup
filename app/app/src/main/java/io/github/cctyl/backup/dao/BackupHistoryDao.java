@@ -1,6 +1,7 @@
 package io.github.cctyl.backup.dao;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
@@ -15,6 +16,9 @@ public interface BackupHistoryDao {
 
     @Query(" delete from backup_history ")
     int deleteAll();
+
+    @Delete
+    int delete(BackupHistory backupHistory);
 
     @Update
     int updateOne(BackupHistory user);

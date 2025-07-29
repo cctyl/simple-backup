@@ -55,6 +55,8 @@ public class WebAppInterface {
     private List<BackupFile> rootChild;
     private BackupFile root;
 
+    private BackupService.LocalBinder binder;
+
     private BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
     private SelectDirDao selectDirDao = AppApplication.getInstance().getApplicationDatabase().selectDirDao();
 
@@ -62,38 +64,10 @@ public class WebAppInterface {
         return context;
     }
 
-    private static boolean isBind = false;
 
-    public void bindBackupService() {
-        Log.d("WebAppInterface", "bindBackupService: ");
-        Intent bindIntent = new Intent(context, BackupService.class);
-        context.bindService(bindIntent, connection, BIND_AUTO_CREATE); // 绑定服务
+    public void setBinder(BackupService.LocalBinder binder) {
+        this.binder = binder;
     }
-
-    public void unbindBackupService() {
-        if (isBind) {
-            isBind = false;
-            context.unbindService(connection);
-        } else {
-            Log.d("WebAppInterface", "unbindBackupService: 未绑定，不要重复解绑");
-        }
-    }
-
-    private BackupService.LocalBinder binder;
-    private ServiceConnection connection = new ServiceConnection() {
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            isBind = true;
-            binder = (BackupService.LocalBinder) service;
-            binder.receiveWebInterface(WebAppInterface.this);
-            Log.d("TestServiceActivity", "onServiceConnected: 链接了");
-        }
-    };
 
     public JsExecUtil getJsExecUtil() {
         return jsExecUtil;
@@ -123,20 +97,7 @@ public class WebAppInterface {
 
     @JavascriptInterface
     public int getStatus(){
-
-        if (binder==null ){
-
-            if ( BackupService.isBinder){
-                Log.d("WebAppInterface", "getStatus: 重新绑定");
-                bindBackupService();
-                return binder.getStatus();
-            }else {
-                return 0;
-            }
-        }else {
-            return binder.getStatus();
-        }
-
+        return binder.getStatus();
     }
 
     public void sendFilesToWebView(List<BackupFile> list) {
@@ -264,16 +225,14 @@ public class WebAppInterface {
     public void startBackup() {
         Log.d("WebAppInterface", "startBackup: ");
         // 开始备份
-        bindBackupService();
+        binder.start();
     }
 
     @JavascriptInterface
     public void completeBackup() {
         //  提前结束备份
 
-        binder.setStatus(0);
-        unbindBackupService();
-
+        binder.stop();
     }
 
     @JavascriptInterface
@@ -531,6 +490,14 @@ public class WebAppInterface {
         context.runOnUiThread(() -> {
             jsExecUtil.exec("receiveProgressData",
                     jsonObject,
+                    null
+            );
+        });
+    }
+
+    public void receiveNotNeedBackup() {
+        context.runOnUiThread(() -> {
+            jsExecUtil.exec("receiveNotNeedBackup",
                     null
             );
         });

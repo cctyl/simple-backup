@@ -5,13 +5,16 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -34,6 +37,7 @@ import io.github.cctyl.backup.dao.BackupHistoryDao;
 import io.github.cctyl.backup.entity.BackupFile;
 import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.ServerConfig;
+import io.github.cctyl.backup.service.BackupService;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
 import io.github.cctyl.backup.utils.ToastUtil;
@@ -62,9 +66,40 @@ public class MainActivity extends AppCompatActivity {
         //webview初始化
         webviewInit();
 
+        bindBackupService();
+    }
+    private static boolean isBind = false;
+    private BackupService.LocalBinder binder;
+    private ServiceConnection connection = new ServiceConnection() {
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            isBind = true;
+            binder = (BackupService.LocalBinder) service;
+            binder.receiveWebInterface(webAppInterface);
+            webAppInterface.setBinder(binder);
+            Log.d("TestServiceActivity", "onServiceConnected: 链接了");
+        }
+    };
+
+    public void bindBackupService() {
+        Log.d("WebAppInterface", "bindBackupService: ");
+        Intent bindIntent = new Intent(this, BackupService.class);
+        bindService(bindIntent, connection, BIND_AUTO_CREATE); // 绑定服务
     }
 
+    public void unbindBackupService() {
+        if (isBind) {
+            isBind = false;
+            unbindService(connection);
+        } else {
+            Log.d("WebAppInterface", "unbindBackupService: 未绑定，不要重复解绑");
+        }
+    }
 
 
     private void makeStatusBarTransparent() {
@@ -159,6 +194,9 @@ public class MainActivity extends AppCompatActivity {
             webView.destroy();
             webView = null;
         }
+
+
+        unbindBackupService();
 
 
     }

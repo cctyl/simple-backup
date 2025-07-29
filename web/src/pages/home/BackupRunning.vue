@@ -93,7 +93,7 @@
     </div>
 
     <!-- 在根元素内添加 -->
-    <ConfirmModal
+<!--    <ConfirmModal
         :visible="showConfirmModal"
         title="结束备份"
         message="您确定要结束备份吗？未完成的备份将需要重新开始。"
@@ -101,19 +101,45 @@
         cancel-text="继续备份"
         @confirm="handleConfirmComplete"
         @cancel="handleCancelComplete">
-    </ConfirmModal>
+    </ConfirmModal>-->
 
+
+    <MaterialDialog
+        :visible="showConfirmModal"
+        title="结束备份"
+        icon="warning"
+        :show-cancel="true"
+        @confirm="handleConfirmComplete"
+        @cancel="handleCancelComplete"
+    >
+      <p>您确定要结束备份吗？未完成的备份将需要重新开始。</p>
+    </MaterialDialog>
+
+
+    <MaterialDialog
+        :visible="showCancel"
+        title="温馨提示"
+        icon="notifications_active"
+        :show-cancel="false"
+        @confirm="handleReturnHome"
+    >
+      <p>
+
+        扫描后没有发现需要备份的文件，本次备份不会进行
+
+      </p>
+    </MaterialDialog>
   </div>
 </template>
 
 
 <script>
 import CircularProgress from "@/components/CircularProgress.vue";
-import ConfirmModal from "@/components/ConfirmModal.vue";
+import MaterialDialog from "@/components/Dialog.vue";
 
 export default {
   name: 'backup-running-view',
-  components: {ConfirmModal, CircularProgress},
+  components: {MaterialDialog, CircularProgress},
   data() {
     return {
 
@@ -136,13 +162,14 @@ export default {
       },
 
 
-
+      showCancel:false,
       showConfirmModal: false
     }
   },
   created() {
     //console.log("backupRunning.vue created")
     window.vue.receiveProgressData = this.receiveProgressData;
+    window.vue.receiveNotNeedBackup = this.receiveNotNeedBackup;
   },
   mounted() {
     window.scrollTo(0, 0);
@@ -184,6 +211,14 @@ export default {
     },
   },
   methods: {
+    receiveNotNeedBackup(){
+      this.showCancel = true;
+    },
+
+    handleReturnHome(){
+      this.$store.commit("SET_BACKUP_STATUS",0);
+      this.showCancel = false;
+    },
 
 
     resumeBackup() {

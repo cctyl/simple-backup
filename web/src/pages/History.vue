@@ -284,7 +284,7 @@ export default {
     },
 
     formatCostTime(seconds) {
-      if (typeof seconds !== 'number' || seconds < 0 || !isFinite(seconds)) {
+      if (typeof seconds !== 'number' || seconds < 0 ) {
         return '无效时间';
       }
 
@@ -306,9 +306,11 @@ export default {
       if (minute > 0) {
         parts.push(`${minute}分钟`);
       }
-      if (day === 0 && hour === 0 && minute === 0 && second > 0) {
+      if (day === 0 && hour === 0 && minute === 0 && second >= 0) {
         parts.push(`${second}秒`);
       }
+
+
 
       // 如果超过一天，显示秒
       if (day > 0 && second > 0) {

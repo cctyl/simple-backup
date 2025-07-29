@@ -112,6 +112,8 @@
     <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
 
 
+
+
   </div>
 
 
@@ -123,7 +125,7 @@ import SelectFolder from "@/components/SelectFolder.vue";
 
 export default {
   name: 'backup-ready-view',
-  components: {SelectFolder},
+  components: { SelectFolder},
   data() {
     return {
       hasBackup: false,
@@ -168,6 +170,7 @@ export default {
 
   },
   methods: {
+
 
 
     startBackup() {
