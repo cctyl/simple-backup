@@ -381,8 +381,8 @@ public class MainActivity extends AppCompatActivity {
 //        webView.loadUrl("file:///android_asset/index.html");
 
 
-        webView.loadUrl("http://192.168.31.151:8080");
-//        webView.loadUrl("http://192.168.43.149:8080");
+//        webView.loadUrl("http://192.168.31.151:8080");
+        webView.loadUrl("http://192.168.43.149:8080");
     }
 
 }

@@ -17,13 +17,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,14 +37,10 @@ import io.github.cctyl.backup.entity.BackupFile;
 import io.github.cctyl.backup.entity.BackupHistory;
 import io.github.cctyl.backup.entity.SelectDir;
 import io.github.cctyl.backup.entity.ServerConfig;
+import io.github.cctyl.backup.error.BreakException;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.ToastUtil;
-import io.github.cctyl.backup.utils.http.ProgressListener;
-import io.github.cctyl.backup.utils.http.ProgressRequestBody;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import io.github.cctyl.backup.utils.http.OkHttpUtil;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class BackupService extends Service {
@@ -72,6 +66,7 @@ public class BackupService extends Service {
      */
     private int mStatus = 0;
 
+    private String url;
     private ServerConfig mServerConfig;
     public class LocalBinder extends Binder {
 
@@ -92,155 +87,111 @@ public class BackupService extends Service {
         }
 
 
-        public void uploadFile(BackupFile file, ProgressListener listener) {
-
-            //从配置文件中读取
-            String token = "Bearer "+mServerConfig.secret;
-            String serverAddr = mServerConfig.addr;
-
-            ProgressRequestBody progressBody = new ProgressRequestBody(file,listener);
-
-            MultipartBody body = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("name", file.getName())
-                    .addFormDataPart("treeUri", file.getTreeUri().toString())
-                    .addFormDataPart("docId", file.getDocId())
-                    .addFormDataPart("relativePath", file.getRelativePath())
-                    .addFormDataPart("isDirectory", String.valueOf(file.isDirectory()))
-                    .addFormDataPart("md5", file.getMd5())
-                    .addFormDataPart("file", file.getName(), progressBody)
-                    .build();
-
-
-
-            Log.d("LocalBinder", "uploadFile: body= "+body);
-
-            Request request = new Request.Builder()
-                    .url("http://"+serverAddr+"/api/file/upload")
-                    .header("authorization",token)
-                    .post(body)
-                    .build();
-
-            OkHttpClient client = new OkHttpClient();
-
-            try {
-                Response execute = client.newCall(request)
-                        .execute();
-                String bodyString = execute.body().string();
-
-                Log.d("LocalBinder", "uploadFile: 上传的响应="+bodyString);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-//            client.newCall(request).enqueue(new Callback() {
-//                @Override
-//                public void onFailure(Call call, IOException e) {
+//        public void uploadFile(BackupFile file, ProgressListener listener) {
 //
-//                    Log.e("LocalBinder", "onFailure: ",e);
-//                }
+//            //从配置文件中读取
+//            String token = "Bearer " + mServerConfig.secret;
+//            String serverAddr = mServerConfig.addr;
 //
-//                @Override
-//                public void onResponse(Call call, Response response) {
-//                    // 处理响应
-//                    Log.d("LocalBinder", "onResponse: "+response.toString());
-//                }
-//            });
-        }
+//            ProgressRequestBody progressBody = new ProgressRequestBody(file,listener);
+//
+//            MultipartBody body = new MultipartBody.Builder()
+//                    .setType(MultipartBody.FORM)
+//                    .addFormDataPart("name", file.getName())
+//                    .addFormDataPart("treeUri", file.getTreeUri().toString())
+//                    .addFormDataPart("docId", file.getDocId())
+//                    .addFormDataPart("relativePath", file.getRelativePath())
+//                    .addFormDataPart("isDirectory", String.valueOf(file.isDirectory()))
+//                    .addFormDataPart("md5", file.getMd5())
+//                    .addFormDataPart("file", file.getName(), progressBody)
+//                    .build();
+//
+//
+//            Log.d("LocalBinder", "uploadFile: body= "+body);
+//
+//            Request request = new Request.Builder()
+//                    .url("http://"+serverAddr+"/api/file/upload")
+//                    .header("authorization",token)
+//                    .post(body)
+//                    .build();
+//
+//            try {
+//                String bodyString = OkHttpUtil.INSTANCE.newCall(request)
+//                        .execute().body().string();
+//                Log.d("LocalBinder", "uploadFile: 上传的响应="+bodyString);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
 
         public void start(ServerConfig serverConfig){
             setNotification();
             mStatus = 1;
             mServerConfig = serverConfig;
+            url = "http://"+mServerConfig.addr;
             t = new Thread(() -> {
                 Log.d("BackupService", "onCreate: 线程启动");
                 startTime = LocalDateTime.now();
                 BackupHistory backupHistory = null;
                 BackupHistory dto = new BackupHistory();
+                boolean cancel = false;
                 try {
-                    progressDto.setStartTime(startTime);
-                    getSystemService(NotificationManager.class).notify(1,
-                            getNotification(100, "准备中", "请稍后，正在检查哪些文件需要备份...")
-                    );
-                    List<SelectDir> selectDirList = selectDirDao.findAll();
-                    if (selectDirList == null || selectDirList.isEmpty()) {
-                        Log.d("BackupService", "onCreate: 未选择任何文件夹");
+                        progressDto.setStartTime(startTime);
+                        getSystemService(NotificationManager.class).notify(1,
+                                getNotification(100, "准备中", "请稍后，正在检查哪些文件需要备份...")
+                        );
+                        List<SelectDir> selectDirList = selectDirDao.findAll();
+                        if (selectDirList == null || selectDirList.isEmpty()) {
+                            Log.d("BackupService", "onCreate: 未选择任何文件夹");
+                            ToastUtil.toast("错误！未选择需要备份的文件夹");
+                            throw new BreakException();
+                        }
 
-                        ToastUtil.toast("错误！未选择需要备份的文件夹");
-                        return;
-                    }
-
-                    backupHistory = initHistory(selectDirList);
-
-
-                    //任务流程是： 先找到需要备份的，然后逐个上传，所以是局部循环，而不是整体循环
-
-                    //1. 递归查找需要备份的文件
-                    Set<Long> updatedIds = new HashSet<>();
-                    List<BackupFile> initParent = getBackupFileFromSelectDir(selectDirList);
-                    recursiveGetChildren(initParent, updatedIds);
-                    Log.d("BackupService", "onCreate: 文件查找完成");
-                    if (updatedIds.isEmpty()){
+                        backupHistory = initHistory(selectDirList);
 
 
-                        Log.d("LocalBinder", "start: 无需备份");
-                        mWebAppInterface.receiveNotNeedBackup();
-                        stopForeground(STOP_FOREGROUND_REMOVE);
+                        //任务流程是： 先找到需要备份的，然后逐个上传，所以是局部循环，而不是整体循环
 
-                        backupHistoryDao.delete(backupHistory);
-                        return;
-                    }
-
-
+                        //1. 递归查找需要备份的文件
+                        Set<Long> updatedIds = new HashSet<>();
+                        List<BackupFile> initParent = getBackupFileFromSelectDir(selectDirList);
+                        recursiveGetChildren(initParent, updatedIds);
+                        Log.d("BackupService", "onCreate: 文件查找完成");
 
 
+                        //1.5与服务器进行对比
+                        int before = updatedIds.size();
+                        updatedIds = compareServerInfo(updatedIds);
+                        int after = updatedIds.size();
+                        if (after==0 && before!=0){
+                            Log.d("LocalBinder", "start: 无需备份");
+                            mWebAppInterface.receiveServerAlreadyLatest();
 
-                    // 逐个上传文件
-                    updateProgress(0);
-                    int totalSize = updatedIds.size();
-                    progressDto.setNeedUploadFileNum(totalSize);
-                    progressDto.setCheckFinish(true);
-                    double count = 0;
-                    for (Long updatedId : updatedIds) {
-                        count++;
-                        BackupFile file  = backupFileDao.findById(updatedId);
-                        if (!file.isDirectory()){
-                            long standSize = progressDto.getAlreadyUploadFileSize();
-                            //模拟上传耗时
-                            double finalCount = count;
-                            uploadFile(file,  (uploaded, total, speed, timeDelta) -> {
-                                progressDto.setAlreadyUploadFileNum((int) finalCount);
-                                progressDto.setAlreadyUploadFileSize(
-                                        standSize+uploaded
-                                );
-                                progressDto.setTotalPercent((int) (finalCount / totalSize *100));
-                                progressDto.setSpeed((int) speed);
-                                updateProgress(progressDto.getTotalPercent());
-                                ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
-                                currentFile.setMimeType(file.getMimeType());
-                                currentFile.setName(file.getName());
-                                currentFile.setRelativePath(file.getRelativePath());
-                                int tempPercent = (int) ( Double.valueOf(uploaded)/total *100);
-                                currentFile.setPercent(tempPercent);
-                                mWebAppInterface.receiveProgressData( GsonUtils.toJsonObject(progressDto));
-                            });
+                           throw new BreakException();
+                        }
 
-                            progressDto.setAlreadyUploadFileSize(
-                                    standSize+ file.getSize()
-                            );
+                        if (updatedIds.isEmpty()){
+                            Log.d("LocalBinder", "start: 无需备份");
+                            mWebAppInterface.receiveNotNeedBackup();
 
+                            throw new BreakException();
                         }
 
 
+                        //2. 逐个上传文件
+                        startUpload(updatedIds);
 
-                    }
 
-                    dto.setBackUpNum((long) count);
-                    dto.setBackupResult("备份成功");
-                    dto.setBackupDetail("今天也保证了数据安全！");
-                    dto.setSuccess(true);
-                    dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
-                    finishNotify();
-                    ToastUtil.toastLong("备份完成！");
+                        //3. 统计结果
+                        dto.setBackUpNum((long) updatedIds.size());
+                        dto.setBackupResult("备份成功");
+                        dto.setBackupDetail("今天也保证了数据安全！");
+                        dto.setSuccess(true);
+                        dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
+                        finishNotify();
+
+
                 } catch (InterruptedException e) {
                     dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
                     dto.setSuccess(false);
@@ -250,7 +201,16 @@ public class BackupService extends Service {
                     dto.setBackupDetail("备份过程中被取消了");
                     Log.d("BackupService", "onCreate: 线程被打断运行");
                     ToastUtil.toast("备份已取消！");
-                } catch (Exception e) {
+                }
+                catch (BreakException e){
+                    cancel = true;
+                    dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
+                    dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
+                    dto.setSuccess(true);
+                    dto.setBackupResult("无需备份");
+                    dto.setBackupDetail("未发现与服务端有差异的文件，本次备份取消");
+                }
+                catch (Exception e) {
                     dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
                     dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
                     dto.setSuccess(false);
@@ -262,12 +222,7 @@ public class BackupService extends Service {
                     ToastUtil.toastLong("备份异常！错误信息：" + e.getMessage());
                 }
 
-                updateHistory(backupHistory, dto);
-                mStatus = 0;
-                //通知界面备份完成
-                mWebAppInterface.receiveBackupStatus(mStatus);
-                Log.d("BackupService", "onCreate: 线程结束");
-                stopForeground(STOP_FOREGROUND_REMOVE);
+                finishBackup(backupHistory, dto,cancel);
             });
 
             t.start();
@@ -284,6 +239,90 @@ public class BackupService extends Service {
             }
 
         }
+    }
+
+    private void finishBackup(BackupHistory backupHistory, BackupHistory dto, boolean cancel) {
+        mStatus = 0;
+        updateHistory(backupHistory, dto);
+        if (!cancel){
+            mWebAppInterface.receiveBackupStatus(mStatus);
+        }
+
+        //通知界面备份完成
+
+        Log.d("BackupService", "onCreate: 线程结束");
+        stopForeground(STOP_FOREGROUND_REMOVE);
+    }
+
+    private Set<Long> compareServerInfo(Set<Long> updatedIds) throws InterruptedException {
+        Set<Long> result = new HashSet<>();
+        if (updatedIds.size()>50){
+            //按50来截取集合，循环，直到结束
+            int start = 0;
+            while (start<updatedIds.size()){
+                List<Long> idList = updatedIds.stream()
+                        .skip(start)
+                        .limit(50)
+                        .collect(Collectors.toList());
+
+                List<BackupFile> list = backupFileDao.findByIdIn(idList);
+                List<BackupFile> compare = OkHttpUtil.compare(list, mServerConfig);
+                result.addAll( compare.stream().map(BackupFile::getId).collect(Collectors.toSet()));
+                start+=50;
+            }
+        }else {
+            List<BackupFile> list = backupFileDao.findByIdIn(updatedIds);
+            List<BackupFile> compare = OkHttpUtil.compare(list, mServerConfig);
+            result.addAll(
+                    compare.stream()
+                    .filter(backupFile -> !backupFile.isDirectory())
+                    .map(BackupFile::getId).collect(Collectors.toSet())
+            );
+        }
+
+        return result;
+    }
+
+    private void startUpload(Set<Long> updatedIds) {
+        updateProgress(0);
+        int totalSize = updatedIds.size();
+        progressDto.setNeedUploadFileNum(totalSize);
+        progressDto.setCheckFinish(true);
+        double count = 0;
+        for (Long updatedId : updatedIds) {
+            count++;
+            BackupFile file  = backupFileDao.findById(updatedId);
+            if (!file.isDirectory()){
+                long standSize = progressDto.getAlreadyUploadFileSize();
+                //模拟上传耗时
+                double finalCount = count;
+                OkHttpUtil.uploadFile(mServerConfig, file, (uploaded, total, speed, timeDelta) -> {
+                    progressDto.setAlreadyUploadFileNum((int) finalCount);
+                    progressDto.setAlreadyUploadFileSize(
+                            standSize + uploaded
+                    );
+                    progressDto.setTotalPercent((int) (finalCount / totalSize *100));
+                    progressDto.setSpeed((int) speed);
+                    updateProgress(progressDto.getTotalPercent());
+                    ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
+                    currentFile.setMimeType(file.getMimeType());
+                    currentFile.setName(file.getName());
+                    currentFile.setRelativePath(file.getRelativePath());
+                    int tempPercent = (int) ( Double.valueOf(uploaded)/total *100);
+                    currentFile.setPercent(tempPercent);
+                    mWebAppInterface.receiveProgressData( GsonUtils.toJsonObject(progressDto));
+                });
+
+                progressDto.setAlreadyUploadFileSize(
+                        standSize+ file.getSize()
+                );
+
+            }
+
+
+
+        }
+
     }
 
     public BackupService() {
@@ -412,6 +451,8 @@ public class BackupService extends Service {
                 List<BackupFile> childrenReal = mWebAppInterface.getChildrenByDocId(real.getTreeUri(), real.getDocId(), real.getRootDocId());
                 recursiveGetChildren(childrenReal, updatedIds);
             }
+
+
         }
 
     }
@@ -461,6 +502,16 @@ public class BackupService extends Service {
         //任务耗时
         long seconds = Duration.between(startTime, now).getSeconds();
         backupHistory.setBackUpCostTime((int) seconds);
+
+        //平均速度
+        if (seconds<=0){
+            backupHistory.setAvgSpeed(0L);
+        }else {
+            backupHistory.setAvgSpeed(
+                    (dto.getTotalFileSize() / seconds)
+            );
+
+        }
 
 
         backupHistory.setBackupResult(dto.getBackupResult());

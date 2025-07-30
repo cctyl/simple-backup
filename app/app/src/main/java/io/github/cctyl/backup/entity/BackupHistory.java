@@ -52,7 +52,7 @@ public class BackupHistory {
 
 
     /**
-     * 总文件大小,MB
+     * 总文件大小,Byte
      */
     @ColumnInfo(name = "total_file_size")
     private Long totalFileSize;
@@ -64,9 +64,17 @@ public class BackupHistory {
     @ColumnInfo(name = "back_up_path_arr")
     private String backUpPathArr;
 
+    @ColumnInfo(name = "avg_speed")
+    private Long avgSpeed;
 
 
+    public Long getAvgSpeed() {
+        return avgSpeed;
+    }
 
+    public void setAvgSpeed(Long avgSpeed) {
+        this.avgSpeed = avgSpeed;
+    }
 
     public BackupHistory() {
     }

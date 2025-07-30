@@ -26,6 +26,7 @@
           <div class="stat-badge">📁 {{ formatNumberWithCommas(item.backUpNum) }} 个文件</div>
           <div class="stat-badge">📊 {{ formatSize(item.totalFileSize) }} 数据</div>
           <div class="stat-badge">⏱️ {{ formatCostTime(item.backUpCostTime) }}</div>
+          <div class="stat-badge">✈️ {{ formatSize(item.avgSpeed) }}/s</div>
         </div>
         <div class="log-details">
           <div class="log-details-list">
@@ -438,6 +439,7 @@ export default {
   border-radius: 12px;
   padding: 8px 12px;
   font-size: 14px;
+  margin: 5px 4px;
 }
 
 .log-details {

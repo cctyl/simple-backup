@@ -516,4 +516,12 @@ public class WebAppInterface {
             );
         });
     }
+
+    public void receiveServerAlreadyLatest() {
+        context.runOnUiThread(() -> {
+            jsExecUtil.exec("receiveServerAlreadyLatest",
+                    null
+            );
+        });
+    }
 }

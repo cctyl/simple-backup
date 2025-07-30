@@ -29,6 +29,8 @@ pub fn create_router() -> Router {
 pub struct FileDto {
     pub relative_path: String,
     pub md5: String,
+    pub id: i64,
+    pub is_directory:bool,
 }
 
 #[debug_handler]

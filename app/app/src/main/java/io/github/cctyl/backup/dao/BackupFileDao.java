@@ -5,7 +5,9 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import io.github.cctyl.backup.entity.BackupFile;
 import io.github.cctyl.backup.entity.SelectDir;
@@ -34,4 +36,7 @@ public interface BackupFileDao {
 
     @Query(" select * from backup_file where id = :id ")
     BackupFile findById(Long id);
+
+    @Query(" select * from backup_file where id in (:updatedIds) ")
+    List<BackupFile> findByIdIn(Collection<Long> updatedIds);
 }

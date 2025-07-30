@@ -125,7 +125,7 @@
     >
       <p>
 
-        扫描后没有发现需要备份的文件，本次备份不会进行
+        {{cancelHint}}
 
       </p>
     </MaterialDialog>
@@ -161,7 +161,7 @@ export default {
         circleDesc: '',
       },
 
-
+      cancelHint:'',
       showCancel:false,
       showConfirmModal: false
     }
@@ -170,6 +170,7 @@ export default {
     //console.log("backupRunning.vue created")
     window.vue.receiveProgressData = this.receiveProgressData;
     window.vue.receiveNotNeedBackup = this.receiveNotNeedBackup;
+    window.vue.receiveServerAlreadyLatest = this.receiveServerAlreadyLatest;
   },
   mounted() {
     window.scrollTo(0, 0);
@@ -211,7 +212,15 @@ export default {
     },
   },
   methods: {
+
+    receiveServerAlreadyLatest(){
+      this.cancelHint = '经过与服务器的比较，您的文件与服务器文件完全一致，无需进行备份，本次备份不会进行';
+      this.showCancel = true;
+
+    },
+
     receiveNotNeedBackup(){
+      this.cancelHint = '扫描后没有发现需要备份的文件，本次备份不会进行';
       this.showCancel = true;
     },
 
