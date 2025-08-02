@@ -14,7 +14,6 @@ use crate::app::database::{self, CONTEXT};
 use app::config::Config;
 use axum::{Extension, Router, extract::DefaultBodyLimit};
 use bytesize::ByteSize;
-use dotenv::dotenv;
 use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
 use tower_http::{
