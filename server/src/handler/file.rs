@@ -131,7 +131,7 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                 } else {
                     error!("md5校验失败，删除已上传的文件");
 
-                    tokio::fs::remove_file(path).await?;
+                 
                     return RR::fail(HttpError::Custom(
                         700,
                         "md5校验失败，请重新上传！".to_string(),
