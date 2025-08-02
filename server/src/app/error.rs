@@ -56,6 +56,14 @@ pub enum HttpError {
     #[error("系统异常:{0}")]
     ServerError(String),
 
+    /**
+     * 
+     * 700开始自定义异常
+     * 701 md5校验失败
+     */
+    #[error("error:code={0},msg={1}")]
+    Custom(u16,String),
+
     #[error("请求错误:{0}")]
     BadRequest(String),
 
@@ -113,15 +121,17 @@ impl HttpError {
             HttpError::UniqueConstraintViolation(_) => StatusCode::CONFLICT,
             HttpError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             HttpError::Biz(_) => StatusCode::OK,
-            
+            HttpError::Custom(code, _) => StatusCode::from_u16(*code).unwrap(),
         }
     }
 }
 
 impl IntoResponse for HttpError {
     fn into_response(self) -> Response {
-        let status_code = self.status_code();
 
+        let status_code =  self.status_code();
+
+        
         let json = Json(Resp::<()> {
             status: status_code.as_u16(),
             message: self.to_string(),

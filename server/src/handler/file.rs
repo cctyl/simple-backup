@@ -9,6 +9,7 @@ use crate::{
     },
     dao::file::FileDao,
 };
+use axum::body::Bytes;
 use axum::{
     Router, debug_handler,
     extract::{Json, Multipart},
@@ -30,7 +31,7 @@ pub struct FileDto {
     pub relative_path: String,
     pub md5: String,
     pub id: i64,
-    pub is_directory:bool,
+    pub is_directory: bool,
 }
 
 #[debug_handler]
@@ -107,12 +108,11 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     return RR::success(());
                 }
 
-
-                if path.starts_with("/"){
+                if path.starts_with("/") {
                     path = path[1..].to_string();
                 }
 
-                let path =  format!("./upload/{}",path);
+                let path = format!("./upload/{}", path);
 
                 info!("path={path}");
                 let path = std::path::Path::new(&path);
@@ -122,13 +122,27 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     tokio::fs::create_dir_all(parent).await?;
                 }
 
-                let write = tokio::fs::write(path, &data).await?;
+                //再次校验md5
+                let recheck_md5 = calculate_md5(&data);
+                //比较前后md5是否相同
+                if md5.clone().unwrap() == recheck_md5 {
+                    info!("md5校验通过");
+                    let write = tokio::fs::write(path, &data).await?;
+                } else {
+                    error!("md5校验失败，删除已上传的文件");
+
+                    tokio::fs::remove_file(path).await?;
+                    return RR::fail(HttpError::Custom(
+                        700,
+                        "md5校验失败，请重新上传！".to_string(),
+                    ));
+                }
             }
             _ => {}
         }
     }
 
-
+    //删除relative_path相同的文件
     let data = crate::entity::models::File::delete_by_map(
         &CONTEXT.rb,
         value! {
@@ -139,6 +153,7 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
 
     info!("del: {data}");
 
+    //保存新的
     let file = crate::entity::models::File {
         id: id::next_id(),
         name: name.unwrap(),
@@ -151,4 +166,9 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
     crate::entity::models::File::insert(&CONTEXT.rb, &file).await?;
 
     RR::success(())
+}
+
+fn calculate_md5(data: &[u8]) -> String {
+    let digest = md5::compute(data);
+    format!("{:x}", digest)
 }
