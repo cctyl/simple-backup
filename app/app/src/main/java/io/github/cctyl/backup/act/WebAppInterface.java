@@ -282,10 +282,7 @@ public class WebAppInterface {
     public void startBackup() {
         Log.d("WebAppInterface", "startBackup: ");
 
-        ServerConfig serverConfig = new ServerConfig();
-        serverConfig.addr = sharedPreference.getString("addr", null);
-        serverConfig.secret = sharedPreference.getString("secret", null);
-        serverConfig.checkMd5 = sharedPreference.getBoolean("checkMd5", false);
+        ServerConfig serverConfig = getServerConfigObj();
 
         if (serverConfig.addr== null ||
         serverConfig.secret == null
@@ -555,13 +552,19 @@ public class WebAppInterface {
      */
     @JavascriptInterface
     public String getServerConfig() {
+        return GsonUtils.toJson(getServerConfigObj());
+    }
+
+    public ServerConfig getServerConfigObj() {
         ServerConfig serverConfig = new ServerConfig();
         serverConfig.addr = sharedPreference.getString("addr", null);
         serverConfig.secret = sharedPreference.getString("secret", null);
         serverConfig.checkMd5 = sharedPreference.getBoolean("checkMd5", false);
+        serverConfig.forceBackup = sharedPreference.getBoolean("forceBackup", false);
 
-        return GsonUtils.toJson(serverConfig);
+        return serverConfig;
     }
+
 
     /**
      * 设置服务器配置
@@ -574,6 +577,7 @@ public class WebAppInterface {
                 .putString("addr", serverConfig.addr)
                 .putString("secret", serverConfig.secret)
                 .putBoolean("checkMd5",serverConfig.checkMd5)
+                .putBoolean("forceBackup",serverConfig.forceBackup)
                 .apply();
 
     }

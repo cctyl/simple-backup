@@ -56,16 +56,37 @@
               <div class="setting-desc">开启后可防止上传错误文件，但会增加上传时间</div>
 
             </div>
+
+
           </div>
           <div class="setting-action">
             <label class="setting-switch">
-              <input type="checkbox" v-model="md5Check" >
+              <input type="checkbox" v-model="checkMd5" @change="checkMd5Change">
               <span class="setting-slider"></span>
             </label>
           </div>
         </div>
 
+        <div class="setting-item">
+          <div class="setting-content">
+            <div class="setting-icon">
+              <i class="material-icons">folder</i>
+            </div>
+            <div class="setting-info">
+              <div class="setting-name">强制备份</div>
+              <div class="setting-desc">不管服务端是否存在相同文件，都会进行备份上传</div>
 
+            </div>
+
+
+          </div>
+          <div class="setting-action">
+            <label class="setting-switch">
+              <input type="checkbox" v-model="forceBackup" @change="forceBackupChange">
+              <span class="setting-slider"></span>
+            </label>
+          </div>
+        </div>
       </div>
 
 
@@ -79,25 +100,36 @@ import {mapActions} from "vuex";
 
 export default {
   name: 'settings-view',
-  data(){
+  data() {
 
     return {
-      md5Check:false
-    }
-  },
-  watch:{
-    md5Check(){
-      console.log("md5Check变化了")
-      let config = this.$store.state.serverConfig;
-      config.checkMd5 = this.md5Check;
-      this.setServerConfig( config)
-    }
-  },
-  mounted() {
-    this.md5Check = this.$store.state.serverConfig.checkMd5;
+      checkMd5: false,
+      forceBackup: false,
 
-  },methods:{
+    }
+  },
+  watch: {},
+  mounted() {
+    this.checkMd5 = this.$store.state.serverConfig.checkMd5;
+    this.forceBackup = this.$store.state.serverConfig.forceBackup;
+
+  }, methods: {
     ...mapActions(['setServerConfig']),
+
+
+    checkMd5Change(){
+      console.log("checkMd5Change")
+      let config = this.$store.state.serverConfig;
+      config.checkMd5 = this.checkMd5;
+      this.setServerConfig( config)
+    },
+
+    forceBackupChange(){
+      console.log("forceBackupChange")
+      let config = this.$store.state.serverConfig;
+      config.forceBackup = this.forceBackup;
+      this.setServerConfig( config)
+    },
   }
 }
 </script>

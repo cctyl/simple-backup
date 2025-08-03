@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -91,8 +92,6 @@ public class BackupService extends Service {
         }
 
 
-
-
         public void start(ServerConfig serverConfig) {
             if (t != null && t.isAlive()) {
                 ToastUtil.toast("备份进行中！请不要重复点击");
@@ -134,15 +133,20 @@ public class BackupService extends Service {
 
                     i();
                     //1.5与服务器进行对比
-                    int before = updatedIds.size();
-                    updatedIds = compareServerInfo(updatedIds);
-                    int after = updatedIds.size();
-                    if (after == 0 && before != 0) {
-                        Log.d("LocalBinder", "start: 无需备份");
-                        mWebAppInterface.receiveServerAlreadyLatest();
+                    if (!serverConfig.forceBackup) {
+                        int before = updatedIds.size();
+                        updatedIds = compareServerInfo(updatedIds);
+                        int after = updatedIds.size();
+                        if (after == 0 && before != 0) {
+                            Log.d("LocalBinder", "start: 无需备份");
+                            mWebAppInterface.receiveServerAlreadyLatest();
 
-                        throw new BreakException();
+                            throw new BreakException();
+                        }
+                    } else {
+                        Log.d("LocalBinder", "start: 无需与服务器进行比较");
                     }
+
 
                     if (updatedIds.isEmpty()) {
                         Log.d("LocalBinder", "start: 无需备份");
@@ -154,7 +158,7 @@ public class BackupService extends Service {
                     i();
                     //2. 逐个上传文件
                     Log.d("LocalBinder", "start: 开始上传文件了");
-                    startUpload(updatedIds,dto,serverConfig.checkMd5);
+                    startUpload(updatedIds, dto, serverConfig.checkMd5);
 
 
                     //3. 统计结果
@@ -177,7 +181,7 @@ public class BackupService extends Service {
                     ToastUtil.toast("备份已取消！");
                 } catch (RuntimeException e) {
 
-                    if (e.getCause() instanceof InterruptedException){
+                    if (e.getCause() instanceof InterruptedException) {
                         dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
                         dto.setSuccess(false);
                         dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
@@ -186,7 +190,7 @@ public class BackupService extends Service {
                         dto.setBackupDetail("备份过程中被取消了");
                         Log.d("BackupService", "onCreate: 线程被打断运行");
                         ToastUtil.toast("备份已取消！");
-                    }else {
+                    } else {
                         dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
                         dto.setSuccess(false);
                         dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
@@ -197,7 +201,6 @@ public class BackupService extends Service {
 
                         mWebAppInterface.receiveUploadError(e.getMessage());
                     }
-
 
 
                 } catch (BreakException e) {
@@ -280,71 +283,77 @@ public class BackupService extends Service {
         return result;
     }
 
-    private void startUpload(Set<Long> updatedIds, BackupHistory dto,boolean checkMd5) throws InterruptedException {
+    private void startUpload(Set<Long> updatedIds, BackupHistory dto, boolean checkMd5) throws InterruptedException {
         updateProgress(0);
         int totalSize = updatedIds.size();
         progressDto.setNeedUploadFileNum(totalSize);
         progressDto.setCheckFinish(true);
         dto.setFailNum(0l);
         progressDto.setFailNum(0);
-        double count = 0;
+        AtomicReference<Double> count = new AtomicReference<>((double) 0);
         for (Long updatedId : updatedIds) {
             i();
 
             BackupFile file = backupFileDao.findById(updatedId);
+
             if (!file.isDirectory()) {
-                count++;
+
                 long standSize = progressDto.getAlreadyUploadFileSize();
-                double finalCount = count;
+                double finalCount = count.get();
 
                 AtomicBoolean success = new AtomicBoolean(false);
 
                 //上传，并监听进度
                 OkHttpUtil.uploadFile(mServerConfig, file, checkMd5, (uploaded, total, speed, timeDelta) -> {
 
-                    i();
+                            i();
 
-                    progressDto.setAlreadyUploadFileNum((int) finalCount);
-                    progressDto.setAlreadyUploadFileSize(
-                            standSize + uploaded
-                    );
-                    progressDto.setTotalPercent((int) (finalCount / totalSize * 100));
-                    progressDto.setSpeed((int) speed);
-                    updateProgress(progressDto.getTotalPercent());
-                    ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
-                    currentFile.setMimeType(file.getMimeType());
-                    currentFile.setName(file.getName());
-                    currentFile.setRelativePath(file.getRelativePath());
-                    int tempPercent = (int) (Double.valueOf(uploaded) / total * 100);
-                    currentFile.setPercent(tempPercent);
-                    mWebAppInterface.receiveProgressData(GsonUtils.toJsonObject(progressDto));
-                },
-                    (obj)->{
-                        int status = obj.get("status").getAsInt();
-                        if (status!=200){
-                            // 上传失败
-                            Log.d("BackupService", "startUpload: 文件："+file.getName()+" 上传失败！");
-                            success.set(false);
-                            progressDto.setFailNum(progressDto.getFailNum()+1);
-                            backupFileDao.deleteById(file.getId());
-                            dto.setFailNum((long) progressDto.getFailNum());
+                            progressDto.setAlreadyUploadFileNum((int) finalCount);
+                            progressDto.setAlreadyUploadFileSize(
+                                    standSize + uploaded
+                            );
+                            progressDto.setTotalPercent((int) (finalCount / totalSize * 100));
+                            progressDto.setSpeed((int) speed);
+                            updateProgress(progressDto.getTotalPercent());
+                            ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
+                            currentFile.setMimeType(file.getMimeType());
+                            currentFile.setName(file.getName());
+                            currentFile.setRelativePath(file.getRelativePath());
+                            int tempPercent = (int) (Double.valueOf(uploaded) / total * 100);
+                            currentFile.setPercent(tempPercent);
+                            mWebAppInterface.receiveProgressData(GsonUtils.toJsonObject(progressDto));
+                        },
+                        (obj) -> {
+                            int status = obj.get("status").getAsInt();
+                            if (status != 200) {
+                                // 上传失败
+                                Log.d("BackupService", "startUpload: 文件：" + file.getName() + " 上传失败！");
+                                success.set(false);
+                                progressDto.setFailNum(progressDto.getFailNum() + 1);
+                                backupFileDao.deleteById(file.getId());
+                                dto.setFailNum((long) progressDto.getFailNum());
+                            }else {
+                                count.getAndSet(new Double((double) (count.get() + 1)));
+                            }
                         }
-                    }
                 );
 
 
-//                if (success.get()){
-//
-                    progressDto.setAlreadyUploadFileSize(
-                            standSize + file.getSize()
-                    );
-//                }else {
-//                    progressDto.setAlreadyUploadFileSize(
-//                            standSize
-//                    );
-//                }
+                progressDto.setAlreadyUploadFileSize(
+                        standSize + file.getSize()
+                );
 
 
+            } else {
+                count.getAndSet(new Double((double) (count.get() + 1)));
+                progressDto.setAlreadyUploadFileNum( count.get().intValue());
+                updateProgress(progressDto.getTotalPercent());
+                ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
+                currentFile.setMimeType(file.getMimeType());
+                currentFile.setName(file.getName());
+                currentFile.setRelativePath(file.getRelativePath());
+                progressDto.setTotalPercent((int) (count.get() / totalSize * 100));
+                mWebAppInterface.receiveProgressData(GsonUtils.toJsonObject(progressDto));
             }
 
 
@@ -434,7 +443,7 @@ public class BackupService extends Service {
 
             if (db == null) {
 
-                if (!real.isDirectory()){
+                if (!real.isDirectory()) {
                     String md5 = getMd5(real);
                     real.setMd5(md5);
                 }
@@ -583,7 +592,6 @@ public class BackupService extends Service {
      * @return
      */
     private Notification getNotification(int progress, String title, String contentText) {
-
 
 
         NotificationManager manager = getSystemService(NotificationManager.class);

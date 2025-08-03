@@ -69,7 +69,7 @@
       </div>
 
       <div class="stat-card">
-        <div class="stat-value">{{ formatNumberWithCommas(progressData.failNum) }}-{{progressData.failNum}}</div>
+        <div class="stat-value">{{ formatNumberWithCommas(progressData.failNum) }}</div>
         <div class="stat-label">上传失败</div>
       </div>
     </div>

@@ -331,7 +331,7 @@ export default {
 
 .log-details-list {
 
-  height: 20vh;
+  max-height: 20vh;
   overflow: auto;
 
 }
