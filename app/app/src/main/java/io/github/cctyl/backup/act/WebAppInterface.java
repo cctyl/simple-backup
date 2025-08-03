@@ -89,6 +89,9 @@ public class WebAppInterface {
         this.jsExecUtil = jsExecUtil;
     }
 
+    /**
+     * 二维码扫码
+     */
     @JavascriptInterface
     public void startScan() {
         ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeBasic();
@@ -96,12 +99,19 @@ public class WebAppInterface {
         ActivityCompat.startActivityForResult(context, intent, REQUEST_CODE_SCAN, optionsCompat.toBundle());
     }
 
-
+    /**
+     * 获取当前备份状态
+     * @return
+     */
     @JavascriptInterface
     public int getStatus(){
         return binder.getStatus();
     }
 
+    /**
+     * 发送文件数据给js
+     * @param list
+     */
     public void sendFilesToWebView(List<BackupFile> list) {
         JSONArray fileArray = new JSONArray();
         // 添加文件列表
@@ -114,8 +124,11 @@ public class WebAppInterface {
 
     }
 
+    /**
+     * 打开目录选择器
+     * @param code
+     */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    @JavascriptInterface
     public void openFolderPicker(int code) {
 
         ToastUtil.toastLong("建议选择根目录，即最外层目录");
@@ -127,6 +140,10 @@ public class WebAppInterface {
         context.startActivityForResult(intent, code);
     }
 
+    /**
+     * 查询备份历史
+     * @return
+     */
     @JavascriptInterface
     public String getBackupHistory() {
         List<BackupHistory> list = backupHistoryDao.findAll();
@@ -138,8 +155,10 @@ public class WebAppInterface {
     }
 
 
-
-
+    /**
+     * 获取状态栏高度
+     * @return
+     */
     @JavascriptInterface
     public int getStatusBarHeight() {
         int result = 0;
@@ -150,13 +169,17 @@ public class WebAppInterface {
         return result / 2;
     }
 
+    /**
+     * 申请目录访问权限
+     * @param refresh
+     */
     @JavascriptInterface
     public void applyPermission(boolean refresh) {
 
         if (refresh) {
 
             Log.d("WebAppInterface", "applyPermission: 刷新uri");
-            openFolderPicker(124);
+            openFolderPicker(125);
         } else {
             String uri = sharedPreference.getString("uri", null);
             if (uri == null) {
@@ -172,13 +195,20 @@ public class WebAppInterface {
 
     }
 
-
+    /**
+     * 获取已授权的目录uri
+     * @return
+     */
     @JavascriptInterface
     public String getDirUri() {
         return sharedPreference.getString("uri", null);
 
     }
 
+    /**
+     * 查询需要备份的文件夹信息
+     * @return
+     */
     @JavascriptInterface
     public String getSelectDir() {
 
@@ -189,6 +219,10 @@ public class WebAppInterface {
         return GsonUtils.toJson(all);
     }
 
+    /**
+     * 更新需要备份的文件夹信息
+     * @param json
+     */
     @JavascriptInterface
     public void setSelectDir(String json) {
 
@@ -206,23 +240,37 @@ public class WebAppInterface {
         toast("文件夹保存成功");
     }
 
+    /**
+     * 获取手机总存储大小
+     * @return
+     */
     @JavascriptInterface
     public long getTotalStorage() {
         return DeviceUtils.getTotalInternalStorageSize();
     }
 
+    /**
+     * 获取手机可用存储
+     * @return
+     */
     @JavascriptInterface
     public long getAvailableStorage() {
         return DeviceUtils.getAvailableInternalStorageSize();
     }
 
+    /**
+     * 获取手机品牌信息
+     * @return
+     */
     @JavascriptInterface
     public String getPhoneDetail() {
 
         return DeviceUtils.getPhoneDetail();
     }
 
-
+    /**
+     * 开始备份
+     */
     @JavascriptInterface
     public void startBackup() {
         Log.d("WebAppInterface", "startBackup: ");
@@ -231,36 +279,60 @@ public class WebAppInterface {
         serverConfig.addr = sharedPreference.getString("addr", null);
         serverConfig.secret = sharedPreference.getString("secret", null);
 
+        if (serverConfig.addr== null ||
+        serverConfig.secret == null
+        ){
+
+            ToastUtil.toastLong("服务器配置为空！无法备份，请检查");
+            return;
+        }
 
         // 开始备份
         binder.start(serverConfig);
     }
 
+
+    /**
+     * 删除备份历史
+     */
     @JavascriptInterface
     public void delBackupInfo(){
         backupHistoryDao.deleteAll();
         backupFileDao.deleteAll();
     }
 
+    /**
+     * 提前结束备份
+     */
     @JavascriptInterface
     public void completeBackup() {
-        //  提前结束备份
 
         binder.stop();
     }
 
+    /**
+     * 继续备份
+     * 恢复已暂停的备份
+     */
     @JavascriptInterface
     public void resumeBackup() {
-        // 继续备份
         binder.setStatus(1);
     }
 
+    /**
+     * 暂停备份·
+     */
     @JavascriptInterface
     public void pauseBackup() {
         // 暂停备份
         binder.setStatus(2);
     }
 
+    /**
+     * 初始化根目录下的文件
+     * 不对js暴露
+     * @param uri
+     */
     public void initRootFileList(Uri uri) {
         //根节点的初始化
         String rootDocId = DocumentsContract.getTreeDocumentId(uri);
@@ -282,10 +354,28 @@ public class WebAppInterface {
         this.setRootChild(rootChild);
         sendFilesToWebView(rootChild);
     }
+
+    /**
+     * 根据uri 和 docid 获取这个目录下的文件
+     * @param treeUri
+     * @param parentDocId
+     * @param rootDocId
+     * @return
+     */
     @SuppressLint("Range")
     public List<BackupFile> getChildrenByDocId(Uri treeUri, String parentDocId, String rootDocId) {
         return getChildrenByDocId(treeUri, parentDocId, rootDocId,false);
     }
+
+    /**
+     * 根据uri 和 docid 获取这个目录下的文件
+     * 可以设置是否计算md5
+     * @param treeUri
+     * @param parentDocId
+     * @param rootDocId
+     * @param needMd5
+     * @return
+     */
     @SuppressLint("Range")
     public List<BackupFile> getChildrenByDocId(Uri treeUri, String parentDocId, String rootDocId,boolean needMd5) {
 
@@ -374,14 +464,24 @@ public class WebAppInterface {
         return list;
     }
 
+    /**
+     *
+     * 通知
+     * @param toast
+     */
     @JavascriptInterface
     public void toast(String toast) {
         Toast.makeText(context, toast, Toast.LENGTH_SHORT).show();
     }
 
+
+    /**
+     * 获取根目录下的文件信息,对js暴露
+     * 先获取uri，没有uri则申请权限
+     */
     @RequiresApi(api = Build.VERSION_CODES.O)
     @JavascriptInterface
-    public void init() {
+    public void initRootFile() {
         String uri = sharedPreference.getString("uri", null);
         if (uri == null) {
 
@@ -397,7 +497,10 @@ public class WebAppInterface {
         }
     }
 
-
+    /**
+     * 获取服务器配置信息json
+     * @return
+     */
     @JavascriptInterface
     public String getServerConfig() {
         ServerConfig serverConfig = new ServerConfig();
@@ -407,6 +510,10 @@ public class WebAppInterface {
         return GsonUtils.toJson(serverConfig);
     }
 
+    /**
+     * 设置服务器配置
+     * @param json
+     */
     @JavascriptInterface
     public void setServerConfig(String json) {
         ServerConfig serverConfig = GsonUtils.fromJson(json, ServerConfig.class);
@@ -417,6 +524,11 @@ public class WebAppInterface {
 
     }
 
+    /**
+     * 进入子目录
+     * @param targetDirJson
+     * @return
+     */
     @JavascriptInterface
     public String intoChild(String targetDirJson) {
 
@@ -430,6 +542,12 @@ public class WebAppInterface {
 
     }
 
+
+    /**
+     * 计算文件md5，不对外暴露
+     * @param fileUri
+     * @return
+     */
     public String getFileMD5(Uri fileUri) {
         ContentResolver resolver = context.getContentResolver();
         try (InputStream is = resolver.openInputStream(fileUri)) {
@@ -451,7 +569,10 @@ public class WebAppInterface {
         }
     }
 
-
+    /**
+     * 计算某个文件的md5
+     * @param targetDirJson
+     */
     @JavascriptInterface
     public void getMd5(String targetDirJson) {
 
@@ -466,6 +587,11 @@ public class WebAppInterface {
 
     }
 
+    /**
+     * 进入指定父级，如果穿空表示进入root
+     * @param parentDirJson
+     * @return
+     */
     @RequiresApi(api = Build.VERSION_CODES.O)
     @JavascriptInterface
     public String intoParent(String parentDirJson) {
@@ -487,7 +613,10 @@ public class WebAppInterface {
 
     }
 
-
+    /**
+     * 通知js 备份状态更新
+     * @param mStatus
+     */
     public void receiveBackupStatus(int mStatus) {
 
         Log.d("WebAppInterface", "receiveBackupStatus: 更新界面备份状态 ");
@@ -499,6 +628,10 @@ public class WebAppInterface {
         });
     }
 
+    /**
+     * 通知js，备份界面信息更新
+     * @param jsonObject
+     */
     public void receiveProgressData(JSONObject jsonObject) {
 
         context.runOnUiThread(() -> {
@@ -509,6 +642,10 @@ public class WebAppInterface {
         });
     }
 
+
+    /**
+     * 通知js无需备份
+     */
     public void receiveNotNeedBackup() {
         context.runOnUiThread(() -> {
             jsExecUtil.exec("receiveNotNeedBackup",
@@ -517,6 +654,9 @@ public class WebAppInterface {
         });
     }
 
+    /**
+     * 通知js已经是最新，无需备份
+     */
     public void receiveServerAlreadyLatest() {
         context.runOnUiThread(() -> {
             jsExecUtil.exec("receiveServerAlreadyLatest",

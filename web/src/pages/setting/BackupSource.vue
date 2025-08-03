@@ -47,6 +47,7 @@ export default {
   mounted() {
 
     window.vue.checkPermission = this.checkPermission;
+    window.vue.jumpSelect = this.jumpSelect;
     this.$bus.$on('onAppBackPressed', this.onAppBackPressed);
     this.checkPermission();
   },
@@ -62,7 +63,12 @@ export default {
 
       window.Android.applyPermission(this.hasPermission);
     },
-    onAppBackPressed(){
+
+    jumpSelect(){
+
+      this.$router.push("/settings/source/select")
+    },
+    onAppBackPressed() {
       this.saveSelectDir()
       this.$router.back();
     },

@@ -101,8 +101,8 @@ export default {
     this.$bus.$on('onAppBackPressed', this.onAppBackPressed);
     this.$bus.$on('iconCallBack', this.intoParent);
     this.selectedDir = this.$store.state.selectedDir;
-    //console.log("window.Android.init()")
-    window.Android.init();
+    //console.log("window.Android.initRootFile()")
+    window.Android.initRootFile();
   },
   watch: {
     currentPath() {
@@ -240,8 +240,6 @@ export default {
     },
 
 
-
-
     toChild(item) {
       //console.log("--------toChild:--------")
       if (this.timer != null) {
@@ -290,7 +288,7 @@ export default {
         window.Android.toast("点太快了");
         return;
       }
-      if ( this.currentPath.length === 1) {
+      if (this.currentPath.length === 1) {
         //console.log("this.currentPath  只有一个元素，直接返回上一级")
         this.$router.back();
         return;
@@ -300,7 +298,7 @@ export default {
         //console.log("定时器开始")
 
         this.currentPath.pop();
-        let dirList  = JSON.parse(window.Android.intoParent(JSON.stringify(this.currentPath[this.currentPath.length-1])))
+        let dirList = JSON.parse(window.Android.intoParent(JSON.stringify(this.currentPath[this.currentPath.length - 1])))
         this.handleData(dirList)
         this.scrollTop();
         if (dirList.length < 20) {
@@ -315,8 +313,6 @@ export default {
         //console.log("--------intoParent:--------")
       }, 50);
     },
-
-
 
 
     onAppBackPressed() {

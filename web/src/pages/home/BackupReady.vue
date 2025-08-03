@@ -3,17 +3,7 @@
 
   <!-- 内容区域 -->
   <div class="content">
-    <!-- 状态切换按钮 -->
-    <div class="state-toggle" v-if="!isReady">
-      <router-link to="/settings/server-config" tag="button" class="toggle-btn highlight"
-                   v-if="!serverSettingReady">
-        你还没有设置服务器信息，点我设置
-      </router-link>
 
-      <router-link to="/settings/source" tag="button" class="toggle-btn highlight" v-if="!sourceSettingReady">
-        你还没有添加备份源，点我添加
-      </router-link>
-    </div>
 
     <!-- 备份状态卡片 (默认显示有备份状态) -->
     <div class="card backup-status" id="backupCard" v-show="isReady">
@@ -89,6 +79,17 @@
       </div>
     </div>
 
+    <!-- 状态切换按钮 -->
+    <div class="state-toggle" v-if="!isReady">
+      <router-link to="/settings/server-config" tag="button" class="toggle-btn highlight"
+                   v-if="!serverSettingReady">
+        你还没有设置服务器信息，点我设置
+      </router-link>
+
+      <router-link to="/settings/source" tag="button" class="toggle-btn highlight" v-if="!sourceSettingReady">
+        你还没有添加备份源，点我添加
+      </router-link>
+    </div>
     <!-- 主操作按钮 -->
     <button class="primary-button"
 
@@ -103,7 +104,7 @@
       </i>
 
       <span>
-        {{ isReady ? (hasBackup ? '立即备份' : '开始首次备份') : '请配置相关信息（点我）' }}
+        {{ isReady ? (hasBackup ? '立即备份' : '开始首次备份') : '请配置相关信息（上方）' }}
       </span>
       <i class="material-icons" v-if="!isReady" style="margin-left: 20px">
         arrow_circle_up
@@ -122,8 +123,6 @@
     <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
 
 
-
-
   </div>
 
 
@@ -135,7 +134,7 @@ import SelectFolder from "@/components/SelectFolder.vue";
 
 export default {
   name: 'backup-ready-view',
-  components: { SelectFolder},
+  components: {SelectFolder},
   data() {
     return {
       hasBackup: false,
@@ -182,7 +181,7 @@ export default {
   methods: {
 
 
-    delBackupInfo(){
+    delBackupInfo() {
 
       window.Android.delBackupInfo()
     },
@@ -192,8 +191,7 @@ export default {
         return;
       }
 
-      this.$store.commit("SET_BACKUP_STATUS",1)
-
+      this.$store.commit("SET_BACKUP_STATUS", 1)
 
 
     },
@@ -225,7 +223,6 @@ export default {
     getBackupList() {
 
       this.backupList = JSON.parse(window.Android.getBackupHistory());
-
 
 
       if (this.backupList.length > 0) {

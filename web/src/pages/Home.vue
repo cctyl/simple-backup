@@ -9,7 +9,6 @@
     </AnimatedTransition>
 
 
-
   </div>
 
 
@@ -32,7 +31,7 @@ export default {
   created() {
 
     // window.Android.toast("当前状态="+window.Android.getStatus());
-    this.$store.commit("SET_BACKUP_STATUS",window.Android.getStatus());
+    this.$store.commit("SET_BACKUP_STATUS", window.Android.getStatus());
     // this.$store.commit("SET_BACKUP_STATUS",1);
 
   },
@@ -43,10 +42,10 @@ export default {
   computed: {},
   methods: {
 
-    receiveBackupStatus(status){
+    receiveBackupStatus(status) {
       // console.log("收到android的备份状态="+status)
       // window.Android.toast("收到android的备份状态="+status);
-      this.$store.commit("SET_BACKUP_STATUS",status);
+      this.$store.commit("SET_BACKUP_STATUS", status);
     }
 
   }

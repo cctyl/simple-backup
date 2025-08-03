@@ -9,7 +9,7 @@
 
         <!--  $store.state.backupStatus === 1 ? '备份中' : '已暂停'       -->
         {{
-         circleTitle
+          circleTitle
         }}
       </div>
       <div class="progress-subtitle">
@@ -23,7 +23,8 @@
       <!-- 圆形进度条 -->
       <div style="display: flex;flex-direction: row;justify-content: center;align-items: center;margin-bottom: 20px">
 
-        <CircularProgress :status="$store.state.backupStatus" :size="170" :progress="progressData.totalPercent"></CircularProgress>
+        <CircularProgress :status="$store.state.backupStatus" :size="170"
+                          :progress="progressData.totalPercent"></CircularProgress>
       </div>
 
       <div class="progress-text">已上传 {{ formatSize(progressData.alreadyUploadFileSize) }}</div>
@@ -93,15 +94,15 @@
     </div>
 
     <!-- 在根元素内添加 -->
-<!--    <ConfirmModal
-        :visible="showConfirmModal"
-        title="结束备份"
-        message="您确定要结束备份吗？未完成的备份将需要重新开始。"
-        confirm-text="结束备份"
-        cancel-text="继续备份"
-        @confirm="handleConfirmComplete"
-        @cancel="handleCancelComplete">
-    </ConfirmModal>-->
+    <!--    <ConfirmModal
+            :visible="showConfirmModal"
+            title="结束备份"
+            message="您确定要结束备份吗？未完成的备份将需要重新开始。"
+            confirm-text="结束备份"
+            cancel-text="继续备份"
+            @confirm="handleConfirmComplete"
+            @cancel="handleCancelComplete">
+        </ConfirmModal>-->
 
 
     <MaterialDialog
@@ -125,7 +126,7 @@
     >
       <p>
 
-        {{cancelHint}}
+        {{ cancelHint }}
 
       </p>
     </MaterialDialog>
@@ -143,9 +144,9 @@ export default {
   data() {
     return {
 
-      progressData:{
+      progressData: {
         totalPercent: 30,
-        needUploadFileNum:0,
+        needUploadFileNum: 0,
         alreadyUploadFileSize: 72,
         currentFile: {
           mimeType: 'text/html',
@@ -156,13 +157,13 @@ export default {
         speed: 20481,//上传速度
         startTime: '2025-07-26T18:45:23Z', //ISO 8601 格式的时间字符串 示例："2023-07-15T18:45:23Z"
         alreadyUploadFileNum: 1,
-        checkFinish:false,
+        checkFinish: false,
         circleTitle: '',
         circleDesc: '',
       },
 
-      cancelHint:'',
-      showCancel:false,
+      cancelHint: '',
+      showCancel: false,
       showConfirmModal: false
     }
   },
@@ -181,31 +182,31 @@ export default {
   computed: {
 
 
-    circleTitle(){
+    circleTitle() {
 
-      if (this.$store.state.backupStatus === 1){
+      if (this.$store.state.backupStatus === 1) {
 
-        if (this.progressData.checkFinish){
-         return  '备份中'
-        }else {
+        if (this.progressData.checkFinish) {
+          return '备份中'
+        } else {
           return '准备中'
         }
-      }else {
+      } else {
         return '已暂停';
       }
 
     },
 
-    circleDesc(){
+    circleDesc() {
 
-      if (this.$store.state.backupStatus === 1){
+      if (this.$store.state.backupStatus === 1) {
 
-        if (this.progressData.checkFinish){
-          return  '请不要关闭应用或断开网络'
-        }else {
+        if (this.progressData.checkFinish) {
+          return '请不要关闭应用或断开网络'
+        } else {
           return '请稍后，正在检查哪些文件需要备份...'
         }
-      }else {
+      } else {
         return '点击下方按钮继续备份';
       }
 
@@ -213,19 +214,19 @@ export default {
   },
   methods: {
 
-    receiveServerAlreadyLatest(){
+    receiveServerAlreadyLatest() {
       this.cancelHint = '经过与服务器的比较，您的文件与服务器文件完全一致，无需进行备份，本次备份不会进行';
       this.showCancel = true;
 
     },
 
-    receiveNotNeedBackup(){
+    receiveNotNeedBackup() {
       this.cancelHint = '扫描后没有发现需要备份的文件，本次备份不会进行';
       this.showCancel = true;
     },
 
-    handleReturnHome(){
-      this.$store.commit("SET_BACKUP_STATUS",0);
+    handleReturnHome() {
+      this.$store.commit("SET_BACKUP_STATUS", 0);
       this.showCancel = false;
     },
 

@@ -66,8 +66,10 @@ public class MainActivity extends AppCompatActivity {
         //webview初始化
         webviewInit();
 
+        //绑定服务
         bindBackupService();
     }
+
     private static boolean isBind = false;
     private BackupService.LocalBinder binder;
     private ServiceConnection connection = new ServiceConnection() {
@@ -101,32 +103,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * 状态栏透明
+     */
     private void makeStatusBarTransparent() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.TRANSPARENT);
+        Window window = getWindow();
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(Color.TRANSPARENT);
 
-            // 关键：设置系统UI可见性
-            View decorView = window.getDecorView();
-            int flags = decorView.getSystemUiVisibility();
-            flags |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-            decorView.setSystemUiVisibility(flags);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        }
+        // 关键：设置系统UI可见性
+        View decorView = window.getDecorView();
+        int flags = decorView.getSystemUiVisibility();
+        flags |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+        decorView.setSystemUiVisibility(flags);
+
     }
 
     private void setLightStatusBarIcons() {
-        // Android 6.0+ 设置文字图标为深色（适合浅色背景）
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(decorView.getSystemUiVisibility()
-                    | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+
         // Android 11+ 新API设置
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsetsController controller = getWindow().getInsetsController();
@@ -138,52 +134,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     public static final int REQUEST_CODE_SCAN = 0x01;
 
-
-    public void testScan() {
-//        startScan(FullScreenQRCodeScanActivity.class);
-    }
-
-    public void testDb() {
-        BackupHistoryDao backupHistoryDao = AppApplication.getInstance().getApplicationDatabase().backupHistoryDao();
-        BackupHistory backupHistory = new BackupHistory();
-        backupHistory.setBackupResult("成功");
-        backupHistory.setSuccess(true);
-        backupHistory.setBackUpTime(LocalDateTime.now());
-        backupHistory.setBackUpNum(1L);
-        backupHistory.setBackUpCostTime(1);
-        backupHistory.setTotalFileSize(1L);
-        backupHistoryDao.insertOne(backupHistory);
-
-        Log.d("MainActivity", "testDb: 插入成功");
-
-
-        List<BackupHistory> all = backupHistoryDao.findAll();
-        Log.d("MainActivity", "testDb: "+all);
-
-
-    }
-
-    public void testDb2(){
-
-        BackupFileDao backupFileDao = AppApplication.getInstance().getApplicationDatabase().backupFileDao();
-
-
-        BackupFile b = new BackupFile();
-        b.setName("a.txt");
-        b.setTreeUri(Uri.parse("content://com.android.externalstorage.documents/tree/primary%3A/document/primary%3A/"));
-        b.setDocId("1");
-        b.setSize(1L);
-        b.setLastModified(1L);
-        b.setDirectory(false);
-        b.setRelativePath("a.txt");
-        b.setMimeType("text/plain");
-
-        backupFileDao.insertOne(b);
-
-
-    }
 
     @Override
     protected void onDestroy() {
@@ -195,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
             webView = null;
         }
 
-
+        //解绑服务
         unbindBackupService();
 
 
@@ -205,54 +158,54 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 123 && resultCode == RESULT_OK) {
-            if (data != null) {
-                Uri uri = data.getData();
-                // 获取持久化权限
-                getContentResolver().takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                );
 
-                //2.获得SharedPreferences的编辑器
-                SharedPreferences.Editor edit = sharedPreference.edit();
-                edit.putString("uri", uri.toString());
-                edit.apply();
-                webAppInterface.initRootFileList(uri);
-            }
-        }
 
-        if (requestCode == 124 && resultCode == RESULT_OK) {
+        if ((requestCode == 123 || requestCode == 124 || requestCode == 125) && resultCode == RESULT_OK) {
             if (data != null) {
                 //只保存但不发送数据
                 Uri uri = data.getData();
 
 
-                Log.d("MainActivity", "onActivityResult: uri="+uri);
+                Log.d("MainActivity", "onActivityResult: uri=" + uri);
                 // 获取持久化权限
                 getContentResolver().takePersistableUriPermission(
                         uri,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                 );
                 String uriString = uri.toString();
-                if (!uriString.replaceAll("content://com.android.externalstorage.documents/tree/primary%3A","")
-                        .isEmpty()){
+                if (!uriString.replaceAll("content://com.android.externalstorage.documents/tree/primary%3A", "")
+                        .isEmpty()
+                ) {
                     ToastUtil.toastLong("您选择的似乎不是根目录,如果存在问题可以重新选择");
-                }else{
+                } else {
                     ToastUtil.toast("授权成功！");
                 }
                 //2.获得SharedPreferences的编辑器
                 SharedPreferences.Editor edit = sharedPreference.edit();
                 edit.putString("uri", uri.toString());
                 edit.apply();
-
-
                 //通知js
-                webAppInterface.getJsExecUtil().exec("checkPermission",null);
+
+
+                if (requestCode == 123) {
+                    //仅在未授权目录，但是已经进入文件夹详情界面时调用
+                    //正常情况下，不应该被调用
+                    webAppInterface.initRootFileList(uri);
+                } else {
+                    webAppInterface.getJsExecUtil().exec("checkPermission", null);
+
+                    //初次授权跟目录，应该直接跳转到文件夹选择界面
+                    if (requestCode == 124) {
+                        webAppInterface.getJsExecUtil().exec("jumpSelect", null);
+                    }
+                }
+
 
             }
         }
 
+
+        //扫码结果
         if (resultCode == RESULT_OK && data != null) {
             if (requestCode == REQUEST_CODE_SCAN) {
                 String result = CameraScan.parseScanResult(data);
@@ -295,16 +248,13 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
 
         Log.d("MainActivity", "onBackPressed: 按下了返回");
-        webAppInterface.getJsExecUtil().exec("onAppBackPressed",null);
+        webAppInterface.getJsExecUtil().exec("onAppBackPressed", null);
 //        if (webView != null && webView.canGoBack()) {
 //            webView.goBack(); // 如果 WebView 可以返回上一页，则返回
 //        } else {
 //            super.onBackPressed(); // 否则按默认行为退出 Activity
 //        }
     }
-
-
-
 
 
     private void webviewInit() {
@@ -342,7 +292,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         webView.setWebViewClient(new WebViewClient() {
-            @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 Log.e("WebViewError", "Error: " + error.getDescription());
