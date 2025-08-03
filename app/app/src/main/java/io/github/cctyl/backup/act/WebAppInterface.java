@@ -22,9 +22,13 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ActivityOptionsCompat;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
@@ -46,6 +50,9 @@ import io.github.cctyl.backup.utils.DeviceUtils;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.JsExecUtil;
 import io.github.cctyl.backup.utils.ToastUtil;
+import io.github.cctyl.backup.utils.http.OkHttpUtil;
+import io.github.cctyl.backup.utils.http.SimpleRestCallback;
+import okhttp3.Call;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class WebAppInterface {
@@ -278,6 +285,7 @@ public class WebAppInterface {
         ServerConfig serverConfig = new ServerConfig();
         serverConfig.addr = sharedPreference.getString("addr", null);
         serverConfig.secret = sharedPreference.getString("secret", null);
+        serverConfig.checkMd5 = sharedPreference.getBoolean("checkMd5", false);
 
         if (serverConfig.addr== null ||
         serverConfig.secret == null
@@ -286,19 +294,51 @@ public class WebAppInterface {
             ToastUtil.toastLong("服务器配置为空！无法备份，请检查");
             return;
         }
-
         // 开始备份
         binder.start(serverConfig);
+
     }
 
 
+    @JavascriptInterface
+    public void checkConnection(String serverAddr,
+                                  String token ){
+
+
+        OkHttpUtil.get("/api/file/test", serverAddr, token,
+                new SimpleRestCallback() {
+                    @Override
+                    public void getData(String json) {
+
+                        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+                        String msg = jsonObject.get("data").getAsString();
+
+                        context.runOnUiThread(()->{
+                            jsExecUtil.exec("receiveConnection",true,msg,null);
+                        });
+
+                    }
+
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        SimpleRestCallback.super.onFailure(call, e);
+
+
+                        context.runOnUiThread(()->{
+                            jsExecUtil.exec("receiveConnection",false,e.getMessage(),null);
+                        });
+                    }
+                }
+        );
+    }
+
     /**
-     * 删除备份历史
+     * 准备启动，先更新界面状态
      */
     @JavascriptInterface
-    public void delBackupInfo(){
-        backupHistoryDao.deleteAll();
-        backupFileDao.deleteAll();
+    public void prepareStart() {
+        Log.d("WebAppInterface", "prepareStart: 准备备份");
+        binder.setStatus(1);
     }
 
     /**
@@ -306,9 +346,11 @@ public class WebAppInterface {
      */
     @JavascriptInterface
     public void completeBackup() {
-
+        binder.setStatus(0);
         binder.stop();
     }
+
+
 
     /**
      * 继续备份
@@ -327,6 +369,16 @@ public class WebAppInterface {
         // 暂停备份
         binder.setStatus(2);
     }
+
+    /**
+     * 删除备份历史
+     */
+    @JavascriptInterface
+    public void delBackupInfo(){
+        backupHistoryDao.deleteAll();
+        backupFileDao.deleteAll();
+    }
+
 
     /**
      * 初始化根目录下的文件
@@ -506,6 +558,7 @@ public class WebAppInterface {
         ServerConfig serverConfig = new ServerConfig();
         serverConfig.addr = sharedPreference.getString("addr", null);
         serverConfig.secret = sharedPreference.getString("secret", null);
+        serverConfig.checkMd5 = sharedPreference.getBoolean("checkMd5", false);
 
         return GsonUtils.toJson(serverConfig);
     }
@@ -520,6 +573,7 @@ public class WebAppInterface {
         sharedPreference.edit()
                 .putString("addr", serverConfig.addr)
                 .putString("secret", serverConfig.secret)
+                .putBoolean("checkMd5",serverConfig.checkMd5)
                 .apply();
 
     }
@@ -623,6 +677,21 @@ public class WebAppInterface {
         context.runOnUiThread(() -> {
             jsExecUtil.exec("receiveBackupStatus",
                     mStatus,
+                    null
+            );
+        });
+    }
+
+    /**
+     * 通知js ,备份出错
+     * @param msg
+     */
+    public void receiveUploadError(String msg) {
+
+        Log.d("WebAppInterface", "receiveUploadError: 通知备份错误 ");
+        context.runOnUiThread(() -> {
+            jsExecUtil.exec("receiveUploadError",
+                    msg,
                     null
             );
         });

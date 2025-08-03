@@ -6,10 +6,14 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import io.github.cctyl.backup.dto.CompareDto;
 import io.github.cctyl.backup.entity.BackupFile;
@@ -30,7 +34,10 @@ public class OkHttpUtil {
 
 
 
-    public static final OkHttpClient INSTANCE = new OkHttpClient();
+    public static final OkHttpClient INSTANCE = new OkHttpClient.Builder()
+            .connectTimeout(3, TimeUnit.SECONDS)
+            .build()
+            ;
 
 
     private static MediaType MEDIATYPE = MediaType.parse("application/json; charset=utf-8");
@@ -38,60 +45,37 @@ public class OkHttpUtil {
     /**
      * 构建器
      *
-     * @param urlParam
-     * @param requestParam
-     * @param requestHeader
+
      * @return
      */
     private static Request.Builder builder(
-            String urlParam,
-            Map<String, ? extends Object> requestParam,
-            Map<String, ? extends Object> requestHeader
+            String path,
+            String serverAddr,
+            String token
 
     ) {
         Request.Builder builder = new Request.Builder();
+        builder.url("http://"+serverAddr+path)
+                .header("authorization",token)
 
-
-        //1. url 与 query 参数
-        if (requestParam != null && !requestParam.isEmpty()) {
-            HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(urlParam)
-                    .newBuilder();
-            for (Map.Entry<String, ?> entry : requestParam.entrySet()) {
-                httpUrlBuilder.addQueryParameter(entry.getKey(), entry.getValue().toString());
-            }
-            builder.url(httpUrlBuilder.build());
-        } else {
-            builder.url(urlParam);
-        }
-
-        //2.请求头
-        if (requestHeader != null && !requestHeader.isEmpty()) {
-            for (Map.Entry<String, ?> entry : requestHeader.entrySet()) {
-                builder.header(entry.getKey(), entry.getValue().toString());
-            }
-        }
-
-
+        ;
         return builder;
-
     }
 
     /**
      * get请求
      *
      * @param url
-     * @param requestParam
-     * @param requestHeader
      * @param callback
      */
     public static void get(
             String url,
-            Map<String, ? extends Object> requestParam,
-            Map<String, ? extends Object> requestHeader,
+            String serverAddr,
+            String token,
             SimpleRestCallback callback
     ) {
         INSTANCE.newCall(
-                        builder(url, requestParam, requestHeader)
+                        builder(url, serverAddr, token)
                                 .get()
                                 .build()
                 )
@@ -102,27 +86,33 @@ public class OkHttpUtil {
      * post请求
      *
      * @param url
-     * @param requestParam
-     * @param requestHeader
      * @param callback
      */
 
     public static void post(
             String url,
-            Map<String, ? extends Object> requestParam,
-            Map<String, ? extends Object> requestHeader,
+            String serverAddr,
+            String token,
             String requestBody,
             SimpleRestCallback callback
     ) {
         INSTANCE.newCall(
-                        builder(url, requestParam, requestHeader)
+                        builder(url, serverAddr, token)
                                 .post(RequestBody.create(MEDIATYPE, GsonUtils.INSTANCE.toJson(requestBody)))
                                 .build()
                 )
                 .enqueue(callback);
     }
 
-    public static void uploadFile(ServerConfig mServerConfig, BackupFile file, ProgressListener listener) {
+    public static void uploadFile(ServerConfig mServerConfig,
+                                  BackupFile file,
+                                  boolean checkMd5,
+                                  ProgressListener listener,
+                                  Consumer<JsonObject> consumer
+
+
+
+    ) {
 
         //从配置文件中读取
         String token = "Bearer " + mServerConfig.secret;
@@ -133,6 +123,7 @@ public class OkHttpUtil {
         MultipartBody body = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("name", file.getName())
+                .addFormDataPart("checkMd5", String.valueOf(checkMd5))
                 .addFormDataPart("treeUri", file.getTreeUri().toString())
                 .addFormDataPart("docId", file.getDocId())
                 .addFormDataPart("relativePath", file.getRelativePath())
@@ -153,6 +144,9 @@ public class OkHttpUtil {
         try {
             String bodyString = INSTANCE.newCall(request)
                     .execute().body().string();
+
+            JsonObject jsonObject = JsonParser.parseString(bodyString).getAsJsonObject();
+            consumer.accept(jsonObject);
             Log.d("LocalBinder", "uploadFile: 上传的响应="+bodyString);
         } catch (IOException e) {
             e.printStackTrace();
@@ -184,11 +178,13 @@ public class OkHttpUtil {
 
                 Log.e("OkHttpUtil", "compare: 请求错误："+compareDto.getMessage());
                 ToastUtil.toastLong("请求服务端错误："+compareDto.getMessage());
-                throw new InterruptedException();
+                throw new RuntimeException("请求服务端错误");
             }
 
         } catch (Exception e) {
-            throw new InterruptedException();
+            Log.e("OkHttpUtil", "compare: "+e.getMessage(),e);
+            ToastUtil.toastLong("文件上传失败！请检查配置和网络");
+            throw new RuntimeException(e);
         }
 
     }

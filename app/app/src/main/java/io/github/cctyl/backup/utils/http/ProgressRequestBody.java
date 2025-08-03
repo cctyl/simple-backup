@@ -63,6 +63,8 @@ public class ProgressRequestBody extends RequestBody {
                     lastUploadSize = uploaded; // 更新上次上传量
                 }
             }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 

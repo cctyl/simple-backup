@@ -25,6 +25,10 @@ public interface BackupFileDao {
     @Query(" delete from backup_file ")
     int deleteAll();
 
+
+    @Query(" delete from backup_file where id = :id ")
+    int deleteById(long id);
+
     @Query(" select * from backup_file order by id desc ")
     List<BackupFile> findAll();
 

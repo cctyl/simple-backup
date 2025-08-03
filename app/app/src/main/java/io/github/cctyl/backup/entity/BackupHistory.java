@@ -44,6 +44,9 @@ public class BackupHistory {
     @ColumnInfo(name = "backup_num")
     private Long backUpNum;
 
+    @ColumnInfo(name = "fail_num")
+    private Long failNum;
+
     /**
      * 备份花费的时间，秒
      */
@@ -67,6 +70,14 @@ public class BackupHistory {
     @ColumnInfo(name = "avg_speed")
     private Long avgSpeed;
 
+
+    public Long getFailNum() {
+        return failNum;
+    }
+
+    public void setFailNum(Long failNum) {
+        this.failNum = failNum;
+    }
 
     public Long getAvgSpeed() {
         return avgSpeed;

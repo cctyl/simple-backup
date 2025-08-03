@@ -13,10 +13,26 @@ public class ProgressDto {
     int alreadyUploadFileNum;
 
     /**
+     * 上传失败数量
+     */
+    int failNum;
+
+
+
+
+    /**
      * 检查文件是否已经完成
      */
     boolean checkFinish;
 
+
+    public int getFailNum() {
+        return failNum;
+    }
+
+    public void setFailNum(int failNum) {
+        this.failNum = failNum;
+    }
 
     public boolean isCheckFinish() {
         return checkFinish;

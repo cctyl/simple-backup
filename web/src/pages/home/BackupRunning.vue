@@ -67,6 +67,11 @@
         <div class="stat-value">{{ formatNumberWithCommas(progressData.alreadyUploadFileNum) }}</div>
         <div class="stat-label">已处理文件</div>
       </div>
+
+      <div class="stat-card">
+        <div class="stat-value">{{ formatNumberWithCommas(progressData.failNum) }}-{{progressData.failNum}}</div>
+        <div class="stat-label">上传失败</div>
+      </div>
     </div>
 
     <!-- 按钮区域 -->
@@ -104,7 +109,6 @@
             @cancel="handleCancelComplete">
         </ConfirmModal>-->
 
-
     <MaterialDialog
         :visible="showConfirmModal"
         title="结束备份"
@@ -116,20 +120,6 @@
       <p>您确定要结束备份吗？未完成的备份将需要重新开始。</p>
     </MaterialDialog>
 
-
-    <MaterialDialog
-        :visible="showCancel"
-        title="温馨提示"
-        icon="notifications_active"
-        :show-cancel="false"
-        @confirm="handleReturnHome"
-    >
-      <p>
-
-        {{ cancelHint }}
-
-      </p>
-    </MaterialDialog>
   </div>
 </template>
 
@@ -161,23 +151,21 @@ export default {
         circleTitle: '',
         circleDesc: '',
       },
-
-      cancelHint: '',
-      showCancel: false,
       showConfirmModal: false
+
     }
   },
   created() {
-    //console.log("backupRunning.vue created")
-    window.vue.receiveProgressData = this.receiveProgressData;
-    window.vue.receiveNotNeedBackup = this.receiveNotNeedBackup;
-    window.vue.receiveServerAlreadyLatest = this.receiveServerAlreadyLatest;
+    console.log("backupRunning.vue created")
+
+
   },
   mounted() {
     window.scrollTo(0, 0);
-    //console.log("backupRunning.vue startBackup")
-    window.Android.startBackup();
+    window.vue.receiveProgressData = this.receiveProgressData;
 
+    console.log("backupRunning.vue startBackup")
+    window.Android.startBackup();
   },
   computed: {
 
@@ -214,29 +202,15 @@ export default {
   },
   methods: {
 
-    receiveServerAlreadyLatest() {
-      this.cancelHint = '经过与服务器的比较，您的文件与服务器文件完全一致，无需进行备份，本次备份不会进行';
-      this.showCancel = true;
 
-    },
-
-    receiveNotNeedBackup() {
-      this.cancelHint = '扫描后没有发现需要备份的文件，本次备份不会进行';
-      this.showCancel = true;
-    },
-
-    handleReturnHome() {
-      this.$store.commit("SET_BACKUP_STATUS", 0);
-      this.showCancel = false;
-    },
 
 
     resumeBackup() {
-      this.$store.commit('SET_BACKUP_STATUS', 1)
+      //this.$store.commit('SET_BACKUP_STATUS', 1)
       window.Android.resumeBackup();
     },
     pauseBackup() {
-      this.$store.commit('SET_BACKUP_STATUS', 2)
+      //this.$store.commit('SET_BACKUP_STATUS', 2)
       window.Android.pauseBackup();
     },
     completeBackup() {
@@ -247,7 +221,7 @@ export default {
     handleConfirmComplete() {
       //console.log("修改状态")
       this.showConfirmModal = false;
-      this.$store.commit('SET_BACKUP_STATUS', 0)
+      //this.$store.commit('SET_BACKUP_STATUS', 0)
       window.Android.completeBackup();
     },
     handleCancelComplete() {

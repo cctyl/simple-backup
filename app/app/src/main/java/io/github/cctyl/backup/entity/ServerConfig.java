@@ -5,4 +5,5 @@ public class ServerConfig {
    public String addr;
 
     public String secret;
+    public boolean checkMd5;
 }

@@ -24,6 +24,8 @@
         </div>
         <div class="log-stats">
           <div class="stat-badge">📁 {{ formatNumberWithCommas(item.backUpNum) }} 个文件</div>
+          <div class="stat-badge">✅ {{ formatNumberWithCommas(item.backUpNum-item.failNum) }} 个文件</div>
+          <div class="stat-badge">❌️ {{ formatNumberWithCommas(item.failNum) }} 个文件</div>
           <div class="stat-badge">📊 {{ formatSize(item.totalFileSize) }} 数据</div>
           <div class="stat-badge">⏱️ {{ formatCostTime(item.backUpCostTime) }}</div>
           <div class="stat-badge">✈️ {{ formatSize(item.avgSpeed) }}/s</div>
@@ -217,7 +219,8 @@ export default {
   name: 'history-view',
   data() {
     return {
-      backupList: [],
+      backupList: [
+      ],
     }
   },
 

@@ -4,11 +4,24 @@
   <!-- 内容区域 -->
   <div class="transition-container">
     <AnimatedTransition>
-      <BackupReady v-if="$store.state.backupStatus===0" :key="0"></BackupReady>
-      <BackupRunning v-else :key="1"></BackupRunning>
+      <BackupRunning v-if="$store.state.backupStatus !== 0" :key="1"></BackupRunning>
+      <BackupReady v-else  :key="0"></BackupReady>
     </AnimatedTransition>
 
 
+    <MaterialDialog
+        :visible="showCancel"
+        :title="title"
+        :icon="icon"
+        :show-cancel="false"
+        @confirm="handleReturnHome"
+    >
+      <p>
+
+        {{ cancelHint }}
+
+      </p>
+    </MaterialDialog>
   </div>
 
 
@@ -19,34 +32,60 @@
 import BackupReady from "./home/BackupReady";
 import BackupRunning from "./home/BackupRunning";
 import AnimatedTransition from "@/components/AnimatedTransition.vue";
+import MaterialDialog from "@/components/Dialog.vue";
 
 export default {
   name: 'home-view',
-  components: {AnimatedTransition, BackupReady, BackupRunning},
+  components: {MaterialDialog, AnimatedTransition, BackupReady, BackupRunning},
   data() {
     return {
-      running: true
+      running: true,
+      cancelHint: '',
+      showCancel: false,
+      title:'温馨提示',
+      icon:'notifications_active'
+
     }
   },
   created() {
 
-    // window.Android.toast("当前状态="+window.Android.getStatus());
-    this.$store.commit("SET_BACKUP_STATUS", window.Android.getStatus());
-    // this.$store.commit("SET_BACKUP_STATUS",1);
-
   },
   mounted() {
-    window.vue.receiveBackupStatus = this.receiveBackupStatus;
+    window.vue.receiveNotNeedBackup = this.receiveNotNeedBackup;
+    window.vue.receiveServerAlreadyLatest = this.receiveServerAlreadyLatest;
+    window.vue.receiveUploadError = this.receiveUploadError;
+
   },
 
   computed: {},
   methods: {
 
-    receiveBackupStatus(status) {
-      // console.log("收到android的备份状态="+status)
-      // window.Android.toast("收到android的备份状态="+status);
-      this.$store.commit("SET_BACKUP_STATUS", status);
-    }
+    receiveUploadError(msg) {
+      this.title = '出现错误！'
+      this.cancelHint = '备份错误：'+msg;
+      this.icon='error';
+      this.showCancel = true;
+
+    },
+    receiveServerAlreadyLatest() {
+      this.title = '温馨提示'
+      this.cancelHint = '经过与服务器的比较，您的文件与服务器文件完全一致，无需进行备份，本次备份不会进行';
+      this.icon = 'notifications_active';
+      this.showCancel = true;
+
+    },
+
+    receiveNotNeedBackup() {
+      this.title = '温馨提示'
+      this.cancelHint = '扫描后没有发现需要备份的文件，本次备份不会进行';
+      this.icon = 'notifications_active';
+      this.showCancel = true;
+    },
+
+    handleReturnHome() {
+      this.showCancel = false;
+    },
+
 
   }
 }

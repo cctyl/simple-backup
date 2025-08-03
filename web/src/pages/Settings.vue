@@ -6,7 +6,7 @@
       <div class="settings-group">
         <div class="group-title">备份选项</div>
 
-        <router-link to="/settings/source"  class="setting-item">
+        <router-link to="/settings/source" class="setting-item">
           <div class="setting-content">
             <div class="setting-icon">
               <i class="material-icons">folder</i>
@@ -22,7 +22,7 @@
           </div>
         </router-link>
 
-        <router-link to="/settings/server-config"  class="setting-item">
+        <router-link to="/settings/server-config" class="setting-item">
           <div class="setting-content">
             <div class="setting-icon">
               <i class="material-icons">backup</i>
@@ -38,6 +38,36 @@
         </router-link>
       </div>
 
+      <!-- 杂项 -->
+      <div class="advanced-header">
+        <span>.</span>
+      </div>
+
+      <div class="settings-group">
+        <div class="group-title">杂项</div>
+
+        <div class="setting-item">
+          <div class="setting-content">
+            <div class="setting-icon">
+              <i class="material-icons">folder</i>
+            </div>
+            <div class="setting-info">
+              <div class="setting-name">md5校验</div>
+              <div class="setting-desc">开启后可防止上传错误文件，但会增加上传时间</div>
+
+            </div>
+          </div>
+          <div class="setting-action">
+            <label class="setting-switch">
+              <input type="checkbox" v-model="md5Check" >
+              <span class="setting-slider"></span>
+            </label>
+          </div>
+        </div>
+
+
+      </div>
+
 
     </div>
 
@@ -45,14 +75,161 @@
   </div>
 </template>
 <script>
+import {mapActions} from "vuex";
+
 export default {
-  name: 'settings-view'
+  name: 'settings-view',
+  data(){
+
+    return {
+      md5Check:false
+    }
+  },
+  watch:{
+    md5Check(){
+      console.log("md5Check变化了")
+      let config = this.$store.state.serverConfig;
+      config.checkMd5 = this.md5Check;
+      this.setServerConfig( config)
+    }
+  },
+  mounted() {
+    this.md5Check = this.$store.state.serverConfig.checkMd5;
+
+  },methods:{
+    ...mapActions(['setServerConfig']),
+  }
 }
 </script>
 <style scoped>
 
 
-.content{
+/* 高级设置 */
+.advanced-header {
+  display: flex;
+  align-items: center;
+  margin: 24px 0 16px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.advanced-header::before, .advanced-header::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #dadce0;
+}
+
+.advanced-header span {
+  margin: 0 16px;
+}
+
+/* 高级选项 */
+.advanced-options {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.option-label {
+  font-size: 16px;
+  color: #202124;
+}
+
+.option-input {
+  width: 120px;
+  padding: 12px;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+/* 设置卡片 */
+.settings-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.setting-label {
+  display: flex;
+  align-items: center;
+}
+
+.setting-label i {
+  margin-right: 16px;
+  color: #5f6368;
+}
+
+.setting-text {
+  font-size: 16px;
+}
+
+.setting-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.setting-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.setting-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.setting-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .setting-slider {
+  background-color: #1a73e8;
+}
+
+input:checked + .setting-slider:before {
+  transform: translateX(24px);
+}
+
+
+.content {
   padding: 16px;
 }
 
@@ -60,7 +237,7 @@ export default {
 .settings-group {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
   overflow: hidden;
 }
@@ -194,7 +371,7 @@ input:checked + .setting-slider:before {
   background: white;
   padding: 16px;
   display: flex;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   z-index: 90;
 }
 

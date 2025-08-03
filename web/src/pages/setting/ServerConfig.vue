@@ -61,14 +61,18 @@
         </div>
       </div>
     </div>
+
+    <Loading :show="showLoading" text="连接中..."/>
   </div>
 </template>
 
 <script>
 import {mapActions, mapMutations} from "vuex";
+import Loading from "@/components/Loading.vue";
 
 export default {
   name: 'server-config-view',
+  components: {Loading},
   data() {
     return {
       showPassword: false,
@@ -82,6 +86,8 @@ export default {
       },
 
       checkSuccess: false,
+      showLoading:false,
+      timer:null,
     }
   },
 
@@ -90,6 +96,7 @@ export default {
     this.secret = this.$store.state.serverConfig.secret;
     this.$bus.$on('rightIconCallBack', this.scanQrCode);
     window.vue.receiveServerConfig = this.receiveServerConfig;
+    window.vue.receiveConnection = this.receiveConnection;
   },
   methods: {
     ...mapActions(['setServerConfig']),
@@ -98,9 +105,39 @@ export default {
       this.showPassword = !this.showPassword;
     },
     checkConnection() {
-      this.testMsg = ' 连接成功！';
+      if (this.timer!=null){
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
+      window.Android.checkConnection(this.addr,this.secret);
+      this.showLoading = true;
+
+
+      this.timer = setTimeout(() => {
+
+        //过了15秒，窗口还没关，就执行
+        if (this.showLoading){
+          this.testMsg = '服务端无响应...';
+          this.showTestResult = true;
+          this.checkSuccess = false;
+          this.showLoading = false;
+        }
+
+
+        this.timer = null;
+      }, 5000)
+    },
+
+    receiveConnection(result,msg){
+
+      if (this.timer!=null){
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
+      this.testMsg =msg;
       this.showTestResult = true;
-      this.checkSuccess=true;
+      this.checkSuccess=result;
+      this.showLoading = false;
     },
     saveConfig() {
       // 重置验证错误状态

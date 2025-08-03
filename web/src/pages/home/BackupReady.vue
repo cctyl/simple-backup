@@ -191,7 +191,8 @@ export default {
         return;
       }
 
-      this.$store.commit("SET_BACKUP_STATUS", 1)
+      window.Android.prepareStart();
+
 
 
     },

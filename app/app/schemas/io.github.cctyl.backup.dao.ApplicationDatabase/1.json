@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "8892c8cd34a65f49c68c9ee01e0014ce",
+    "identityHash": "0290989b438ce33b61307c02a3703144",
     "entities": [
       {
         "tableName": "backup_history",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `backup_result` TEXT, `backup_detail` TEXT, `success` INTEGER, `backup_time` INTEGER, `backup_num` INTEGER, `back_up_cost_time` INTEGER, `total_file_size` INTEGER, `back_up_path_arr` TEXT, `avg_speed` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `backup_result` TEXT, `backup_detail` TEXT, `success` INTEGER, `backup_time` INTEGER, `backup_num` INTEGER, `fail_num` INTEGER, `back_up_cost_time` INTEGER, `total_file_size` INTEGER, `back_up_path_arr` TEXT, `avg_speed` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -41,6 +41,12 @@
           {
             "fieldPath": "backUpNum",
             "columnName": "backup_num",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "failNum",
+            "columnName": "fail_num",
             "affinity": "INTEGER",
             "notNull": false
           },
@@ -212,7 +218,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8892c8cd34a65f49c68c9ee01e0014ce')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0290989b438ce33b61307c02a3703144')"
     ]
   }
 }

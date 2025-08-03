@@ -11,6 +11,7 @@ export default {
     serverConfig:{
         addr:null,//服务器地址
         secret:null,//密钥
+        checkMd5:null,//md5校验
     },
     backupStatus:0, //0 准备，1运行中，2暂停
 

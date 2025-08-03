@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Header   :style="{
+    <Header :style="{
       paddingTop: statusBarHeight+'px'
     }"></Header>
     <div style="padding-bottom: 100px;padding-top: 60px;  ">
@@ -20,47 +20,57 @@ import {mapMutations} from "vuex";
 export default {
   name: 'App',
   components: {
-      Header, Footer
+    Header, Footer
   },
-  data(){
+  data() {
 
-    return{
-      statusBarHeight:45
+    return {
+      statusBarHeight: 45
     }
   },
   created() {
-    this.statusBarHeight = window.Android.getStatusBarHeight();
+    console.log("当前状态="+window.Android.getStatus());
+    this.$store.commit("SET_BACKUP_STATUS", window.Android.getStatus());
 
-    window.vue.onAppBackPressed = this.onAppBackPressed;
+
+
+    this.statusBarHeight = window.Android.getStatusBarHeight();
     this.initDataFromAndroid();
   },
   mounted() {
+    window.vue.onAppBackPressed = this.onAppBackPressed;
+    window.vue.receiveBackupStatus = this.receiveBackupStatus;
   },
-  methods:{
-    ...mapMutations(['SET_SERVER_CONFIG','SET_SELECTED_DIR']),
+  methods: {
+    ...mapMutations(['SET_SERVER_CONFIG', 'SET_SELECTED_DIR']),
 
+    receiveBackupStatus(status) {
+      console.log("收到android的备份状态="+status)
+      // window.Android.toast("收到android的备份状态="+status);
+      this.$store.commit("SET_BACKUP_STATUS", status);
+    },
     /**
      * 向android请求数据然后存入vuex
      */
-    initDataFromAndroid(){
+    initDataFromAndroid() {
       this.getServerConfig();
       this.getSelectDir();
     },
 
 
-    getServerConfig(){
+    getServerConfig() {
       let config = JSON.parse(window.Android.getServerConfig());
       // console.log("App getServerConfig=", config)
       this.SET_SERVER_CONFIG(config);
     },
 
-    getSelectDir(){
+    getSelectDir() {
       let arr = JSON.parse(window.Android.getSelectDir());
       // console.log("App getSelectDir=", arr)
       this.SET_SELECTED_DIR(arr)
     },
 
-    onAppBackPressed(){
+    onAppBackPressed() {
       // console.log("app 发送返回信号")
       this.$bus.$emit("onAppBackPressed")
     }
