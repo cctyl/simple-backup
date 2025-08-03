@@ -69,9 +69,6 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
 
 #[debug_handler]
 async fn upload(mut multipart: Multipart) -> RR<()> {
-
- 
-
     let mut name = None;
     let mut tree_uri = None;
     let mut doc_id = None;
@@ -104,7 +101,7 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     .to_string()
                     .parse::<bool>()
                     .unwrap_or(false);
-            },
+            }
             "isDirectory" => {
                 is_directory = String::from_utf8_lossy(&data)
                     .to_string()
@@ -112,7 +109,6 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     .unwrap_or(false)
             }
             "file" => {
-             
                 let mut path = relative_path.clone().ok_or(HttpError::BadRequest(
                     "必须提供releactivePath！".to_string(),
                 ))?;
@@ -134,10 +130,10 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     tokio::fs::create_dir_all(parent).await?;
                 }
 
-                if !check_md5{
+                if !check_md5 {
                     info!("无需校验md5");
                     let write = tokio::fs::write(path, &data).await?;
-                }else{
+                } else {
                     //再次校验md5
                     let recheck_md5 = calculate_md5(&data);
 
@@ -150,15 +146,12 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     } else {
                         error!("md5校验失败，删除已上传的文件");
 
-                    
                         return RR::fail(HttpError::Custom(
                             700,
                             "md5校验失败，请重新上传！".to_string(),
                         ));
                     }
                 }
-                
-              
             }
             _ => {}
         }
@@ -195,9 +188,22 @@ fn calculate_md5(data: &[u8]) -> String {
     format!("{:x}", digest)
 }
 
-
 #[debug_handler]
-async fn test()->RR<String>{
-
+async fn test() -> RR<String> {
     RR::success("服务端连接成功！".to_string())
+}
+
+#[test]
+fn test_qr_code() {
+    use qrcode::QrCode;
+    use qrcode::render::unicode;
+  let code = QrCode::new(br#"{
+"addr":"192.168.31.151:8082",
+"secret":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9s"
+}"#).unwrap();
+    let image = code.render::<unicode::Dense1x2>()
+        .dark_color(unicode::Dense1x2::Light)
+        .light_color(unicode::Dense1x2::Dark)
+        .build();
+    println!("{}", image);
 }

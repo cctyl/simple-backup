@@ -39,3 +39,5 @@ bytesize = "2.0.1"
 idgenerator = "2.0.0"
 # md-5 = "0.11.0-rc.0"
 md5 = "0.8.0"
+qrcode = { version = "0.14.1"}
+image = "0.25.6"
