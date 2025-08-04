@@ -6,6 +6,7 @@ import History from "@/pages/History.vue";
 import BackupSource from "@/pages/setting/BackupSource.vue";
 import DirSelect from "@/pages/setting/DirSelect.vue";
 import ServerConfig from "@/pages/setting/ServerConfig.vue";
+import Help from "@/pages/Help.vue";
 
 
 Vue.use(VueRouter)
@@ -16,12 +17,12 @@ const router = new VueRouter({
         {
             path: '/',
             redirect: '/home',
-            meta: { headerTitle: '首页' }
+            meta: { headerTitle: '首页',rightIcon:'help_outline' }
         },
         {
             path: '/home',
             component: Home,
-            meta: { headerTitle: '首页' }
+            meta: { headerTitle: '首页',rightIcon:'help_outline' }
         },
 
         {
@@ -62,6 +63,12 @@ const router = new VueRouter({
             path: '/history',
             component: History,
             meta: { headerTitle: '备份历史' }
+        },
+
+        {
+            path: '/help',
+            component: Help,
+            meta: { headerTitle: '使用帮助' }
         },
         // {
         //     path: '/blacklist',

@@ -48,7 +48,7 @@ export default {
     }
   },
   created() {
-
+    this.$bus.$on('rightIconCallBack', this.toHelpPage);
   },
   mounted() {
     window.vue.receiveNotNeedBackup = this.receiveNotNeedBackup;
@@ -59,7 +59,10 @@ export default {
 
   computed: {},
   methods: {
+    toHelpPage(){
 
+      this.$router.push("/help")
+    },
     receiveUploadError(msg) {
       this.title = '出现错误！'
       this.cancelHint = '备份错误：'+msg;
@@ -87,6 +90,9 @@ export default {
     },
 
 
+  },
+  beforeDestroy() {
+    this.$bus.$off(['rightIconCallBack']);
   }
 }
 </script>

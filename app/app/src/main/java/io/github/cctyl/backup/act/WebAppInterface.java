@@ -523,6 +523,53 @@ public class WebAppInterface {
         Toast.makeText(context, toast, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * 跳转到b站
+     * @param bvid
+     */
+    @JavascriptInterface
+    public void toBilibili(String bvid) {
+        Uri appUri = Uri.parse("bilibili://video/" + bvid);
+        Intent intent = new Intent(Intent.ACTION_VIEW, appUri);
+
+        // 检查是否有能处理该Intent的APP（即B站是否安装）
+        if (intent.resolveActivity(context. getPackageManager()) != null) {
+            context.startActivity(intent);
+        } else {
+            // 未安装B站时，跳转到网页版
+            Uri webUri = Uri.parse("https://www.bilibili.com/video/" + bvid);
+            context.startActivity(new Intent(Intent.ACTION_VIEW, webUri));
+        }
+    }
+
+    @JavascriptInterface
+    public void toBilibiliUserProfile(String uid) {
+        Uri appUri = Uri.parse("bilibili://space/" + uid);
+        Intent intent = new Intent(Intent.ACTION_VIEW, appUri);
+
+        // 检查B站是否安装
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(intent);
+        } else {
+            // 未安装时跳转网页版
+            Uri webUri = Uri.parse("https://space.bilibili.com/" + uid);
+            context. startActivity(new Intent(Intent.ACTION_VIEW, webUri));
+        }
+    }
+
+    @JavascriptInterface
+    public void openInBrowser(String url) {
+        Uri uri = Uri.parse(url);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+
+        // 检查是否有浏览器能处理该Intent
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            context. startActivity(intent);
+        } else {
+            ToastUtil.toastLong("未找到浏览器应用");
+        }
+    }
+
 
     /**
      * 获取根目录下的文件信息,对js暴露
@@ -554,6 +601,9 @@ public class WebAppInterface {
     public String getServerConfig() {
         return GsonUtils.toJson(getServerConfigObj());
     }
+
+
+
 
     public ServerConfig getServerConfigObj() {
         ServerConfig serverConfig = new ServerConfig();
