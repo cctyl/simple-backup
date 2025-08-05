@@ -616,6 +616,9 @@ public class WebAppInterface {
     }
 
 
+
+
+
     /**
      * 设置服务器配置
      * @param json
@@ -631,6 +634,19 @@ public class WebAppInterface {
                 .apply();
 
     }
+
+    @JavascriptInterface
+    public boolean getIsFirst() {
+        return sharedPreference.getBoolean("isFirst", true);
+    }
+
+    @JavascriptInterface
+    public void setFirst() {
+        sharedPreference.edit()
+                .putBoolean("isFirst", false)
+                .apply();
+    }
+
 
     /**
      * 进入子目录
