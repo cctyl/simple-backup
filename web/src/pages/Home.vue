@@ -22,6 +22,23 @@
 
       </p>
     </MaterialDialog>
+
+
+
+    <MaterialDialog
+        :visible="isFirst"
+        title="首次使用提示"
+        icon="notifications_active"
+        @confirm="handleIsFirstConfirm"
+        @cancel="handleIsFirstCancel"
+    >
+      <p>
+
+        您是第一次使用本软件，是否需要查看使用教程？
+        如果您取消，后续也可以再首页-右上角按钮重新进入教程页面。
+
+      </p>
+    </MaterialDialog>
   </div>
 
 
@@ -43,22 +60,37 @@ export default {
       cancelHint: '',
       showCancel: false,
       title:'温馨提示',
-      icon:'notifications_active'
+      icon:'notifications_active',
+      isFirst:false,
 
     }
   },
   created() {
     this.$bus.$on('rightIconCallBack', this.toHelpPage);
+    this.isFirst = window.Android.getIsFirst();
   },
   mounted() {
     window.vue.receiveNotNeedBackup = this.receiveNotNeedBackup;
     window.vue.receiveServerAlreadyLatest = this.receiveServerAlreadyLatest;
     window.vue.receiveUploadError = this.receiveUploadError;
 
+
   },
 
   computed: {},
   methods: {
+
+    handleIsFirstCancel(){
+      window.Android.setFirst();
+
+      this.isFirst =false;
+    },
+    handleIsFirstConfirm(){
+      this.isFirst =false;
+      window.Android.setFirst();
+      this.toHelpPage();
+    },
+
     toHelpPage(){
 
       this.$router.push("/help")

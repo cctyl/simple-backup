@@ -87,24 +87,57 @@
             </label>
           </div>
         </div>
+
+
+        <div class="setting-item" @click="showDeleteConfirm">
+          <div class="setting-content">
+            <div class="setting-icon">
+              <i class="material-icons">delete</i>
+            </div>
+            <div class="setting-info">
+              <div class="setting-name">删除备份历史</div>
+              <div class="setting-desc">清除本地保存的备份记录</div>
+            </div>
+          </div>
+          <div class="setting-action">
+            <i class="material-icons">chevron_right</i>
+          </div>
+        </div>
       </div>
 
 
     </div>
 
 
+    <MaterialDialog
+        :visible="showDel"
+        title="警告"
+        icon="warning"
+        @confirm="handleDelConfirm"
+        @cancel="handleDelCancel"
+    >
+      <p>
+
+        确定要删除备份历史吗？确定后只会删除app本地的历史记录，不会删除本地文件，也不会删除服务端的备份记录和实际文件
+
+      </p>
+    </MaterialDialog>
+
   </div>
 </template>
 <script>
 import {mapActions} from "vuex";
+import MaterialDialog from "@/components/Dialog.vue";
 
 export default {
   name: 'settings-view',
+  components: {MaterialDialog},
   data() {
 
     return {
       checkMd5: false,
       forceBackup: false,
+      showDel:false
 
     }
   },
@@ -113,10 +146,19 @@ export default {
     this.checkMd5 = this.$store.state.serverConfig.checkMd5;
     this.forceBackup = this.$store.state.serverConfig.forceBackup;
 
-  }, methods: {
+  },
+  methods: {
     ...mapActions(['setServerConfig']),
-
-
+    showDeleteConfirm(){
+      this.showDel = true;
+    },
+    handleDelConfirm(){
+        this.showDel = false;
+        window.Android.delBackupInfo()
+    },
+    handleDelCancel(){
+      this.showDel = false;
+    },
     checkMd5Change(){
       console.log("checkMd5Change")
       let config = this.$store.state.serverConfig;

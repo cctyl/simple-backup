@@ -27,7 +27,7 @@
               <div>
                 <div class="step-title">启动服务器</div>
                 <div class="step-desc">
-                  在pc端，双击下载好的可执行文件 simple-backup.exe, 然后目录下会产生一个 “扫我.png”,打开图片，后续扫码
+                  在pc端，双击下载好的可执行文件 simple-backup.exe, 然后目录下会产生一个 “扫我.png”,打开图片，用于后续扫码
                 </div>
 
               </div>
@@ -231,11 +231,11 @@
         获取更多帮助
       </div>
       <div class="card-body">
-        <div class="step-item" @click="toBrowser(githubUserProfileUrl)">
-          <div class="step-number">
+        <div class="step-item-i" @click="toBrowser(githubUserProfileUrl)">
+          <div class="step-number-i">
             <i class="material-icons">forum</i>
           </div>
-          <div class="step-content">
+          <div class="step-content-i">
             <div class="step-title">作者github主页</div>
             <div class="step-desc">
               查看更多好玩的应用
@@ -243,11 +243,11 @@
           </div>
         </div>
 
-        <div class="step-item" @click="toBilibiliUserProfile(authUid)">
-          <div class="step-number">
+        <div class="step-item-i" @click="toBilibiliUserProfile(authUid)">
+          <div class="step-number-i">
             <i class="material-icons">mail</i>
           </div>
-          <div class="step-content">
+          <div class="step-content-i">
             <div class="step-title">作者bilibili</div>
             <div class="step-desc">
               看看有什么新东西
@@ -255,11 +255,11 @@
           </div>
         </div>
 
-        <div class="step-item" @click="toBrowser(githubSourceUrl)">
-          <div class="step-number">
+        <div class="step-item-i" @click="toBrowser(githubSourceUrl)">
+          <div class="step-number-i">
             <i class="material-icons">menu_book</i>
           </div>
-          <div class="step-content">
+          <div class="step-content-i">
             <div class="step-title">源代码</div>
             <div class="step-desc">
               本应用完全开源免费，点击这里访问源代码：{{githubSourceUrl}}
@@ -306,6 +306,34 @@ export default {
 };
 </script>
 <style scoped>
+
+
+.step-content-i {
+  flex: 1;
+}
+.step-item-i {
+  display: flex;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.step-item-i:last-child {
+  margin-bottom: 0;
+}
+
+.step-number-i{
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e8f0fe;
+  color: #1a73e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
 
 /* 内容区域 */
 .content {

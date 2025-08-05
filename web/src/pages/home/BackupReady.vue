@@ -111,7 +111,7 @@
       </i>
     </button>
 
-    <button class="primary-button"
+<!--    <button class="primary-button"
             @click="delBackupInfo"
     >
 
@@ -119,7 +119,9 @@
         删除备份记录
       </span>
 
-    </button>
+    </button>-->
+
+
     <SelectFolder :show-count="false" title="将要备份的文件夹" @click.native="toSource"></SelectFolder>
 
 
@@ -181,10 +183,7 @@ export default {
   methods: {
 
 
-    delBackupInfo() {
 
-      window.Android.delBackupInfo()
-    },
     startBackup() {
       if (!this.isReady) {
         this.scrollTop();
@@ -192,7 +191,6 @@ export default {
       }
 
       window.Android.prepareStart();
-
 
 
     },
