@@ -41,7 +41,7 @@
 
 
           <div style="display: flex;justify-content: center">
-            <router-link to="/settings/source" tag="div" class="detail-button">
+            <router-link to="/settings/source" tag="div" class="detail-button" style="margin-top: 20px">
               查看配置 <i class="material-icons" style="font-size: 18px;">chevron_right</i>
             </router-link>
           </div>

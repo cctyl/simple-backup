@@ -283,6 +283,9 @@ export default {
       authUid:'8427106'
     }
   },
+  created() {
+    this.$bus.$on('onAppBackPressed', this.onAppBackPressed);
+  },
   methods:{
     toBlibili(){
       window.Android.toBilibili(this.bvid);
@@ -292,7 +295,13 @@ export default {
     },
     toBilibiliUserProfile(uid){
       window.Android.toBilibiliUserProfile(uid)
-    }
+    },
+    onAppBackPressed() {
+      this.$router.back();
+    },
+  },
+  beforeDestroy() {
+    this.$bus.$off(['onAppBackPressed']);
   }
 };
 </script>
