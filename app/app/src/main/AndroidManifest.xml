@@ -8,7 +8,9 @@
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-
+    <queries>
+        <package android:name="tv.danmaku.bili" /> <!-- B站包名 -->
+    </queries>
     <application
         android:name=".AppApplication"
         android:allowBackup="true"

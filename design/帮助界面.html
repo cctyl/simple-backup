@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>应用教程</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Android状态栏 */
+        .status-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 24px;
+        }
+        
+        /* 应用栏 */
+        .app-bar {
+            background-color: #1a73e8;
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            position: fixed;
+            top: 24px;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 56px;
+        }
+        
+        .app-bar .title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-left: 16px;
+        }
+        
+        /* 内容区域 */
+        .content {
+            padding: 16px;
+            padding-top: 100px; /* 状态栏+应用栏高度 */
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* 视频容器 */
+        .video-container {
+            position: relative;
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .video-container iframe {
+            width: 100%;
+            height: 210px;
+            border: none;
+        }
+        
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(transparent 70%, rgba(0,0,0,0.7));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+            color: white;
+        }
+        
+        .video-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .video-meta {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .video-meta span {
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .video-meta i {
+            margin-right: 4px;
+        }
+        
+        /* 教程卡片 */
+        .tutorial-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #f1f3f4;
+            font-weight: 500;
+            font-size: 16px;
+            color: #202124;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header i {
+            margin-right: 8px;
+            color: #1a73e8;
+        }
+        
+        .card-body {
+            padding: 16px;
+        }
+        
+        /* 教程步骤 */
+        .tutorial-steps {
+            counter-reset: step-counter;
+        }
+        
+        .step-item {
+            display: flex;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e8f0fe;
+            color: #1a73e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #202124;
+        }
+        
+        .step-desc {
+            font-size: 14px;
+            color: #5f6368;
+            line-height: 1.5;
+        }
+        
+        .step-image {
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 12px;
+            background: #f8f9fa;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5f6368;
+            font-style: italic;
+        }
+        
+        /* 常见问题 */
+        .faq-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        
+        .faq-question {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .faq-question .material-icons {
+            color: #1a73e8;
+            margin-right: 8px;
+            font-size: 20px;
+        }
+        
+        .faq-answer {
+            font-size: 14px;
+            color: #5f6368;
+            padding-left: 32px;
+            line-height: 1.5;
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            text-align: center;
+            padding: 8px;
+            color: #5f6368;
+            font-size: 12px;
+            flex: 1;
+        }
+        
+        .nav-item.active {
+            color: #1a73e8;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .content {
+                padding: 16px;
+                padding-top: 88px;
+            }
+            
+            .video-container iframe {
+                height: 180px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .video-container iframe {
+                height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Android状态栏 -->
+    <div class="status-bar">
+        <div>9:41</div>
+        <div>
+            <span class="material-icons" style="font-size: 14px;">signal_cellular_alt</span>
+            <span class="material-icons" style="font-size: 14px; margin-left: 4px;">wifi</span>
+            <span class="material-icons" style="font-size: 14px; margin-left: 4px;">battery_full</span>
+        </div>
+    </div>
+    
+    <!-- 应用栏 -->
+    <div class="app-bar">
+        <span class="material-icons">arrow_back</span>
+        <div class="title">应用教程</div>
+        <div style="flex: 1;"></div>
+        <span class="material-icons">help_outline</span>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 视频教程 -->
+        <div class="video-container">
+            <!-- Bilibili视频嵌入 -->
+            <iframe src="//player.bilibili.com/player.html?bvid=BV181hLzdEtG&autoplay=0&page=1" 
+                    scrolling="no" 
+                    frameborder="no" 
+                    allowfullscreen="true">
+            </iframe>
+            <div class="video-overlay">
+                <div class="video-title">云备份应用使用指南</div>
+                <div class="video-meta">
+                    <span><i class="material-icons">visibility</i> 12.5万播放</span>
+                    <span><i class="material-icons">thumb_up</i> 8.2千点赞</span>
+                    <span><i class="material-icons">schedule</i> 15:24</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 文字教程 -->
+        <div class="tutorial-card">
+            <div class="card-header">
+                <i class="material-icons">list_alt</i>
+                快速入门指南
+            </div>
+            <div class="card-body">
+                <div class="tutorial-steps">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">配置服务器连接</div>
+                            <div class="step-desc">
+                                在设置中配置您的服务器地址和访问令牌，确保应用可以连接到您的备份服务器。
+                            </div>
+                            <div class="step-image">配置服务器界面截图</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">选择备份源</div>
+                            <div class="step-desc">
+                                在备份源管理中选择您需要备份的文件夹，支持多选和排除特定文件夹。
+                            </div>
+                            <div class="step-image">文件夹选择界面截图</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">设置备份规则</div>
+                            <div class="step-desc">
+                                配置自动备份计划、网络限制和电源要求，优化您的备份体验。
+                            </div>
+                            <div class="step-image">备份规则设置截图</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <div class="step-title">执行首次备份</div>
+                            <div class="step-desc">
+                                返回主界面点击"立即备份"按钮开始您的首次完整备份，过程可在活动日志中查看。
+                            </div>
+                            <div class="step-image">备份进行中界面截图</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 常见问题 -->
+        <div class="tutorial-card">
+            <div class="card-header">
+                <i class="material-icons">help</i>
+                常见问题解答
+            </div>
+            <div class="card-body">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="material-icons">live_help</i>
+                        备份过程中断会怎样？
+                    </div>
+                    <div class="faq-answer">
+                        应用支持断点续传功能。当备份中断后，下次备份时会自动从上次中断的位置继续，不会重复上传已完成的文件。
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="material-icons">live_help</i>
+                        如何节省移动数据流量？
+                    </div>
+                    <div class="faq-answer">
+                        在备份设置中开启"仅Wi-Fi上传"选项，并设置"移动数据限制"功能，避免在移动网络下备份大文件。
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="material-icons">live_help</i>
+                        备份会消耗很多电量吗？
+                    </div>
+                    <div class="faq-answer">
+                        应用已优化电池使用，您可以在设置中开启"仅在充电时备份"选项，这样备份只会在设备充电时进行，避免耗电问题。
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="material-icons">live_help</i>
+                        如何管理存储空间？
+                    </div>
+                    <div class="faq-answer">
+                        在存储管理界面，您可以查看存储使用情况，设置版本保留策略，并清理旧版本备份以释放空间。
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 更多帮助 -->
+        <div class="tutorial-card">
+            <div class="card-header">
+                <i class="material-icons">support_agent</i>
+                获取更多帮助
+            </div>
+            <div class="card-body">
+                <div class="step-item">
+                    <div class="step-number">
+                        <i class="material-icons">forum</i>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">用户社区</div>
+                        <div class="step-desc">
+                            加入我们的用户社区，与其他用户交流使用经验，获取非官方技巧和建议。
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">
+                        <i class="material-icons">mail</i>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">联系支持团队</div>
+                        <div class="step-desc">
+                            发送邮件至 support@cloudbackup.com 获取官方技术支持，通常会在24小时内回复。
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">
+                        <i class="material-icons">menu_book</i>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">完整用户手册</div>
+                        <div class="step-desc">
+                            访问我们的在线文档，查看完整的用户手册和API参考。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item">
+            <div class="nav-icon material-icons">home</div>
+            <div>首页</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">history</div>
+            <div>日志</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon material-icons">cloud</div>
+            <div>云端</div>
+        </div>
+        <div class="nav-item active">
+            <div class="nav-icon material-icons">help</div>
+            <div>帮助</div>
+        </div>
+    </div>
+    
+    <script>
+        // 这里仅用于展示效果，没有实际功能
+    </script>
+</body>
+</html>

@@ -21,48 +21,164 @@
       <div class="card-body">
         <div class="tutorial-steps">
           <div class="step-item">
-            <div class="step-number">1</div>
+
             <div class="step-content">
-              <div class="step-title">配置服务器连接</div>
-              <div class="step-desc">
-                在设置中配置您的服务器地址和访问令牌，确保应用可以连接到您的备份服务器。
+              <div class="step-number">1</div>
+              <div>
+                <div class="step-title">启动服务器</div>
+                <div class="step-desc">
+                  在pc端，双击下载好的可执行文件 simple-backup.exe, 然后目录下会产生一个 “扫我.png”,打开图片，后续扫码
+                </div>
+
               </div>
-              <div class="step-image">配置服务器界面截图</div>
+
+            </div>
+            <div class="step-image">
+
+              <img src="/img/tutorial/服务器启动.png" alt="">
+            </div>
+          </div>
+
+
+
+          <div class="step-item">
+
+            <div class="step-content">
+              <div class="step-number">2</div>
+              <div>
+                <div class="step-title">观察首页提示</div>
+                <div class="step-desc">
+                  查看需要配置的两个项目
+                </div>
+
+              </div>
+
+            </div>
+            <div class="step-image">
+
+              <img src="/img/tutorial/首页截图.jpg" alt="">
+            </div>
+          </div>
+
+
+          <div class="step-item">
+
+            <div class="step-content">
+              <div class="step-number">3</div>
+              <div>
+                <div class="step-title">配置服务器连接</div>
+                <div class="step-desc">
+                  点击第一个黄色图标，跳转到服务器设置页面，
+                  在设置中配置您的服务器地址和访问令牌，你可以点击右上角，打开相机扫描服务器的二维码，
+                  扫码完成后，点击测试链接，显示如下则表示链接成功
+                </div>
+
+              </div>
+
+            </div>
+            <div class="step-image">
+
+              <img src="/img/tutorial/首页第一个黄色按钮.jpg" alt="">
+              <img src="/img/tutorial/1754402504392.jpg" alt="">
+              <img src="/img/tutorial/1754402504378.jpg" alt="">
+            </div>
+          </div>
+
+
+
+          <div class="step-item">
+
+            <div class="step-content">
+              <div class="step-number">4</div>
+              <div>
+                <div class="step-title">选择备份源</div>
+                <div class="step-desc">
+                  点击首页第二个黄色按钮, 跳转到备份源管理页面，
+                  首先点击绿色“授权”按钮，选择根目录。
+                  授权成功后，在展示出的文件夹列表中，勾选需要备份的文件夹，并点击右上角的√进行确认，完成配置
+                  支持多选和排除特定文件夹。
+                </div>
+
+              </div>
+
+            </div>
+            <div class="step-image">
+
+              <img src="/img/tutorial/1754402504360.jpg" alt="">
+              <img src="/img/tutorial/1754402504341.jpg" alt="">
+              <img src="/img/tutorial/1754402504326.jpg" alt="">
+              <img src="/img/tutorial/1754402504308.jpg" alt="">
+              <img src="/img/tutorial/1754402504291.jpg" alt="">
+            </div>
+          </div>
+
+
+
+          <div class="step-item">
+
+            <div class="step-content">
+              <div class="step-number">5</div>
+              <div>
+                <div class="step-title">开始第一次备份</div>
+                <div class="step-desc">
+                  点击左下角“首页”按钮，回到首页，点击开始首次备份，进入备份界面。等待备份完成。
+                </div>
+
+              </div>
+
+            </div>
+            <div class="step-image">
+
+              <img src="/img/tutorial/1754402504277.jpg" alt="">
+              <img src="/img/tutorial/1754402504260.jpg" alt="">
+              <img src="/img/tutorial/1754402504240.jpg" alt="">
+
             </div>
           </div>
 
           <div class="step-item">
-            <div class="step-number">2</div>
+
             <div class="step-content">
-              <div class="step-title">选择备份源</div>
-              <div class="step-desc">
-                在备份源管理中选择您需要备份的文件夹，支持多选和排除特定文件夹。
+              <div class="step-number">6</div>
+              <div>
+                <div class="step-title">查看备份历史</div>
+                <div class="step-desc">
+                  点击底部“历史”按钮，可查看历史备份数据信息
+                </div>
+
               </div>
-              <div class="step-image">文件夹选择界面截图</div>
+
+            </div>
+            <div class="step-image">
+
+              <img src="/img/tutorial/1754402504222.jpg" alt="">
+
             </div>
           </div>
 
+
+
           <div class="step-item">
-            <div class="step-number">3</div>
+
             <div class="step-content">
-              <div class="step-title">设置备份规则</div>
-              <div class="step-desc">
-                配置自动备份计划、网络限制和电源要求，优化您的备份体验。
+              <div class="step-number">7</div>
+              <div>
+                <div class="step-title">再次查看教程</div>
+                <div class="step-desc">
+                  你可以从首页右上角的按钮进入教程界面再次查看教程
+                </div>
+
               </div>
-              <div class="step-image">备份规则设置截图</div>
+
+            </div>
+            <div class="step-image">
+
+              <img src="/img/tutorial/首页再次查看教程.jpg" alt="">
+
             </div>
           </div>
 
-          <div class="step-item">
-            <div class="step-number">4</div>
-            <div class="step-content">
-              <div class="step-title">执行首次备份</div>
-              <div class="step-desc">
-                返回主界面点击"立即备份"按钮开始您的首次完整备份，过程可在活动日志中查看。
-              </div>
-              <div class="step-image">备份进行中界面截图</div>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
@@ -272,7 +388,7 @@ export default {
 }
 
 .step-item {
-  display: flex;
+
   margin-bottom: 24px;
   position: relative;
 }
@@ -282,8 +398,8 @@ export default {
 }
 
 .step-number {
-  width: 32px;
-  height: 32px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   background: #e8f0fe;
   color: #1a73e8;
@@ -291,12 +407,13 @@ export default {
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  margin-right: 16px;
+  margin-right: 10px;
   flex-shrink: 0;
 }
 
 .step-content {
-  flex: 1;
+  display: flex;
+  width: 100%;
 }
 
 .step-title {
@@ -317,12 +434,19 @@ export default {
   border-radius: 12px;
   margin-top: 12px;
   background: #f8f9fa;
-  height: 150px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #5f6368;
   font-style: italic;
+  overflow: auto;
+}
+
+.step-image img{
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 /* 常见问题 */
