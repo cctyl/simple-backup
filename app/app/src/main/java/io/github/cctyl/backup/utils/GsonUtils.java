@@ -25,6 +25,7 @@ import io.github.cctyl.backup.utils.gson.UriTypeAdapter;
 public class GsonUtils {
 
     public static final Gson INSTANCE = new GsonBuilder()
+            .serializeNulls()
             .registerTypeAdapter(Uri.class, new UriTypeAdapter())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create()

@@ -617,8 +617,8 @@ public class BackupService extends Service {
                 .setContentText(contentText)
                 .setSubText("简单备份")
                 .setWhen(System.currentTimeMillis())
-                .setSmallIcon(R.mipmap.ic_launcher)  // 必须设置，且不能为0
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setSmallIcon(R.mipmap.backup)  // 必须设置，且不能为0
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.backup))
                 .setContentIntent(pi)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);  // 设置优先级
         if (progress >= 0) {
@@ -650,8 +650,8 @@ public class BackupService extends Service {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new NotificationCompat.Builder(this, completeChannelId)
                 .setContentTitle("备份完成")
-                .setSmallIcon(R.mipmap.ic_launcher) // 必须设置且有效
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setSmallIcon(R.mipmap.backup) // 必须设置且有效
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.backup))
                 .setContentIntent(pi)
                 .build();
 
@@ -678,8 +678,8 @@ public class BackupService extends Service {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new NotificationCompat.Builder(this, completeChannelId)
                 .setContentTitle("备份被取消")
-                .setSmallIcon(R.mipmap.ic_launcher) // 必须设置且有效
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setSmallIcon(R.mipmap.backup) // 必须设置且有效
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.backup))
                 .setContentIntent(pi)
                 .build();
 
