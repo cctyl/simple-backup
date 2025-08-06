@@ -277,7 +277,7 @@ export default {
 
     return{
       bvid:"BV181hLzdEtG",
-      githubSourceUrl:'https://github.com/cctyl/bili-rec-web',
+      githubSourceUrl:'https://github.com/cctyl/simple-backup',
       githubUserProfileUrl:'https://github.com/cctyl',
       bilibiliUserProfileUrl:'https://space.bilibili.com/8427106',
       authUid:'8427106'
