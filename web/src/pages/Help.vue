@@ -276,7 +276,7 @@ export default {
   data(){
 
     return{
-      bvid:"BV181hLzdEtG",
+      bvid:"BV1L2tAzdEMk",
       githubSourceUrl:'https://github.com/cctyl/simple-backup',
       githubUserProfileUrl:'https://github.com/cctyl',
       bilibiliUserProfileUrl:'https://space.bilibili.com/8427106',
