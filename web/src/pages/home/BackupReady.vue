@@ -7,12 +7,12 @@
 
     <!-- 备份状态卡片 (默认显示有备份状态) -->
     <div class="card backup-status" id="backupCard" v-show="isReady">
-      <div class="status-indicator" :class="{'warning': !hasBackup}" id="statusIndicator"></div>
+      <div class="status-indicator" :class="getStatusIndicatorClass()" id="statusIndicator"></div>
       <div class="card-header">
         <div class="card-title">备份状态</div>
         <span class="material-icons" style="color: #5f6368; ">info</span>
       </div>
-      <div class="card-body " v-if="hasBackup">
+      <div class="card-body" v-if="hasBackup && backupList[0].success">
         <div class="backup-info">
           <div class="device-icon">
             <i class="material-icons">smartphone</i>
@@ -22,6 +22,7 @@
             <div class="device-model">{{ phoneDetail }}</div>
           </div>
         </div>
+
         <div class="backup-stats">
           <div class="stat-item">
             <div class="stat-label">上次备份</div>
@@ -40,7 +41,40 @@
             <div class="stat-value">{{ backupList[0].backUpCostTime }} 秒</div>
           </div>
         </div>
+
+        <!-- 备份说明和结论区域 -->
+        <div class="backup-details-section">
+          <div class="detail-item" v-if="backupList[0].backupDetail">
+            <div class="detail-label">
+              <i class="material-icons detail-icon">description</i>
+              <span>备份说明</span>
+            </div>
+            <div class="detail-content">{{ backupList[0].backupDetail }}</div>
+          </div>
+
+          <div class="detail-item" v-if="backupList[0].backupResult">
+            <div class="detail-label">
+              <i class="material-icons detail-icon">fact_check</i>
+              <span>备份结论</span>
+            </div>
+            <div class="detail-content result-content">{{ backupList[0].backupResult }}</div>
+          </div>
+        </div>
       </div>
+      <!-- 在现有 card-body 之后添加新的异常状态显示 -->
+      <div class="card-body" v-else-if="hasBackup && !backupList[0].success">
+        <div class="interrupted-backup">
+          <div class="interrupted-icon">
+            <i class="material-icons">error</i>
+          </div>
+          <div class="interrupted-title">备份被中断</div>
+          <div class="interrupted-text">上次备份未完成，可能由于设备断开连接或应用被关闭导致</div>
+          <div class="interrupted-time" v-if="backupList[0].backUpTime">
+            中断时间: {{ formatRelativeTime(backupList[0].backUpTime) }}
+          </div>
+        </div>
+      </div>
+
       <div class="card-body" v-else>
         <div class="no-backup">
           <div class="no-backup-icon">
@@ -160,9 +194,7 @@ export default {
     window.scrollTo(0, 0);
     this.sourceSettingReady = this.$store.state.selectedDir.length > 0;
 
-    //TODO 临时关闭
     this.serverSettingReady = this.$store.state.serverConfig.addr && this.$store.state.serverConfig.secret;
-    // this.serverSettingReady = true;
     this.getBackupList();
     this.getPhoneDetail();
     this.getStorageInfo();
@@ -182,7 +214,14 @@ export default {
   },
   methods: {
 
-
+    getStatusIndicatorClass() {
+      if (!this.hasBackup) {
+        return 'warning'; // 尚未备份 - 警告状态（黄色）
+      } else if (this.hasBackup && this.backupList[0] && !this.backupList[0].success) {
+        return 'error'; // 备份中断 - 错误状态（红色）
+      }
+      return ''; // 正常备份状态（绿色）
+    },
 
     startBackup() {
       if (!this.isReady) {
@@ -222,7 +261,8 @@ export default {
     getBackupList() {
 
       this.backupList = JSON.parse(window.Android.getBackupHistory());
-
+      console.log("backuplist=")
+      console.log(this.backupList)
 
       if (this.backupList.length > 0) {
         this.hasBackup = true;
@@ -299,6 +339,87 @@ export default {
 </script>
 
 <style scoped>
+
+.backup-details-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f3f4;
+}
+
+.detail-item {
+  margin-bottom: 16px;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #5f6368;
+  margin-bottom: 8px;
+}
+
+.detail-icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.detail-content {
+  font-size: 14px;
+  color: #202124;
+  line-height: 1.5;
+  padding-left: 26px;
+}
+
+.result-content {
+  font-weight: 500;
+  color: #1a73e8;
+}
+
+/* 备份中断状态 */
+.interrupted-backup {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.interrupted-icon {
+  font-size: 64px;
+  color: #ea4335;
+  margin-bottom: 16px;
+}
+
+.interrupted-icon i {
+  background-color: #fce8e6;
+  border-radius: 50%;
+  padding: 12px;
+}
+
+.interrupted-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #202124;
+}
+
+.interrupted-text {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 16px;
+}
+
+.interrupted-time {
+  font-size: 12px;
+  color: #80868b;
+  background-color: #f8f9fa;
+  padding: 8px 16px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
 /* 警告状态的主按钮样式 */
 .primary-button.warning {
   background: #fbbc04 !important; /* 警告黄色背景 */
@@ -566,7 +687,7 @@ export default {
 
 .stat-value {
   font-weight: 500;
-  font-size: 16px;
+  font-size: 12px;
 }
 
 /* 无备份状态 */

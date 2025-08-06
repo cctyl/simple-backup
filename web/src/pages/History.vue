@@ -5,48 +5,62 @@
     <div class="timeline" v-if="backupList.length>0">
 
 
-      <div class="log-item"  v-for="item in backupList" :key="item.id">
+      <div class="log-item" v-for="item in backupList" :key="item.id">
         <div class="timeline-node"></div>
-        <div class="log-header">
-          <div class="log-status "
-               :class="{
-            'status-success':item.success,
-            'status-error':!item.success
-          }"
-          >
-            <i class="material-icons">check_circle</i>
+
+        <div v-if="item.success">
+          <div class="log-header">
+            <div class="log-status status-success">
+              <i class="material-icons">check_circle</i>
+            </div>
+            <div class="log-title">{{ item.backupResult }}</div>
+            <div class="log-time">{{ formatRelativeTime(item.backUpTime) }}</div>
           </div>
-          <div class="log-title">{{ item.backupResult }}</div>
-          <div class="log-time">{{ formatRelativeTime(item.backUpTime ) }}</div>
-        </div>
-        <div class="log-content">
-          {{ item.backupDetail }}
-        </div>
-        <div class="log-stats">
-          <div class="stat-badge">📁 {{ formatNumberWithCommas(item.backUpNum) }} 个文件</div>
-          <div class="stat-badge">✅ {{ formatNumberWithCommas(item.backUpNum-item.failNum) }} 个文件</div>
-          <div class="stat-badge">❌️ {{ formatNumberWithCommas(item.failNum) }} 个文件</div>
-          <div class="stat-badge">📊 {{ formatSize(item.totalFileSize) }} 数据</div>
-          <div class="stat-badge">⏱️ {{ formatCostTime(item.backUpCostTime) }}</div>
-          <div class="stat-badge">✈️ {{ formatSize(item.avgSpeed) }}/s</div>
-        </div>
-        <div class="log-details">
-          <div class="log-details-list">
-            <div class="log-files" v-for="p in item.backUpPathArr.split(',')" :key="p">
-              <i class="material-icons" style="font-size: 16px; vertical-align: middle;">folder</i>
-              {{p}}
+          <div class="log-content">
+            {{ item.backupDetail }}
+          </div>
+          <div class="log-stats">
+            <div class="stat-badge">📁 {{ formatNumberWithCommas(item.backUpNum) }} 个文件</div>
+            <div class="stat-badge">✅ {{ formatNumberWithCommas(item.backUpNum - item.failNum) }} 个文件</div>
+            <div class="stat-badge">❌️ {{ formatNumberWithCommas(item.failNum) }} 个文件</div>
+            <div class="stat-badge">📊 {{ formatSize(item.totalFileSize) }} 数据</div>
+            <div class="stat-badge">⏱️ {{ formatCostTime(item.backUpCostTime) }}</div>
+            <div class="stat-badge">✈️ {{ formatSize(item.avgSpeed) }}/s</div>
+          </div>
+          <div class="log-details">
+            <div class="log-details-list">
+              <div class="log-files" v-for="p in item.backUpPathArr.split(',')" :key="p">
+                <i class="material-icons" style="font-size: 16px; vertical-align: middle;">folder</i>
+                {{ p }}
+              </div>
+
+            </div>
+
+
+            <div style="display: flex;justify-content: center">
+              <router-link to="/settings/source" tag="div" class="detail-button" style="margin-top: 20px">
+                查看配置 <i class="material-icons" style="font-size: 18px;">chevron_right</i>
+              </router-link>
             </div>
 
           </div>
+        </div>
+        <div v-else>
 
-
-          <div style="display: flex;justify-content: center">
-            <router-link to="/settings/source" tag="div" class="detail-button" style="margin-top: 20px">
-              查看配置 <i class="material-icons" style="font-size: 18px;">chevron_right</i>
-            </router-link>
-          </div>
+            <div class="log-header">
+              <div class="log-status status-error">
+                <i class="material-icons">error</i>
+              </div>
+              <div class="log-title">备份中断</div>
+              <div class="log-time">{{ formatRelativeTime(item.backUpTime) }}</div>
+            </div>
+            <div class="log-content">
+              备份过程被异常中断，可能是应用被杀死,备份未完成，请重新备份
+            </div>
 
         </div>
+
+
       </div>
       <!--
             &lt;!&ndash; 日志项1 - 成功 &ndash;&gt;
@@ -192,7 +206,7 @@
 
             -->
     </div>
-    <div  v-else>
+    <div v-else>
 
       <!--  没有备份历史时的显示    -->
       <div class="empty-state">
@@ -204,14 +218,7 @@
       </div>
     </div>
 
-    <!-- 空状态（隐藏） -->
-    <div class="empty-state" style="display: none;">
-      <div class="empty-icon">
-        <i class="material-icons">history</i>
-      </div>
-      <div class="empty-title">暂无活动记录</div>
-      <div class="empty-text">您还没有任何备份或恢复活动记录</div>
-    </div>
+
   </div>
 </template>
 <script>
@@ -219,8 +226,7 @@ export default {
   name: 'history-view',
   data() {
     return {
-      backupList: [
-      ],
+      backupList: [],
     }
   },
 
@@ -288,7 +294,7 @@ export default {
     },
 
     formatCostTime(seconds) {
-      if (typeof seconds !== 'number' || seconds < 0 ) {
+      if (typeof seconds !== 'number' || seconds < 0) {
         return '无效时间';
       }
 
@@ -313,7 +319,6 @@ export default {
       if (day === 0 && hour === 0 && minute === 0 && second >= 0) {
         parts.push(`${second}秒`);
       }
-
 
 
       // 如果超过一天，显示秒
