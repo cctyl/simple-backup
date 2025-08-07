@@ -1,5 +1,5 @@
 [package]
-name = "axum_auth_backend_demo"
+name = "simple-backup"
 version = "0.1.0"
 edition = "2024"
 

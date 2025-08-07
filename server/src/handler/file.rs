@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::utils::id;
 use crate::{
@@ -15,6 +16,7 @@ use axum::{
     extract::{Json, Multipart},
 };
 use log::{error, info};
+use md5::Context as Md5Context;
 use rbatis::plugin::object_id::ObjectId;
 use rbs::value;
 use serde::{Deserialize, Serialize};
@@ -70,88 +72,100 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
 #[debug_handler]
 async fn upload(mut multipart: Multipart) -> RR<()> {
     let mut name = None;
-    let mut tree_uri = None;
     let mut doc_id = None;
     let mut md5 = None;
     let mut relative_path = None;
     let mut is_directory = false;
     let mut check_md5 = false;
 
-    while let Some(field) = multipart.next_field().await.unwrap() {
+    while let Some(mut field) = multipart.next_field().await.unwrap() {
         let name_str = field.name().unwrap_or("").to_string();
-        let data = field.bytes().await;
-
-        let data = match data {
-            Ok(i) => i,
-            Err(e) => {
-                error!("{:#?}", e);
-
-                return RR::fail(HttpError::ServerError(e.to_string()));
-            }
-        };
 
         match name_str.as_str() {
-            "name" => name = Some(String::from_utf8_lossy(&data).to_string()),
-            "treeUri" => tree_uri = Some(String::from_utf8_lossy(&data).to_string()),
-            "docId" => doc_id = Some(String::from_utf8_lossy(&data).to_string()),
-            "md5" => md5 = Some(String::from_utf8_lossy(&data).to_string()),
-            "relativePath" => relative_path = Some(String::from_utf8_lossy(&data).to_string()),
-            "checkMd5" => {
-                check_md5 = String::from_utf8_lossy(&data)
-                    .to_string()
-                    .parse::<bool>()
-                    .unwrap_or(false);
-            }
-            "isDirectory" => {
-                is_directory = String::from_utf8_lossy(&data)
-                    .to_string()
-                    .parse::<bool>()
-                    .unwrap_or(false)
+            "name" | "treeUri" | "docId" | "md5" | "relativePath" | "checkMd5" | "isDirectory" => {
+                let bytes = field.bytes().await?;
+                let value = String::from_utf8_lossy(&bytes).to_string();
+
+                match name_str.as_str() {
+                    "name" => name = Some(value),
+
+                    "docId" => doc_id = Some(value),
+                    "md5" => md5 = Some(value),
+                    "relativePath" => relative_path = Some(value),
+                    "checkMd5" => check_md5 = value.parse().unwrap_or(false),
+                    "isDirectory" => is_directory = value.parse().unwrap_or(false),
+                    e => info!("忽略字段: {}", e),
+                }
             }
             "file" => {
-                let mut path = relative_path.clone().ok_or(HttpError::BadRequest(
-                    "必须提供releactivePath！".to_string(),
-                ))?;
-                if path == "/" {
-                    return RR::success(());
-                }
+                // 处理文件上传的逻辑保持不变
+                let (temp_path, real_path) = {
+                    let mut rel_path = relative_path
+                        .clone()
+                        .ok_or(HttpError::BadRequest("必须提供 relativePath！".to_string()))?;
 
-                if path.starts_with("/") {
-                    path = path[1..].to_string();
-                }
+                    if rel_path == "/" {
+                        return RR::success(());
+                    }
 
-                let path = format!("./upload/{}", path);
+                    if rel_path.starts_with('/') {
+                        rel_path = rel_path[1..].to_string();
+                    }
 
-                info!("path={path}");
-                let path = std::path::Path::new(&path);
-                if let Some(parent) = path.parent() {
-                    info!("父目录不存在，创建中");
-                    // 递归创建所有缺失的父目录
+                    (
+                        std::path::PathBuf::from(format!(
+                            "./upload/{}.temp{}",
+                            rel_path,
+                            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+                        )),
+                        std::path::PathBuf::from(format!("./upload/{}", rel_path)),
+                    )
+                };
+
+                if let Some(parent) = real_path.parent() {
                     tokio::fs::create_dir_all(parent).await?;
                 }
 
-                if !check_md5 {
-                    info!("无需校验md5");
-                    let write = tokio::fs::write(path, &data).await?;
-                } else {
-                    //再次校验md5
-                    let recheck_md5 = calculate_md5(&data);
+                let mut dest_file = tokio::fs::File::create(&temp_path).await?;
+                let mut hasher = check_md5.then(Md5Context::new);
+                let mut file_size = 0;
 
-                    info!("md5={md5:?},recheck_md5={recheck_md5} ");
+                while let Some(chunk) = field.chunk().await? {
+                    dest_file.write_all(&chunk).await?;
+                    file_size += chunk.len() as u64;
 
-                    //比较前后md5是否相同
-                    if md5.clone().unwrap() == recheck_md5 {
-                        info!("md5校验通过");
-                        let write = tokio::fs::write(path, &data).await?;
-                    } else {
-                        error!("md5校验失败，删除已上传的文件");
-
-                        return RR::fail(HttpError::Custom(
-                            700,
-                            "md5校验失败，请重新上传！".to_string(),
-                        ));
+                    if let Some(hasher) = &mut hasher {
+                        hasher.consume(&chunk);
                     }
                 }
+
+                dest_file.flush().await?;
+
+                if check_md5 {
+                    let computed_md5 = hasher.map(|h| format!("{:x}", h.compute())).unwrap();
+
+                    if md5.as_ref() != Some(&computed_md5) {
+                        tokio::fs::remove_file(&temp_path).await.ok();
+                        return RR::fail(HttpError::Custom(
+                            700,
+                            "MD5 校验失败，请重新上传！".to_string(),
+                        ));
+                    } 
+                }
+
+                
+                tokio::fs::rename(&temp_path, &real_path).await?;
+                
+                info!(
+                    "文件上传成功: 路径={}, 大小={} bytes{}",
+                    real_path.display(),
+                    file_size,
+                    if check_md5 {
+                        format!(", MD5={}", md5.as_ref().unwrap_or(&"".to_string()))
+                    } else {
+                        "".into()
+                    }
+                );
             }
             _ => {}
         }
@@ -182,7 +196,6 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
 
     RR::success(())
 }
-
 fn calculate_md5(data: &[u8]) -> String {
     let digest = md5::compute(data);
     format!("{:x}", digest)
@@ -197,11 +210,15 @@ async fn test() -> RR<String> {
 fn test_qr_code() {
     use qrcode::QrCode;
     use qrcode::render::unicode;
-  let code = QrCode::new(br#"{
+    let code = QrCode::new(
+        br#"{
 "addr":"192.168.31.151:8082",
 "secret":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9s"
-}"#).unwrap();
-    let image = code.render::<unicode::Dense1x2>()
+}"#,
+    )
+    .unwrap();
+    let image = code
+        .render::<unicode::Dense1x2>()
         .dark_color(unicode::Dense1x2::Light)
         .light_color(unicode::Dense1x2::Dark)
         .build();
