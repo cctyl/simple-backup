@@ -277,36 +277,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum_auth_backend_demo"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "axum-valid",
- "bytesize",
- "chrono",
- "dotenvy",
- "fast_log",
- "idgenerator",
- "image",
- "jsonwebtoken",
- "log",
- "md5",
- "qrcode",
- "rbatis",
- "rbdc-sqlite",
- "rbs",
- "serde",
- "serde_json",
- "thiserror 2.0.12",
- "time",
- "tokio",
- "tower",
- "tower-http",
- "validator",
-]
-
-[[package]]
 name = "axum_typed_multipart"
 version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2879,6 +2849,36 @@ name = "simdutf8"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
+
+[[package]]
+name = "simple-backup"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-valid",
+ "bytesize",
+ "chrono",
+ "dotenvy",
+ "fast_log",
+ "idgenerator",
+ "image",
+ "jsonwebtoken",
+ "log",
+ "md5",
+ "qrcode",
+ "rbatis",
+ "rbdc-sqlite",
+ "rbs",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "time",
+ "tokio",
+ "tower",
+ "tower-http",
+ "validator",
+]
 
 [[package]]
 name = "simple_asn1"

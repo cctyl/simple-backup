@@ -5,7 +5,7 @@
 ## 特点
 
 - 🚀 **极简部署** - 无需复杂配置，开箱即用
-- 📦 **超轻量级** - 后端采用 Rust 编写，Windows 下内存占用不超过 5MB
+- 📦 **超轻量级** - 后端采用 Rust 编写，Windows 下内存占用不超过 10MB
 - 🌍 **跨平台支持** - 支持多种操作系统
 - 🔧 **简单易用** - 图形化界面，操作简单直观
 
@@ -14,6 +14,9 @@
 - **App 端**: Java + Vue2
 - **后端**: Rust + Axum + Rbatis + SQLite
 
+## 性能展示
+工作时最大内存约为5.8M（win10 22h2）
+![服务器启动](./img/性能展示.png)
 ## 快速开始
 
 ### 1. 启动服务器
@@ -40,7 +43,7 @@
 
 ## 视频教程
 
-[观看B站视频教程](https://www.bilibili.com/video/BV181hLzdEtG)
+[观看B站视频教程](https://www.bilibili.com/video/BV1L2tAzdEMk)
 
 ## 常见问题
 
