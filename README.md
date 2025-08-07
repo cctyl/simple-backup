@@ -43,7 +43,7 @@
 
 ## 视频教程
 
-[观看B站视频教程](https://www.bilibili.com/video/BV181hLzdEtG)
+[观看B站视频教程](https://www.bilibili.com/video/BV1L2tAzdEMk)
 
 ## 常见问题
 
