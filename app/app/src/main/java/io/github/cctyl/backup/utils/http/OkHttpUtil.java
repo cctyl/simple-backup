@@ -35,7 +35,7 @@ public class OkHttpUtil {
 
 
     public static final OkHttpClient INSTANCE = new OkHttpClient.Builder()
-            .connectTimeout(3, TimeUnit.SECONDS)
+//            .connectTimeout(30, TimeUnit.SECONDS)
             .build()
             ;
 
@@ -104,6 +104,10 @@ public class OkHttpUtil {
                 .enqueue(callback);
     }
 
+
+    public static void cancelAllRequests() {
+        INSTANCE.dispatcher().cancelAll();
+    }
     public static void uploadFile(ServerConfig mServerConfig,
                                   BackupFile file,
                                   boolean checkMd5,
@@ -149,7 +153,7 @@ public class OkHttpUtil {
             consumer.accept(jsonObject);
             Log.d("LocalBinder", "uploadFile: 上传的响应="+bodyString);
         } catch (IOException e) {
-            e.printStackTrace();
+           throw new RuntimeException(e);
         }
 
     }
@@ -160,14 +164,16 @@ public class OkHttpUtil {
         //从配置文件中读取
         String token = "Bearer " + mServerConfig.secret;
         String serverAddr = mServerConfig.addr;
-
+        String json = GsonUtils.INSTANCE.toJson(list);
         Request request = new Request.Builder()
                 .url("http://"+serverAddr+"/api/file/compare")
                 .header("authorization",token)
-                .post(RequestBody.create(MEDIATYPE, GsonUtils.INSTANCE.toJson(list)))
+                .post(RequestBody.create(MEDIATYPE, json))
                 .build();
 
+        System.out.println(json);
         try {
+            //FIXME 这里莫名其妙的调用了upload，待查
             String bodyString = INSTANCE.newCall(request)
                     .execute().body().string();
             Log.d("LocalBinder", "uploadFile: 上传的响应="+bodyString);

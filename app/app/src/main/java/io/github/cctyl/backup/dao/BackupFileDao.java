@@ -25,6 +25,8 @@ public interface BackupFileDao {
     @Query(" delete from backup_file ")
     int deleteAll();
 
+    @Query(" delete from backup_file where id in (:ids) ")
+    int deleteByIdIn( Collection<Long> ids);
 
     @Query(" delete from backup_file where id = :id ")
     int deleteById(long id);

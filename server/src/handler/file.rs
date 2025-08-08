@@ -15,7 +15,6 @@ use axum::{
     Router, debug_handler,
     extract::{Json, Multipart},
 };
-use futures::stream::{self, StreamExt};
 use log::{error, info};
 use md5::Context as Md5Context;
 use rbatis::plugin::object_id::ObjectId;
@@ -32,14 +31,18 @@ pub fn create_router() -> Router {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileDto {
-    pub relative_path: String,
-    pub md5: String,
-    pub id: i64,
-    pub is_directory: bool,
+    pub id:i64,
+    pub name:String,
+    pub doc_id:String,
+    pub relative_path:String,
+    pub is_directory:bool,
+    pub md5:String,
 }
 
 #[debug_handler]
 async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
+
+    info!("compare params: {}",params.len());
     let collect: Vec<String> = params
         .iter()
         .map(|item: &FileDto| item.relative_path.clone())
@@ -47,7 +50,7 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
 
     let mut result = vec![];
     let db_list = FileDao::select_by_relative_path_in(collect).await?;
-
+    info!("compare db_list: {}",db_list.len());
     // let result: Vec<FileDto> = stream::iter(params)
 
     //     .filter(|item| async move {
@@ -57,8 +60,10 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
     //     .await?
     //     ;
 
-    for item in params {
-        let flag = check_file(&item, &db_list).await?;
+    for item in params.into_iter() {
+        info!("foreach item : {}",item.name);
+        let flag = check_file(item.clone(), &db_list).await?;
+        info!("check finish: {}",item.name);
         if flag {
             result.push(item);
         }
@@ -67,7 +72,7 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
     RR::success(result)
 }
 
-pub async fn check_file(item: &FileDto, db_list: &Vec<crate::entity::models::File>) -> R<bool> {
+pub async fn check_file(item: FileDto, db_list: &Vec<crate::entity::models::File>) -> R<bool> {
     let mut hasher = Md5Context::new();
     if item.is_directory {
         return Ok(false);
@@ -89,7 +94,7 @@ pub async fn check_file(item: &FileDto, db_list: &Vec<crate::entity::models::Fil
             info!("数据库中不存在");
             //数据库中不存在，那么真实文件中是否存在？
             let path = format!("./upload/{}", item.relative_path);
-            let try_exists = tokio::fs::try_exists(&path).await.is_ok();
+            let try_exists = tokio::fs::try_exists(&path).await?;
             if try_exists {
                 info!("文件真实存在");
                 let mut file = File::open(&path).await?;
@@ -116,8 +121,17 @@ pub async fn check_file(item: &FileDto, db_list: &Vec<crate::entity::models::Fil
                 }
 
                 let real_md5 = format!("{:x}", hasher.finalize());
-                info!("real_md5: {}", real_md5);
-                info!("md5 比较：{}",real_md5 == item.md5);
+                if real_md5 == item.md5 {
+                    
+                    let file = crate::entity::models::File {
+                        id: id::next_id(),
+                        name: item.name,
+                        doc_id: item.doc_id,
+                        relative_path: item.relative_path,
+                        is_directory:item.is_directory,
+                        md5: item.md5.clone(),
+                    };
+                }
                 Ok(real_md5 != item.md5)
             } else {
                 //不存在自然是上传
@@ -129,6 +143,9 @@ pub async fn check_file(item: &FileDto, db_list: &Vec<crate::entity::models::Fil
 
 #[debug_handler]
 async fn upload(mut multipart: Multipart) -> RR<()> {
+
+
+    info!("开始上传");
     let mut name = None;
     let mut doc_id = None;
     let mut md5 = None;
