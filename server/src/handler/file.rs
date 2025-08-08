@@ -15,13 +15,14 @@ use axum::{
     Router, debug_handler,
     extract::{Json, Multipart},
 };
+use futures::stream::{self, StreamExt};
 use log::{error, info};
 use md5::Context as Md5Context;
 use rbatis::plugin::object_id::ObjectId;
 use rbs::value;
 use serde::{Deserialize, Serialize};
 use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 pub fn create_router() -> Router {
     Router::new()
         .route("/compare", axum::routing::post(compare))
@@ -44,29 +45,86 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
         .map(|item: &FileDto| item.relative_path.clone())
         .collect();
 
+    let mut result = vec![];
     let db_list = FileDao::select_by_relative_path_in(collect).await?;
 
-    let result: Vec<FileDto> = params
-        .into_iter()
-        .filter(|item| {
-            //如果这个文件不存在，那自然是需要上传
-            let find = db_list
-                .iter()
-                .find(|i| i.relative_path == item.relative_path);
+    // let result: Vec<FileDto> = stream::iter(params)
 
-            match find {
-                Some(i) => {
-                    //如果已存在，则判定md5是否相同
-                    //不同，则需要更新
+    //     .filter(|item| async move {
 
-                    i.md5 != item.md5
-                }
-                None => true,
-            }
-        })
-        .collect();
+    //     })
+    //     .collect::<Vec<FileDto>>()
+    //     .await?
+    //     ;
+
+    for item in params {
+        let flag = check_file(&item, &db_list).await?;
+        if flag {
+            result.push(item);
+        }
+    }
 
     RR::success(result)
+}
+
+pub async fn check_file(item: &FileDto, db_list: &Vec<crate::entity::models::File>) -> R<bool> {
+    let mut hasher = Md5Context::new();
+    if item.is_directory {
+        return Ok(false);
+    }
+
+    //如果这个文件不存在，那自然是需要上传
+    let find = db_list
+        .iter()
+        .find(|i| i.relative_path == item.relative_path);
+
+    match find {
+        Some(i) => {
+            //如果已存在，则判定md5是否相同
+            //不同，则需要更新
+
+            Ok(i.md5 != item.md5)
+        }
+        None => {
+            info!("数据库中不存在");
+            //数据库中不存在，那么真实文件中是否存在？
+            let path = format!("./upload/{}", item.relative_path);
+            let try_exists = tokio::fs::try_exists(&path).await.is_ok();
+            if try_exists {
+                info!("文件真实存在");
+                let mut file = File::open(&path).await?;
+
+                // 定义缓冲区大小
+                let buffer_size = 102400; // 100KB 缓冲区
+                let mut buffer = vec![0; buffer_size];
+
+                loop {
+                    // 异步读取数据到缓冲区
+                    let bytes_read = file.read(&mut buffer).await?;
+
+                    // 如果读取的字节数为0，表示到达文件末尾
+                    if bytes_read == 0 {
+                        break;
+                    }
+
+                    // 处理读取到的数据（这里只是示例）
+                    // 注意：我们只使用前 bytes_read 字节，因为缓冲区可能没有被完全填满
+                    let data = &buffer[..bytes_read];
+                    // 在这里处理 data...
+
+                    hasher.consume(&data);
+                }
+
+                let real_md5 = format!("{:x}", hasher.finalize());
+                info!("real_md5: {}", real_md5);
+                info!("md5 比较：{}",real_md5 == item.md5);
+                Ok(real_md5 != item.md5)
+            } else {
+                //不存在自然是上传
+                Ok(true)
+            }
+        }
+    }
 }
 
 #[debug_handler]
@@ -116,7 +174,10 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                         std::path::PathBuf::from(format!(
                             "./upload/{}.temp{}",
                             rel_path,
-                            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+                            SystemTime::now()
+                                .duration_since(UNIX_EPOCH)
+                                .unwrap()
+                                .as_millis()
                         )),
                         std::path::PathBuf::from(format!("./upload/{}", rel_path)),
                     )
@@ -150,12 +211,11 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                             700,
                             "MD5 校验失败，请重新上传！".to_string(),
                         ));
-                    } 
+                    }
                 }
 
-                
                 tokio::fs::rename(&temp_path, &real_path).await?;
-                
+
                 info!(
                     "文件上传成功: 路径={}, 大小={} bytes{}",
                     real_path.display(),
