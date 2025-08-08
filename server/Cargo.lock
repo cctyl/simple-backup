@@ -2861,7 +2861,6 @@ dependencies = [
  "chrono",
  "dotenvy",
  "fast_log",
- "futures",
  "idgenerator",
  "image",
  "jsonwebtoken",
