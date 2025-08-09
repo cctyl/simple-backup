@@ -21,9 +21,12 @@ public class ProgressDto {
 
 
     /**
-     * 检查文件是否已经完成
+     * 检查状态
+     * 0 检查完毕
+     * 1 本地检查
+     * 2 比较服务器信息
      */
-    boolean checkFinish;
+    int checkState;
 
 
     public int getFailNum() {
@@ -34,12 +37,12 @@ public class ProgressDto {
         this.failNum = failNum;
     }
 
-    public boolean isCheckFinish() {
-        return checkFinish;
+    public int getCheckState() {
+        return checkState;
     }
 
-    public void setCheckFinish(boolean checkFinish) {
-        this.checkFinish = checkFinish;
+    public void setCheckState(int checkState) {
+        this.checkState = checkState;
     }
 
     public int getTotalPercent() {

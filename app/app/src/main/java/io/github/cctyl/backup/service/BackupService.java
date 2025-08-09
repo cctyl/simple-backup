@@ -125,24 +125,30 @@ public class BackupService extends Service {
                     //任务流程是： 先找到需要备份的，然后逐个上传，所以是局部循环，而不是整体循环
 
                     //1. 递归查找需要备份的文件
+                    long startTime = System.currentTimeMillis();
                     Set<Long> updatedIds = new HashSet<>();
                     List<BackupFile> initParent = getBackupFileFromSelectDir(selectDirList);
                     i();
                     recursiveGetChildren(initParent, updatedIds);
                     Log.d("BackupService", "onCreate: 文件查找完成");
-
+                    Log.d("LocalBinder", "start: 本地文件查找花费：" + (System.currentTimeMillis() - startTime) + " 毫秒");
                     i();
                     //1.5与服务器进行对比
                     if (!serverConfig.forceBackup) {
+                        startTime = System.currentTimeMillis();
                         int before = updatedIds.size();
                         updatedIds = compareServerInfo(updatedIds);
                         int after = updatedIds.size();
                         if (after == 0 && before != 0) {
+                            Log.d("LocalBinder", "start: 与服务器比较共花费：" + (System.currentTimeMillis() - startTime) + " 毫秒");
                             Log.d("LocalBinder", "start: 无需备份");
                             mWebAppInterface.receiveServerAlreadyLatest();
 
                             throw new BreakException();
                         }
+
+                        Log.d("LocalBinder", "start: 与服务器比较共花费：" + (System.currentTimeMillis() - startTime) + " 毫秒");
+
                     } else {
                         Log.d("LocalBinder", "start: 无需与服务器进行比较");
                     }
@@ -151,17 +157,22 @@ public class BackupService extends Service {
                     if (updatedIds.isEmpty()) {
                         Log.d("LocalBinder", "start: 无需备份");
                         mWebAppInterface.receiveNotNeedBackup();
-
                         throw new BreakException();
                     }
 
                     i();
+
                     //2. 逐个上传文件
                     Log.d("LocalBinder", "start: 开始上传文件了");
                     notUploadFileIdSet.addAll(updatedIds);
-                    startUpload(updatedIds, dto, serverConfig.checkMd5,
+                    startTime = System.currentTimeMillis();
+                    startUpload(
+                            updatedIds,
+                            dto,
+                            serverConfig.checkMd5,
                             notUploadFileIdSet
-                            );
+                    );
+                    Log.d("LocalBinder", "start: 文件上传共花费：" + (System.currentTimeMillis() - startTime) + " 毫秒");
 
 
                     //3. 统计结果
@@ -236,10 +247,10 @@ public class BackupService extends Service {
     }
 
     private void handleInterruptedException(Set<Long> notUploadFileIdSet, BackupHistory dto) {
-        if (mStatus.get()==0){
+        if (mStatus.get() == 0) {
 
             //删除未备份的文件
-            if (!notUploadFileIdSet.isEmpty()){
+            if (!notUploadFileIdSet.isEmpty()) {
                 backupFileDao.deleteByIdIn(notUploadFileIdSet);
             }
 
@@ -250,14 +261,14 @@ public class BackupService extends Service {
             dto.setSuccess(true);
             dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
             finishNotify();
-        }else {
+        } else {
             dto.setBackUpNum((long) progressDto.getAlreadyUploadFileNum());
             dto.setSuccess(false);
             dto.setTotalFileSize(progressDto.getAlreadyUploadFileSize());
 
             dto.setBackupResult("备份中断");
             dto.setBackupDetail("备份过程中被取消了");
-            Log.d("BackupService", "onCreate: 线程被打断运行,mstatus="+mStatus.get());
+            Log.d("BackupService", "onCreate: 线程被打断运行,mstatus=" + mStatus.get());
             ToastUtil.toast("备份已取消！");
         }
     }
@@ -276,28 +287,44 @@ public class BackupService extends Service {
 
     private Set<Long> compareServerInfo(Set<Long> updatedIds) throws InterruptedException {
         Set<Long> result = new HashSet<>();
-        if (updatedIds.size() > 2) {
+        // 更新比较进度
+        if (updatedIds.size() > 50) {
             //按50来截取集合，循环，直到结束
             int start = 0;
             while (start < updatedIds.size()) {
                 List<Long> idList = updatedIds.stream()
                         .skip(start)
-                        .limit(2)
+                        .limit(50)
                         .collect(Collectors.toList());
 
                 List<BackupFile> list = backupFileDao.findByIdIn(idList);
+                if (!list.isEmpty()) {
+                    updateUiCompareData(list.get(0), (int) (start * 1.0 / updatedIds.size() * 100), list.size());
+                }
                 List<BackupFile> compare = OkHttpUtil.compare(list, mServerConfig);
                 result.addAll(compare.stream().map(BackupFile::getId).collect(Collectors.toSet()));
-                start += 2;
+                start += 50;
+
+                if (!list.isEmpty()) {
+                    updateUiCompareData(list.get(0), (int) (start * 1.0 / updatedIds.size() * 100), list.size());
+                }
+
             }
         } else {
             List<BackupFile> list = backupFileDao.findByIdIn(updatedIds);
+            if (!list.isEmpty()) {
+                updateUiCompareData(list.get(0), 0, list.size());
+            }
             List<BackupFile> compare = OkHttpUtil.compare(list, mServerConfig);
             result.addAll(
                     compare.stream()
                             .filter(backupFile -> !backupFile.isDirectory())
                             .map(BackupFile::getId).collect(Collectors.toSet())
             );
+
+            if (!list.isEmpty()) {
+                updateUiCompareData(list.get(0), 100, list.size());
+            }
         }
 
         return result;
@@ -311,7 +338,7 @@ public class BackupService extends Service {
         updateProgress(0);
         int totalSize = updatedIds.size();
         progressDto.setNeedUploadFileNum(totalSize);
-        progressDto.setCheckFinish(true);
+        progressDto.setCheckState(0);
         dto.setFailNum(0l);
         progressDto.setFailNum(0);
         AtomicReference<Double> count = new AtomicReference<>((double) 0);
@@ -357,7 +384,7 @@ public class BackupService extends Service {
                                 progressDto.setFailNum(progressDto.getFailNum() + 1);
                                 backupFileDao.deleteById(file.getId());
                                 dto.setFailNum((long) progressDto.getFailNum());
-                            }else {
+                            } else {
                                 count.getAndSet(new Double((double) (count.get() + 1)));
                             }
                         }
@@ -371,7 +398,7 @@ public class BackupService extends Service {
 
             } else {
                 count.getAndSet(new Double((double) (count.get() + 1)));
-                progressDto.setAlreadyUploadFileNum( count.get().intValue());
+                progressDto.setAlreadyUploadFileNum(count.get().intValue());
                 updateProgress(progressDto.getTotalPercent());
                 ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
                 currentFile.setMimeType(file.getMimeType());
@@ -426,7 +453,7 @@ public class BackupService extends Service {
         progressDto.setSpeed(0);
 
         progressDto.setAlreadyUploadFileNum(0);
-        progressDto.setCheckFinish(false);
+        progressDto.setCheckState(1);
         progressDto.setNeedUploadFileNum(needUploadFileNum);
         ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
         currentFile.setMimeType(file.getMimeType());
@@ -443,13 +470,54 @@ public class BackupService extends Service {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void updateUiCompareData(BackupFile file, int percent, int fileNum) {
+        /*
+            totalPercent: 30,
+            alreadyUploadFileSize: 72,
+            currentFile: {
+                mimeType: 'text/html',
+                name: 'IMG_20230715_184523.jpg',
+                relativePath: '内部存储/DCIM/Camera',
+                percent: 90,
+            },
+            speed: 20481,//上传速度
+            startTime: '2025-07-26T18:45:23Z', //ISO 8601 格式的时间字符串 示例："2023-07-15T18:45:23Z"
+            alreadyUploadFileNum: 1,
+         */
+
+
+        progressDto.setTotalPercent(percent);
+        progressDto.setAlreadyUploadFileSize(0L);
+        progressDto.setSpeed(0);
+
+        progressDto.setAlreadyUploadFileNum(0);
+        progressDto.setCheckState(2);
+        ProgressDto.CurrentFile currentFile = progressDto.getCurrentFile();
+        currentFile.setMimeType(file.getMimeType());
+        currentFile.setName(file.getName() + "等" + fileNum + "个文件");
+        currentFile.setRelativePath(file.getRelativePath());
+        currentFile.setPercent(100);
+
+        mWebAppInterface.getContext().runOnUiThread(() -> {
+            mWebAppInterface.getJsExecUtil().exec("receiveProgressData",
+                    GsonUtils.toJsonObject(progressDto),
+                    null
+            );
+        });
+
+        // 这里更新状态栏进度条
+
+        updateCompareProgress(percent);
+
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void updateUiStopData() {
 
 
         progressDto.setSpeed(0);
-        progressDto.setCheckFinish(true);
+        progressDto.setCheckState(0);
 
         mWebAppInterface.receiveProgressData(GsonUtils.toJsonObject(progressDto));
 
@@ -469,7 +537,7 @@ public class BackupService extends Service {
 
             if (db == null) {
 
-                if (!real.isDirectory() ) {
+                if (!real.isDirectory()) {
                     String md5 = getMd5(real);
                     real.setMd5(md5);
                 }
@@ -492,7 +560,7 @@ public class BackupService extends Service {
 
                     } else {
 
-                        if (db.getMd5()==null) {
+                        if (db.getMd5() == null) {
                             //第一次备份的时候没有计算md5，现在发现修改时间不一致了
                             String md5 = getMd5(db);
                             db.setMd5(md5);
@@ -550,6 +618,7 @@ public class BackupService extends Service {
             backupFile.setRelativePath(selectDir.getRelativePath());
             backupFile.setDirectory(selectDir.isDirectory());
             backupFile.setMimeType(selectDir.getMimeType());
+            backupFile.setMd5("");
             return backupFile;
         }).collect(Collectors.toList());
         return initParent;
@@ -726,6 +795,11 @@ public class BackupService extends Service {
 
     public void updateProgress(int progress) {
         getSystemService(NotificationManager.class).notify(1, getNotification(progress, "备份中", progress + "%"));
+    }
+
+
+    public void updateCompareProgress(int progress) {
+        getSystemService(NotificationManager.class).notify(1, getNotification(progress, "比较中", progress + "%"));
     }
 
 

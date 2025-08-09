@@ -327,10 +327,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         // 加载本地文件（确保文件在 assets 目录）
-        webView.loadUrl("file:///android_asset/index.html");
+//        webView.loadUrl("file:///android_asset/index.html");
 
 
-//        webView.loadUrl("http://192.168.31.151:8080");
+        webView.loadUrl("http://192.168.31.151:8080");
 //        webView.loadUrl("http://192.168.43.149:8080");
     }
 

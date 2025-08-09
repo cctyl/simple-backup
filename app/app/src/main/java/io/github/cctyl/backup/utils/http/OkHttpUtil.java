@@ -168,10 +168,9 @@ public class OkHttpUtil {
 
         System.out.println(json);
         try {
-            //FIXME 这里莫名其妙的调用了upload，待查
             String bodyString = INSTANCE.newCall(request)
                     .execute().body().string();
-            Log.d("LocalBinder", "uploadFile: 上传的响应=" + bodyString);
+            Log.d("LocalBinder", "compare: 上传的响应=" + bodyString);
             CompareDto compareDto = GsonUtils.fromJson(bodyString, CompareDto.class);
             if (compareDto.getStatus() == 200) {
                 return compareDto.getData();
