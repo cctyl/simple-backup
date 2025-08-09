@@ -5,7 +5,7 @@
     <!-- 视频教程 -->
     <div class="video-container">
       <!-- Bilibili视频嵌入 -->
-      <iframe :src="`//player.bilibili.com/player.html?bvid=${bvid}&cid=339262048&page=1&high_quality=1&danmaku=0`" allowfullscreen="allowfullscreen" width="100%" height="500" scrolling="no" frameborder="0" sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"></iframe>
+      <iframe :src="`https://player.bilibili.com/player.html?bvid=${bvid}&cid=339262048&page=1&high_quality=1&danmaku=0`" allowfullscreen="allowfullscreen" width="100%" height="500" scrolling="no" frameborder="0" sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"></iframe>
       <div class="video-overlay" @click="toBlibili">
         <div class="video-title">云备份应用使用指南</div>
         <div class="video-title" ><a>跳转b站观看</a></div>
@@ -35,7 +35,7 @@
             </div>
             <div class="step-image">
 
-              <img src="/img/tutorial/服务器启动.png" alt="">
+              <img src="img/tutorial/服务器启动.png" alt="">
             </div>
           </div>
 
@@ -56,7 +56,7 @@
             </div>
             <div class="step-image">
 
-              <img src="/img/tutorial/首页截图.jpg" alt="">
+              <img src="img/tutorial/首页截图.jpg" alt="">
             </div>
           </div>
 
@@ -78,9 +78,9 @@
             </div>
             <div class="step-image">
 
-              <img src="/img/tutorial/首页第一个黄色按钮.jpg" alt="">
-              <img src="/img/tutorial/1754402504392.jpg" alt="">
-              <img src="/img/tutorial/1754402504378.jpg" alt="">
+              <img src="img/tutorial/首页第一个黄色按钮.jpg" alt="">
+              <img src="img/tutorial/1754402504392.jpg" alt="">
+              <img src="img/tutorial/1754402504378.jpg" alt="">
             </div>
           </div>
 
@@ -104,11 +104,11 @@
             </div>
             <div class="step-image">
 
-              <img src="/img/tutorial/1754402504360.jpg" alt="">
-              <img src="/img/tutorial/1754402504341.jpg" alt="">
-              <img src="/img/tutorial/1754402504326.jpg" alt="">
-              <img src="/img/tutorial/1754402504308.jpg" alt="">
-              <img src="/img/tutorial/1754402504291.jpg" alt="">
+              <img src="img/tutorial/1754402504360.jpg" alt="">
+              <img src="img/tutorial/1754402504341.jpg" alt="">
+              <img src="img/tutorial/1754402504326.jpg" alt="">
+              <img src="img/tutorial/1754402504308.jpg" alt="">
+              <img src="img/tutorial/1754402504291.jpg" alt="">
             </div>
           </div>
 
@@ -129,9 +129,9 @@
             </div>
             <div class="step-image">
 
-              <img src="/img/tutorial/1754402504277.jpg" alt="">
-              <img src="/img/tutorial/1754402504260.jpg" alt="">
-              <img src="/img/tutorial/1754402504240.jpg" alt="">
+              <img src="img/tutorial/1754402504277.jpg" alt="">
+              <img src="img/tutorial/1754402504260.jpg" alt="">
+              <img src="img/tutorial/1754402504240.jpg" alt="">
 
             </div>
           </div>
@@ -151,7 +151,7 @@
             </div>
             <div class="step-image">
 
-              <img src="/img/tutorial/1754402504222.jpg" alt="">
+              <img src="img/tutorial/1754402504222.jpg" alt="">
 
             </div>
           </div>
@@ -173,7 +173,7 @@
             </div>
             <div class="step-image">
 
-              <img src="/img/tutorial/首页再次查看教程.jpg" alt="">
+              <img src="img/tutorial/首页再次查看教程.jpg" alt="">
 
             </div>
           </div>
