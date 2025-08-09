@@ -14,7 +14,7 @@
         </div>
 
         <!-- 内容区域 -->
-        <div class="dialog-content">
+        <div class="dialog-content" :class=" {'no-padding': !contentPadding}">
           <slot></slot>
         </div>
 
@@ -44,6 +44,10 @@
 export default {
   name: 'MaterialDialog',
   props: {
+    contentPadding:{
+      type: Boolean,
+      default: true
+    },
     visible: {
       type: Boolean,
       default: false
@@ -187,7 +191,13 @@ export default {
   padding: 20px 24px;
   flex: 1;
   overflow-y: auto;
+  line-height: 2;
 }
+
+.no-padding{
+  padding: 0;
+}
+
 
 /* 操作按钮区域 */
 .dialog-actions {

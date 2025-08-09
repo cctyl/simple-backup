@@ -68,40 +68,6 @@ public class ProgressRequestBody extends RequestBody {
         }
     }
 
-    public static void main(String[] args) {
 
-        String token = "";
-        String serverAddr = "";
-        File file = new File("");
-        ProgressRequestBody progressBody = new ProgressRequestBody(new BackupFile(), (uploaded, total, speed, timeDelta) -> {
-            // 通过LiveData/Handler/RxJava传递到UI层
-            Log.d("ProgressRequestBody", "main: 上传进度变化: " + uploaded + "/" + total + " (" + speed + "B/s)");
-        });
-
-        MultipartBody body = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.getName(), progressBody)
-
-                .build();
-
-        Request request = new Request.Builder()
-                .url("http://"+token)
-                .header("authorization",token)
-                .post(body)
-                .build();
-
-        OkHttpClient client = new OkHttpClient();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) {
-                // 处理响应
-            }
-        });
-    }
 }
 

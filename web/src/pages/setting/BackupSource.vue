@@ -20,25 +20,41 @@
       </button>
       <button class="action-button authorization-button"
               :class="{secondary: hasPermission}"
-              @click="applyPermission">
+              @click="openApplyPermissionDialog">
         {{ hasPermission ? '重新选择根目录' : '请授权app访问目录' }}
       </button>
 
     </div>
+
+
+    <MaterialDialog
+        :visible="showApplyPermissionDialog"
+        :content-padding="false"
+        title="授权提示"
+        icon="notifications_active"
+        @confirm="handleApplyPermissionDialogConfirm"
+        @cancel="handleApplyPermissionDialogCancel"
+    >
+      <DirectoryGuideDialog/>
+    </MaterialDialog>
+
+
   </div>
 </template>
 <script>
 
 import SelectFolder from "@/components/SelectFolder.vue";
 import {mapActions} from "vuex";
-
+import DirectoryGuideDialog from "@/components/DirectoryGuideDialog.vue";
+import MaterialDialog from "@/components/Dialog.vue";
 export default {
   name: 'backup-source-view',
-  components: {SelectFolder},
+  components: {MaterialDialog, SelectFolder,DirectoryGuideDialog},
   data() {
     return {
       filter: '',
       hasPermission: true,
+      showApplyPermissionDialog:false,
     }
   },
   created() {
@@ -72,6 +88,18 @@ export default {
       this.saveSelectDir()
       this.$router.back();
     },
+
+    openApplyPermissionDialog(){
+      this.showApplyPermissionDialog = true;
+
+    },
+    handleApplyPermissionDialogConfirm(){
+      this.showApplyPermissionDialog = false;
+      this.applyPermission();
+    },
+    handleApplyPermissionDialogCancel(){
+      this.showApplyPermissionDialog = false;
+    }
 
   },
   beforeDestroy() {

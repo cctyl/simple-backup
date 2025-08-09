@@ -30,8 +30,8 @@
           <div class="log-details">
             <div class="log-details-list">
               <div class="log-files" v-for="p in item.backUpPathArr.split(',')" :key="p">
-                <i class="material-icons" style="font-size: 16px; vertical-align: middle;">folder</i>
-                {{ p }}
+                <i class="material-icons log-file-icon">folder</i>
+                <span class="log-file-path">{{ p }}</span>
               </div>
 
             </div>
@@ -457,16 +457,28 @@ export default {
   border-top: 1px solid #f1f3f4;
   flex-direction: column;
 }
-
 .log-files {
   font-size: 14px;
   color: #5f6368;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: wrap;
+  display: flex;
+  align-items: center;
   flex: 1;
   border-bottom: 1px solid #f1f3f4;
   padding: 10px 0px;
+  min-width: 0; /* 允许flex项目收缩到内容宽度以下 */
+}
+
+.log-file-icon {
+  font-size: 16px;
+  vertical-align: middle;
+  margin-right: 4px;
+  flex-shrink: 0; /* 防止图标被压缩 */
+}
+
+.log-file-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detail-button {

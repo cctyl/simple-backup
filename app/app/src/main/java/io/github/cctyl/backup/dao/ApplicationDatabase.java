@@ -17,7 +17,7 @@ import io.github.cctyl.backup.utils.room.UrlConverter;
                 SelectDir.class,
                 BackupFile.class
 
-        }, version = 1,
+        }, version = 2,
         exportSchema = true
 )
 @TypeConverters({

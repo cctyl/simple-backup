@@ -117,14 +117,19 @@ export default {
   align-items: center;
   flex-shrink: 0;
   margin: 5px;
+  max-width: 100%;
 }
 
 .selected-name {
   margin-right: 8px;
   font-size: 14px;
   color: #202124;
+  line-height:1.5;
+  /* 添加以下样式 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
-
 .selected-remove {
   color: #5f6368;
   font-size: 18px;

@@ -67,9 +67,10 @@ export default {
   },
   created() {
     this.$bus.$on('rightIconCallBack', this.toHelpPage);
-    this.isFirst = window.Android.getIsFirst();
+
   },
   mounted() {
+    this.isFirst = window.Android.getIsFirst();
     window.vue.receiveNotNeedBackup = this.receiveNotNeedBackup;
     window.vue.receiveServerAlreadyLatest = this.receiveServerAlreadyLatest;
     window.vue.receiveUploadError = this.receiveUploadError;

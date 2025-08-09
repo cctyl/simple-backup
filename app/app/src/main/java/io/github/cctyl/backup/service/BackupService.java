@@ -231,7 +231,6 @@ public class BackupService extends Service {
                 cancelNotify();
             }
 
-            OkHttpUtil.cancelAllRequests();
 
         }
     }
@@ -470,7 +469,7 @@ public class BackupService extends Service {
 
             if (db == null) {
 
-                if (!real.isDirectory() && mServerConfig.checkMd5) {
+                if (!real.isDirectory() ) {
                     String md5 = getMd5(real);
                     real.setMd5(md5);
                 }
@@ -549,10 +548,8 @@ public class BackupService extends Service {
             backupFile.setDocId(selectDir.getDocId());
             backupFile.setRootDocId(selectDir.getRootDocId());
             backupFile.setRelativePath(selectDir.getRelativePath());
-            backupFile.setDirectory(true);
-            backupFile.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
-            //目录不需要md5
-            backupFile.setMd5("");
+            backupFile.setDirectory(selectDir.isDirectory());
+            backupFile.setMimeType(selectDir.getMimeType());
             return backupFile;
         }).collect(Collectors.toList());
         return initParent;

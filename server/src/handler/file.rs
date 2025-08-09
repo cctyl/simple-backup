@@ -100,8 +100,7 @@ pub async fn check_file(item: FileDto, db_list: &Vec<crate::entity::models::File
                 let mut file = File::open(&path).await?;
 
                 // 定义缓冲区大小
-                let buffer_size = 102400; // 100KB 缓冲区
-                let mut buffer = vec![0; buffer_size];
+                let mut buffer = [0; 102400];
 
                 loop {
                     // 异步读取数据到缓冲区
@@ -123,6 +122,8 @@ pub async fn check_file(item: FileDto, db_list: &Vec<crate::entity::models::File
                 let real_md5 = format!("{:x}", hasher.finalize());
                 if real_md5 == item.md5 {
                     
+                    info!("{}md5比较相同，不必上传",item.name);
+
                     let file = crate::entity::models::File {
                         id: id::next_id(),
                         name: item.name,
@@ -131,6 +132,7 @@ pub async fn check_file(item: FileDto, db_list: &Vec<crate::entity::models::File
                         is_directory:item.is_directory,
                         md5: item.md5.clone(),
                     };
+                    crate::entity::models::File::insert(&CONTEXT.rb, &file).await?;
                 }
                 Ok(real_md5 != item.md5)
             } else {

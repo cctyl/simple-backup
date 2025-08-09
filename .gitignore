@@ -171,3 +171,7 @@ server/data.db-shm
 server/data.db-wal
 server/upload/**
 扫我.png
+
+app/app/release/**
+app/app/build/**
+app/app/src/main/assets/**

@@ -2,6 +2,7 @@ package io.github.cctyl.backup.entity;
 
 import android.net.Uri;
 
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
@@ -17,6 +18,30 @@ public class SelectDir {
 
     private String rootDocId;//根目录的docId
     private String relativePath;//相对路径
+
+
+    @ColumnInfo(name = "is_directory")
+    private boolean isDirectory;//是否是目录
+
+
+    @ColumnInfo(name = "mime_type")
+    private String mimeType;//文件类型
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public boolean isDirectory() {
+        return isDirectory;
+    }
+
+    public void setDirectory(boolean directory) {
+        isDirectory = directory;
+    }
 
     public SelectDir() {
     }

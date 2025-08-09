@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "0290989b438ce33b61307c02a3703144",
+    "version": 2,
+    "identityHash": "f3dbe7ea90a199421fba27d5518a131d",
     "entities": [
       {
         "tableName": "backup_history",
@@ -86,7 +86,7 @@
       },
       {
         "tableName": "select_dir",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT, `treeUri` TEXT, `docId` TEXT, `rootDocId` TEXT, `relativePath` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT, `treeUri` TEXT, `docId` TEXT, `rootDocId` TEXT, `relativePath` TEXT, `is_directory` INTEGER NOT NULL, `mime_type` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -121,6 +121,18 @@
           {
             "fieldPath": "relativePath",
             "columnName": "relativePath",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isDirectory",
+            "columnName": "is_directory",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mimeType",
+            "columnName": "mime_type",
             "affinity": "TEXT",
             "notNull": false
           }
@@ -218,7 +230,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0290989b438ce33b61307c02a3703144')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f3dbe7ea90a199421fba27d5518a131d')"
     ]
   }
 }

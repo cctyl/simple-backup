@@ -38,7 +38,13 @@ public class AppApplication extends Application {
                 )
                 //允许迁移数据库，（如果不设置，那么数据库发生变更时，room就会默认删除原本数据库，再创建信数据库，那么原本的数据就会丢失）
                 .addMigrations(
-
+                        new Migration(1,2) {
+                            @Override
+                            public void migrate(@NonNull SupportSQLiteDatabase database) {
+                                database.execSQL("ALTER TABLE select_dir ADD COLUMN is_directory INTEGER DEFAULT 0 not null ");
+                                database.execSQL("ALTER TABLE select_dir ADD COLUMN mime_type TEXT  ");
+                            }
+                        }
                 )
                 //运行在主线程中操作数据库（默认情况下room不能在主线程操作数据库，因为是耗时操作）
                 .allowMainThreadQueries()

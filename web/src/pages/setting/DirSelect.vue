@@ -39,7 +39,7 @@
           <div class="tree-content">
             <div class="tree-name">{{ item.name }}</div>
           </div>
-          <div class="tree-checkbox" v-if="item.isDirectory" @click.stop="select(item)">
+          <div class="tree-checkbox"  @click.stop="select(item)">
             <input type="checkbox" :checked="item.checked">
 
 
