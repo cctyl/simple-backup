@@ -29,11 +29,16 @@
                 <div class="step-desc">
                   在pc端，双击下载好的可执行文件 simple-backup.exe,
                   如果电脑弹出防火墙提示，请允许。
-                  然后目录下会产生一个 “扫我.png”,打开图片，用于后续扫码。
-                  （注意，电脑网络更换后ip也会更换，你可以重启软件来刷新二维码）
 
                 </div>
 
+                <div class="step-desc">
+                  然后目录下会产生一个 “扫我.png”,打开图片，用于后续扫码。
+                </div>
+
+                <div class="step-desc">
+                  （注意，电脑网络更换后ip也会更换，你可以重启软件来刷新二维码）
+                </div>
               </div>
 
             </div>
@@ -71,24 +76,32 @@
               <div class="step-number">3</div>
               <div>
                 <div class="step-title">配置服务器连接</div>
-                <div class="step-desc">
-                  首先，要求手机和电脑在同一个网络下。
-                  点击第一个黄色图标，跳转到服务器设置页面，
-                  在设置中配置您的服务器地址和访问令牌，你可以点击右上角，打开相机扫描服务器的二维码，
-                  扫码完成后，点击测试链接，显示如下则表示链接成功。
 
-                  注意，当您的电脑同时链接了多个网络，那么这个二维码扫出来的ip不一定合适，您可能需要自己在电脑上输入ipconfig来展示所有ip，
-                  然后手动在app上输入ip，然后点击测试链接。
-                </div>
+
+
+
+
 
               </div>
 
             </div>
             <div class="step-image">
-
+              <div class="step-desc">
+                点击第一个黄色图标，跳转到服务器设置页面，
+              </div>
               <img src="img/tutorial/首页第一个黄色按钮.jpg" alt="">
+              <div class="step-desc">
+                在设置中配置您的服务器地址和访问令牌，你可以点击右上角，打开相机扫描服务器的二维码，
+              </div>
               <img src="img/tutorial/1754402504392.jpg" alt="">
+              <div class="step-desc">
+                扫码完成后，点击测试链接，显示如下则表示链接成功。
+              </div>
               <img src="img/tutorial/1754402504378.jpg" alt="">
+              <div class="step-desc">
+                注意，当您的电脑同时链接了多个网络，那么这个二维码扫出来的ip可能会链接失败，您可能需要自己在电脑上输入ipconfig来展示所有ip，
+                然后手动在app上输入ip，然后点击测试链接。
+              </div>
             </div>
           </div>
 
@@ -100,30 +113,38 @@
               <div class="step-number">4</div>
               <div>
                 <div class="step-title">选择备份源</div>
-                <div class="step-desc">
-                  点击首页第二个黄色按钮, 跳转到备份源管理页面，
-                  第一步授权：
-                  首先点击绿色“授权”按钮，选择根目录。
-                  （授权的目录，就是应用可见的目录）
-                  （不是根目录也可以，部分手机如一加等限制应用访问根目录，只要你授权的目录下，存在你需要备份的文件夹即可）。
-
-                  第二步：选择需要备份的文件夹。
-                  授权成功后，在展示出的文件夹列表中，勾选需要备份的文件夹，并点击右上角的√进行确认，完成配置
-                  支持多选和排除特定文件夹。
 
 
-
-                </div>
 
               </div>
 
             </div>
             <div class="step-image">
-
+              <div class="step-desc" >
+                点击首页第二个黄色按钮, 跳转到备份源管理页面，
+              </div>
               <img src="img/tutorial/1754402504360.jpg" alt="">
+              <div class="step-desc" >
+
+                第一步授权：
+                首先点击绿色“授权”按钮，选择根目录。
+              </div>
               <img src="img/tutorial/1754402504341.jpg" alt="">
+              <div class="step-desc" >
+
+                找到根目录后，点击允许访问
+              </div>
               <img src="img/tutorial/1754402504326.jpg" alt="">
+              <div class="step-desc">
+                第二步：选择需要备份的文件夹。
+                授权成功后，在展示出的文件夹列表中，勾选需要备份的文件夹，并点击右上角的√进行确认，完成配置
+                支持多选
+
+              </div>
               <img src="img/tutorial/1754402504308.jpg" alt="">
+              <div class="step-desc">
+                第三步：选择完毕后，点击右上角打勾，回到设置界面
+              </div>
               <img src="img/tutorial/1754402504291.jpg" alt="">
             </div>
           </div>
@@ -477,6 +498,7 @@ export default {
 }
 
 .step-desc {
+  margin-top: 10px;
   font-size: 14px;
   color: #5f6368;
   line-height: 1.5;
