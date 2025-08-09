@@ -147,7 +147,7 @@ export default {
         speed: 20481,//上传速度
         startTime: '2025-07-26T18:45:23Z', //ISO 8601 格式的时间字符串 示例："2023-07-15T18:45:23Z"
         alreadyUploadFileNum: 1,
-        checkFinish: false,
+        checkState: 1,
         circleTitle: '',
         circleDesc: '',
       },
@@ -174,10 +174,12 @@ export default {
 
       if (this.$store.state.backupStatus === 1) {
 
-        if (this.progressData.checkFinish) {
+        if (this.progressData.checkState===0) {
           return '备份中'
-        } else {
+        } else if (this.progressData.checkState===1){
           return '准备中'
+        }else {
+          return '比较中'
         }
       } else {
         return '已暂停';
@@ -189,10 +191,12 @@ export default {
 
       if (this.$store.state.backupStatus === 1) {
 
-        if (this.progressData.checkFinish) {
+        if (this.progressData.checkState===0) {
           return '请不要关闭应用或断开网络'
-        } else {
+        } else if (this.progressData.checkState===1){
           return '请稍后，正在检查哪些文件需要备份...'
+        }else {
+          return '请稍后，正在和服务器比较文件差异...'
         }
       } else {
         return '点击下方按钮继续备份';

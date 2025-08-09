@@ -50,7 +50,6 @@ export default {
     progress: {
       type: Number,
       default: 0,
-      validator: value => value >= 0 && value <= 100
     },
     size: {
       type: Number,
