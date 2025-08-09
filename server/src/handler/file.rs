@@ -42,7 +42,6 @@ pub struct FileDto {
 #[debug_handler]
 async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
 
-    info!("compare params: {}",params.len());
     let collect: Vec<String> = params
         .iter()
         .map(|item: &FileDto| item.relative_path.clone())
@@ -50,18 +49,7 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
 
     let mut result = vec![];
     let db_list = FileDao::select_by_relative_path_in(collect).await?;
-    info!("compare db_list: {}",db_list.len());
-    // let result: Vec<FileDto> = stream::iter(params)
-
-    //     .filter(|item| async move {
-
-    //     })
-    //     .collect::<Vec<FileDto>>()
-    //     .await?
-    //     ;
-
     for item in params.into_iter() {
-        info!("foreach item : {}",item.name);
         let flag = check_file(item.clone(), &db_list).await?;
         info!("check finish: {}",item.name);
         if flag {
