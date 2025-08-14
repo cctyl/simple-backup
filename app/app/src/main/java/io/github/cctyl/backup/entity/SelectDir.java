@@ -19,6 +19,8 @@ public class SelectDir {
     private String rootDocId;//根目录的docId
     private String relativePath;//相对路径
 
+    @ColumnInfo(name = "last_modified")
+    private long lastModified;  //最后修改时间，时间戳
 
     @ColumnInfo(name = "is_directory")
     private boolean isDirectory;//是否是目录
@@ -26,6 +28,15 @@ public class SelectDir {
 
     @ColumnInfo(name = "mime_type")
     private String mimeType;//文件类型
+
+
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
 
     public String getMimeType() {
         return mimeType;

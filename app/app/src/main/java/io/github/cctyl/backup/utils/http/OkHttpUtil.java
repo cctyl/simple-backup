@@ -122,6 +122,7 @@ public class OkHttpUtil {
 
         MultipartBody body = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
+                //务必注意字段的先后顺序
                 .addFormDataPart("name", file.getName())
                 .addFormDataPart("checkMd5", String.valueOf(checkMd5))
                 .addFormDataPart("treeUri", file.getTreeUri().toString())
@@ -129,9 +130,12 @@ public class OkHttpUtil {
                 .addFormDataPart("relativePath", file.getRelativePath())
                 .addFormDataPart("isDirectory", String.valueOf(file.isDirectory()))
                 .addFormDataPart("md5", file.getMd5())
+                .addFormDataPart("createTime", String.valueOf(file.getLastModified()))
                 .addFormDataPart("file", file.getName(), progressBody)
                 .build();
 
+
+        Log.d("OkHttpUtil", "uploadFile:  "+file.getName() +"最后修改时间是："+file.getLastModified());
 
         Log.d("LocalBinder", "uploadFile: body= " + body);
 

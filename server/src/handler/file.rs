@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::utils::id;
 use crate::{
@@ -31,17 +31,16 @@ pub fn create_router() -> Router {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileDto {
-    pub id:i64,
-    pub name:String,
-    pub doc_id:String,
-    pub relative_path:String,
-    pub is_directory:bool,
-    pub md5:String,
+    pub id: i64,
+    pub name: String,
+    pub doc_id: String,
+    pub relative_path: String,
+    pub is_directory: bool,
+    pub md5: String,
 }
 
 #[debug_handler]
 async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
-
     let collect: Vec<String> = params
         .iter()
         .map(|item: &FileDto| item.relative_path.clone())
@@ -51,7 +50,7 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
     let db_list = FileDao::select_by_relative_path_in(collect).await?;
     for item in params.into_iter() {
         let flag = check_file(item.clone(), &db_list).await?;
-        info!("check finish: {}",item.name);
+        info!("check finish: {}", item.name);
         if flag {
             result.push(item);
         }
@@ -79,76 +78,76 @@ pub async fn check_file(item: FileDto, db_list: &Vec<crate::entity::models::File
             Ok(i.md5 != item.md5)
         }
         None => {
-            Ok(true)
-            // info!("数据库中不存在");
-            // //数据库中不存在，那么真实文件中是否存在？
-            // let path = format!("./upload/{}", item.relative_path);
-            // let try_exists = tokio::fs::try_exists(&path).await?;
-            // if try_exists {
-            //     info!("文件真实存在");
-            //     let mut file = File::open(&path).await?;
+           
+            info!("数据库中不存在");
+            //数据库中不存在，那么真实文件中是否存在？
+            let path = format!("./upload/{}", item.relative_path);
+            let try_exists = tokio::fs::try_exists(&path).await?;
+            if try_exists {
+                info!("文件真实存在");
+                let mut file = File::open(&path).await?;
 
-            //     // 定义缓冲区大小
-            //     let mut buffer = [0; 102400];
+                // 定义缓冲区大小
+                let mut buffer = [0; 102400];
 
-            //     loop {
-            //         // 异步读取数据到缓冲区
-            //         let bytes_read = file.read(&mut buffer).await?;
+                loop {
+                    // 异步读取数据到缓冲区
+                    let bytes_read = file.read(&mut buffer).await?;
 
-            //         // 如果读取的字节数为0，表示到达文件末尾
-            //         if bytes_read == 0 {
-            //             break;
-            //         }
+                    // 如果读取的字节数为0，表示到达文件末尾
+                    if bytes_read == 0 {
+                        break;
+                    }
 
-            //         // 处理读取到的数据（这里只是示例）
-            //         // 注意：我们只使用前 bytes_read 字节，因为缓冲区可能没有被完全填满
-            //         let data = &buffer[..bytes_read];
-            //         // 在这里处理 data...
+                    // 处理读取到的数据（这里只是示例）
+                    // 注意：我们只使用前 bytes_read 字节，因为缓冲区可能没有被完全填满
+                    let data = &buffer[..bytes_read];
+                    // 在这里处理 data...
 
-            //         hasher.consume(&data);
-            //     }
+                    hasher.consume(&data);
+                }
 
-            //     let real_md5 = format!("{:x}", hasher.finalize());
-            //     if real_md5 == item.md5 {
-                    
-            //         info!("{}md5比较相同，不必上传",item.name);
+                let real_md5 = format!("{:x}", hasher.finalize());
+                if real_md5 == item.md5 {
 
-            //         let file = crate::entity::models::File {
-            //             id: id::next_id(),
-            //             name: item.name,
-            //             doc_id: item.doc_id,
-            //             relative_path: item.relative_path,
-            //             is_directory:item.is_directory,
-            //             md5: item.md5.clone(),
-            //         };
-            //         crate::entity::models::File::insert(&CONTEXT.rb, &file).await?;
-            //     }
-            //     Ok(real_md5 != item.md5)
-            // } else {
-            //     //不存在自然是上传
-            //     Ok(true)
-            // }
+                    info!("{}md5比较相同，不必上传",item.name);
+
+                    let file = crate::entity::models::File {
+                        id: id::next_id(),
+                        name: item.name,
+                        doc_id: item.doc_id,
+                        relative_path: item.relative_path,
+                        is_directory:item.is_directory,
+                        md5: item.md5.clone(),
+                    };
+                    crate::entity::models::File::insert(&CONTEXT.rb, &file).await?;
+                }
+                Ok(real_md5 != item.md5)
+            } else {
+                //不存在自然是上传
+                Ok(true)
+            }
         }
     }
 }
 
 #[debug_handler]
 async fn upload(mut multipart: Multipart) -> RR<()> {
-
-
     info!("开始上传");
     let mut name = None;
     let mut doc_id = None;
     let mut md5 = None;
     let mut relative_path = None;
+    let mut create_time: Option<SystemTime> = None;
     let mut is_directory = false;
     let mut check_md5 = false;
 
+    //务必注意字段的先后顺序
     while let Some(mut field) = multipart.next_field().await.unwrap() {
         let name_str = field.name().unwrap_or("").to_string();
 
         match name_str.as_str() {
-            "name" | "treeUri" | "docId" | "md5" | "relativePath" | "checkMd5" | "isDirectory" => {
+            "name" | "treeUri" | "docId" | "md5" | "relativePath" | "checkMd5" | "isDirectory"| "createTime" => {
                 let bytes = field.bytes().await?;
                 let value = String::from_utf8_lossy(&bytes).to_string();
 
@@ -160,9 +159,23 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     "relativePath" => relative_path = Some(value),
                     "checkMd5" => check_md5 = value.parse().unwrap_or(false),
                     "isDirectory" => is_directory = value.parse().unwrap_or(false),
+                    "createTime" => {
+        
+                        info!("创建时间传递了");
+        
+                        // 解析时间戳（假设为毫秒）
+                        if let Ok(timestamp) = value.parse::<u64>() {
+                            create_time = Some(UNIX_EPOCH + Duration::from_millis(timestamp));
+        
+                            info!(" create_time: {}", timestamp);
+                        } else {
+                            info!("无法解析创建时间: {}", value);
+                        }
+                    },
                     e => info!("忽略字段: {}", e),
                 }
-            }
+            },
+
             "file" => {
                 // 处理文件上传的逻辑保持不变
                 let (temp_path, real_path) = {
@@ -224,6 +237,17 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
 
                 tokio::fs::rename(&temp_path, &real_path).await?;
 
+                let ctime = create_time
+                    .clone()
+                    .ok_or(HttpError::BadRequest("必须提供创建时间".to_string()))?;
+                let real_path_clone = real_path.clone();
+                tokio::task::spawn_blocking(move || {
+                    let file_times = filetime::FileTime::from_system_time(ctime);
+                    filetime::set_file_times(&real_path_clone, file_times, file_times)
+                        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                })
+                .await??;
+
                 info!(
                     "文件上传成功: 路径={}, 大小={} bytes{}",
                     real_path.display(),
@@ -234,8 +258,10 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                         "".into()
                     }
                 );
+            },
+            _ => {
+                error!("出现了异常的匹配！");
             }
-            _ => {}
         }
     }
 

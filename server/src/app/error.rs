@@ -6,6 +6,7 @@ use axum::{
 
 use log::{error, info};
 use thiserror::Error;
+use tokio::task::JoinError;
 use validator::ValidationErrors;
 
 use crate::app::response::Resp;
@@ -82,6 +83,11 @@ pub enum HttpError {
     OtherError(#[from] anyhow::Error),
 }
 
+impl From<JoinError> for HttpError {
+    fn from(e: JoinError) -> Self {
+        HttpError::OtherError(anyhow::Error::from(e))
+    }
+}
 
 impl From<std::io::Error> for HttpError  {
     fn from(e: std::io::Error) -> Self {

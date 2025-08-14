@@ -619,6 +619,7 @@ public class BackupService extends Service {
             backupFile.setDirectory(selectDir.isDirectory());
             backupFile.setMimeType(selectDir.getMimeType());
             backupFile.setMd5("");
+            backupFile.setLastModified(selectDir.getLastModified());
             return backupFile;
         }).collect(Collectors.toList());
         return initParent;

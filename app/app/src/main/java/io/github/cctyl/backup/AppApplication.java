@@ -46,6 +46,14 @@ public class AppApplication extends Application {
                             }
                         }
                 )
+                .addMigrations(
+                        new Migration(2,3) {
+                            @Override
+                            public void migrate(@NonNull SupportSQLiteDatabase database) {
+                                database.execSQL("ALTER TABLE select_dir ADD COLUMN last_modified INTEGER  not null ");
+                            }
+                        }
+                )
                 //运行在主线程中操作数据库（默认情况下room不能在主线程操作数据库，因为是耗时操作）
                 .allowMainThreadQueries()
                 .build()
