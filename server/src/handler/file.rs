@@ -50,7 +50,7 @@ async fn compare(Json(params): Json<Vec<FileDto>>) -> RR<Vec<FileDto>> {
     let db_list = FileDao::select_by_relative_path_in(collect).await?;
     for item in params.into_iter() {
         let flag = check_file(item.clone(), &db_list).await?;
-        info!("check finish: {}", item.name);
+        info!("check finish: {},flag = {}", item.name,flag);
         if flag {
             result.push(item);
         }
