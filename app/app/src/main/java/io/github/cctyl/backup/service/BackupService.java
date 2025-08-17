@@ -44,6 +44,7 @@ import io.github.cctyl.backup.error.BreakException;
 import io.github.cctyl.backup.utils.GsonUtils;
 import io.github.cctyl.backup.utils.ToastUtil;
 import io.github.cctyl.backup.utils.http.OkHttpUtil;
+import okhttp3.Call;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class BackupService extends Service {
@@ -133,6 +134,9 @@ public class BackupService extends Service {
                     Log.d("BackupService", "onCreate: 文件查找完成");
                     Log.d("LocalBinder", "start: 本地文件查找花费：" + (System.currentTimeMillis() - startTime) + " 毫秒");
                     i();
+
+
+
                     //1.5与服务器进行对比
                     if (!serverConfig.forceBackup) {
                         startTime = System.currentTimeMillis();
@@ -201,6 +205,7 @@ public class BackupService extends Service {
                         dto.setBackupResult("备份出错");
                         dto.setBackupDetail("备份过程发送了错误，错误信息=" + e.getMessage());
                         Log.d("BackupService", "onCreate: 线程被打断运行 RuntimeException Other");
+                        Log.e("BackupService", "error:",e);
 
                         mWebAppInterface.receiveUploadError(e.getMessage());
                     }
@@ -240,6 +245,15 @@ public class BackupService extends Service {
                 t.interrupt();
                 stopForeground(STOP_FOREGROUND_REMOVE);
                 cancelNotify();
+            }
+            for (Call call : OkHttpUtil.INSTANCE.dispatcher().runningCalls()) {
+
+                call.cancel();
+            }
+
+            for (Call call : OkHttpUtil.INSTANCE_UPLOAD.dispatcher().runningCalls()) {
+
+                call.cancel();
             }
 
 
@@ -288,13 +302,13 @@ public class BackupService extends Service {
     private Set<Long> compareServerInfo(Set<Long> updatedIds) throws InterruptedException {
         Set<Long> result = new HashSet<>();
         // 更新比较进度
-        if (updatedIds.size() > 50) {
+        if (updatedIds.size() > 10) {
             //按50来截取集合，循环，直到结束
             int start = 0;
             while (start < updatedIds.size()) {
                 List<Long> idList = updatedIds.stream()
                         .skip(start)
-                        .limit(50)
+                        .limit(10)
                         .collect(Collectors.toList());
 
                 List<BackupFile> list = backupFileDao.findByIdIn(idList);
@@ -303,7 +317,7 @@ public class BackupService extends Service {
                 }
                 List<BackupFile> compare = OkHttpUtil.compare(list, mServerConfig);
                 result.addAll(compare.stream().map(BackupFile::getId).collect(Collectors.toSet()));
-                start += 50;
+                start += 10;
 
                 if (!list.isEmpty()) {
                     updateUiCompareData(list.get(0), (int) (start * 1.0 / updatedIds.size() * 100), list.size());
@@ -342,6 +356,7 @@ public class BackupService extends Service {
         dto.setFailNum(0l);
         progressDto.setFailNum(0);
         AtomicReference<Double> count = new AtomicReference<>((double) 0);
+        mWebAppInterface.receiveProgressData(GsonUtils.toJsonObject(progressDto));
         for (Long updatedId : updatedIds) {
             i();
 

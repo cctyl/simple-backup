@@ -79,12 +79,11 @@ pub async fn check_file(item: FileDto, db_list: &Vec<crate::entity::models::File
         }
         None => {
            
-            info!("数据库中不存在");
+            info!("数据库中不存在: {}", item.name);
             //数据库中不存在，那么真实文件中是否存在？
             let path = format!("./upload/{}", item.relative_path);
             let try_exists = tokio::fs::try_exists(&path).await?;
             if try_exists {
-                info!("文件真实存在");
                 let mut file = File::open(&path).await?;
 
                 // 定义缓冲区大小
@@ -121,9 +120,13 @@ pub async fn check_file(item: FileDto, db_list: &Vec<crate::entity::models::File
                         md5: item.md5.clone(),
                     };
                     crate::entity::models::File::insert(&CONTEXT.rb, &file).await?;
+                }else{
+
+                    info!("重新上传文件: {}", item.name);
                 }
                 Ok(real_md5 != item.md5)
             } else {
+                info!("重新上传文件: {}", item.name);
                 //不存在自然是上传
                 Ok(true)
             }
@@ -161,7 +164,7 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     "isDirectory" => is_directory = value.parse().unwrap_or(false),
                     "createTime" => {
         
-                        info!("创建时间传递了");
+                        info!("创建时间:");
         
                         // 解析时间戳（假设为毫秒）
                         if let Ok(timestamp) = value.parse::<u64>() {
@@ -177,6 +180,7 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
             },
 
             "file" => {
+                info!("开始处理文件上传 {}",name.clone().unwrap());
                 // 处理文件上传的逻辑保持不变
                 let (temp_path, real_path) = {
                     let mut rel_path = relative_path
@@ -220,6 +224,7 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                         hasher.consume(&chunk);
                     }
                 }
+                info!("文件写入完成: {} bytes", file_size);
 
                 dest_file.flush().await?;
 
@@ -243,8 +248,10 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                 let real_path_clone = real_path.clone();
                 tokio::task::spawn_blocking(move || {
                     let file_times = filetime::FileTime::from_system_time(ctime);
-                    filetime::set_file_times(&real_path_clone, file_times, file_times)
+                    filetime::set_file_mtime(&real_path_clone, file_times)
                         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                    // filetime::set_file_times(&real_path_clone, file_times, file_times)
+                    //     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
                 })
                 .await??;
 

@@ -1,6 +1,7 @@
 package io.github.cctyl.backup.utils.http;
 
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.provider.DocumentsContract;
 import android.util.Log;
 
@@ -48,7 +49,13 @@ public class ProgressRequestBody extends RequestBody {
         )) {
             int read;
             while ((read = is.read(buffer)) != -1) {
-                sink.write(buffer, 0, read);
+                Log.d("ProgressRequestBody", "writeTo: start write " +read);
+                try {
+                    sink.write(buffer, 0, read);
+                } catch (IOException e) {
+                    Log.e("ProgressRequestBody", "writeTo: ",e);
+                    throw new RuntimeException(e);
+                }
                 uploaded += read;
                 long currentTime = System.currentTimeMillis();
                 long timeDelta = currentTime - lastUpdateTime;
@@ -62,8 +69,13 @@ public class ProgressRequestBody extends RequestBody {
                     lastUpdateTime = currentTime;
                     lastUploadSize = uploaded; // 更新上次上传量
                 }
+
+                Log.d("ProgressRequestBody", "writeTo: "+read);
             }
         } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }catch (Exception e){
+            Log.e("ProgressRequestBody", "writeTo: " + e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
