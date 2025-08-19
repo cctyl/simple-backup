@@ -1,4 +1,6 @@
 use std::any::Any;
+use std::fs::FileTimes;
+use std::os::windows::fs::FileTimesExt;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::utils::id;
@@ -246,14 +248,24 @@ async fn upload(mut multipart: Multipart) -> RR<()> {
                     .clone()
                     .ok_or(HttpError::BadRequest("必须提供创建时间".to_string()))?;
                 let real_path_clone = real_path.clone();
-                tokio::task::spawn_blocking(move || {
-                    let file_times = filetime::FileTime::from_system_time(ctime);
-                    filetime::set_file_mtime(&real_path_clone, file_times)
-                        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-                    // filetime::set_file_times(&real_path_clone, file_times, file_times)
-                    //     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-                })
-                .await??;
+                
+                let dest =std::fs:: File::options().write(true).open(&real_path_clone)?;
+                let times = FileTimes::new()
+                    .set_accessed(ctime)
+                    .set_modified(ctime)
+                    .set_created(ctime)
+                    ;
+                dest.set_times(times)?;
+                
+
+                // tokio::task::spawn_blocking(move || {
+                //     let file_times = filetime::FileTime::from_system_time(ctime);
+                //     filetime::set_file_mtime(&real_path_clone, file_times)
+                //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                //     // filetime::set_file_times(&real_path_clone, file_times, file_times)
+                //     //     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                // })
+                // .await??;
 
                 info!(
                     "文件上传成功: 路径={}, 大小={} bytes{}",
